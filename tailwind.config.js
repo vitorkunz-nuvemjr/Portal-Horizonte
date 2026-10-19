@@ -51,7 +51,19 @@ export default {
 				secondary: '#b30069',
 				'primary-container': '#1070e9',
 				'primary-fixed': '#d8e2ff',
-				'on-error-container': '#93000a'
+				'on-error-container': '#93000a',
+				accent: '#3080F9',
+				'primary-hover': '#00479b',
+				brand: {
+					cream: '#FAF6EE',
+					paper: '#FDFBF7',
+					surface: '#FFF8F2',
+					border: '#E8E2D8',
+					borderLight: '#F0ECE4',
+					charcoal: '#1E1D1A',
+					muted: '#63625D',
+					subtle: '#8C8A83'
+				}
 			},
 			spacing: {
 				margin: '2rem',

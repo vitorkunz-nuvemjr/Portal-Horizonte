@@ -16,9 +16,10 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const email = (formData.get('email') as string | null)?.trim();
 		const password = (formData.get('password') as string | null) ?? '';
+		const keepSession = formData.get('keepSession') === 'on' || formData.get('keepSession') === 'true';
 
 		if (!email || !password) {
-			return fail(400, { message: 'E-mail e senha são obrigatórios.' });
+			return fail(400, { message: 'E-mail corporativo e senha de acesso são obrigatórios.' });
 		}
 
 		if (locals.mode === 'supabase' && locals.supabase) {
@@ -32,22 +33,45 @@ export const actions: Actions = {
 			throw redirect(303, '/strategy');
 		}
 
-		// Local Store mode: match by email or fall back to first admin
+		// Local Store mode: match by email, or name snippet, or fallback
 		const db = readDb();
-		const match =
-			db.profiles.find((p) => p.email?.toLowerCase() === email.toLowerCase()) ??
-			db.profiles[0];
+		const emailLower = email.toLowerCase();
+		let match = db.profiles.find((p) => p.email?.toLowerCase() === emailLower);
+
+		if (!match) {
+			// Check if username part (e.g. "lucas.mendes") matches name in database
+			const prefix = emailLower.split('@')[0].replace(/[._-]/g, ' ');
+			const terms = prefix.split(/\s+/).filter(Boolean);
+			match = db.profiles.find((p) => {
+				const nameLower = p.name.toLowerCase();
+				return terms.some((t) => t.length > 2 && nameLower.includes(t));
+			});
+		}
+
+		if (!match) {
+			match = db.profiles[0];
+		}
 
 		if (!match) {
 			return fail(400, { message: 'Nenhum perfil de usuário local encontrado.' });
 		}
 
-		cookies.set(SESSION_COOKIE, match.id, {
+		const cookieOpts: {
+			path: string;
+			httpOnly: boolean;
+			sameSite: 'lax';
+			maxAge?: number;
+		} = {
 			path: '/',
 			httpOnly: true,
-			sameSite: 'lax',
-			maxAge: 60 * 60 * 24 * 30
-		});
+			sameSite: 'lax'
+		};
+
+		if (keepSession) {
+			cookieOpts.maxAge = 60 * 60 * 24 * 30; // 30 days
+		}
+
+		cookies.set(SESSION_COOKIE, match.id, cookieOpts);
 
 		throw redirect(303, '/strategy');
 	},
