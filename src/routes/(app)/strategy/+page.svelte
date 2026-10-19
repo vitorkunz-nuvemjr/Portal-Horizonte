@@ -6,6 +6,7 @@
 	import StrategyCanvas from '$lib/components/canvas/StrategyCanvas.svelte';
 	import OutlineView from '$lib/components/canvas/OutlineView.svelte';
 	import NodeDrawer from '$lib/components/drawer/NodeDrawer.svelte';
+	import KeyResultDossierModal from '$lib/components/modal/KeyResultDossierModal.svelte';
 	import {
 		applyValueLens,
 		enrichNodes,
@@ -349,20 +350,34 @@
 	{/if}
 </div>
 
-<!-- Node Edit & Alignment Drawer -->
-<NodeDrawer
-	node={selectedNode}
-	allNodes={data.nodes}
-	cycles={data.cycles}
-	profiles={enriched.profilesWithTeams}
-	teams={data.teams}
-	valuesList={enriched.valuesList}
-	{canEdit}
-	{collapsedIds}
-	onClose={() => (selectedNodeId = null)}
-	onAddChild={openCreateChild}
-	onToggleCollapse={toggleCollapse}
-/>
+<!-- Node Edit: Dossier Modal for Key Results, Drawer for Objectives & KPIs -->
+{#if selectedNode?.type === 'key_result'}
+	<KeyResultDossierModal
+		node={selectedNode}
+		allNodes={data.nodes}
+		cycles={data.cycles}
+		profiles={enriched.profilesWithTeams}
+		teams={data.teams}
+		valuesList={enriched.valuesList}
+		{canEdit}
+		onClose={() => (selectedNodeId = null)}
+		onAddChild={openCreateChild}
+	/>
+{:else}
+	<NodeDrawer
+		node={selectedNode}
+		allNodes={data.nodes}
+		cycles={data.cycles}
+		profiles={enriched.profilesWithTeams}
+		teams={data.teams}
+		valuesList={enriched.valuesList}
+		{canEdit}
+		{collapsedIds}
+		onClose={() => (selectedNodeId = null)}
+		onAddChild={openCreateChild}
+		onToggleCollapse={toggleCollapse}
+	/>
+{/if}
 
 <!-- Create Node Modal (Objective / KR / KPI) -->
 {#if createModal.open}

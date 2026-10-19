@@ -457,7 +457,7 @@
 </aside>
 
 <!-- Main Content Container (Pushes content by 64px if pinned, or 16px if unpinned rail) -->
-<div class="transition-all duration-300 ease-in-out {sidebarPinned ? 'md:pl-64' : 'md:pl-16'} relative z-10">
+<div class="transition-all duration-300 ease-in-out {sidebarPinned ? 'md:pl-64' : 'md:pl-16'} relative">
 	<main class="relative pt-20 min-h-screen bg-transparent">
 		{@render children()}
 	</main>
