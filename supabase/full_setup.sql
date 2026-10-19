@@ -140,7 +140,8 @@ create index if not exists nodes_cycle_idx on nodes (cycle_id);
 create index if not exists nodes_type_idx on nodes (type);
 create index if not exists nodes_year_idx on nodes (year);
 
-create unique index if not exists one_mission on nodes (tree) where type = 'mission';
+drop index if exists one_mission;
+create unique index if not exists one_active_mission on nodes (tree) where type = 'mission' and end_year is null;
 
 create or replace function touch_updated_at()
 returns trigger language plpgsql as $$
