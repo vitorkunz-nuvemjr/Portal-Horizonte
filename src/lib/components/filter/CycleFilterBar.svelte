@@ -161,7 +161,7 @@
 						<span
 							class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant font-semibold"
 						>
-							Vetor Estratégico Corporativo
+							Visão Estratégica da EJ
 						</span>
 						<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
 						<span class="font-label-sm text-label-sm font-bold text-primary tracking-wide">

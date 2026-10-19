@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { ShieldCheck, X, AlertCircle } from 'lucide-svelte';
 
@@ -28,15 +29,15 @@
 </script>
 
 <svelte:head>
-	<title>Nuvem Jr. — Horizonte OKRs & Strat</title>
+	<title>Nuvem Jr. - Horizonte OKRs e Planejamento</title>
 </svelte:head>
 
 <div class="min-h-screen bg-[#fff8f2] text-[#1E1D1A] antialiased flex flex-col font-sans selection:bg-[#3080F9] selection:text-white">
 	<!-- Top Navigation Header -->
 	<header class="w-full h-16 border-b border-[#E8E2D8]/70 bg-[#FDFBF7]/95 backdrop-blur-md px-6 lg:px-12 flex items-center justify-between z-30 shrink-0">
 		<div class="flex items-center gap-3">
-			<div class="w-9 h-9 rounded-lg bg-[#0058bd] text-white flex items-center justify-center shadow-sm shadow-[#0058bd]/25">
-				<span class="material-symbols-outlined text-[20px]">account_tree</span>
+			<div class="w-9 h-9 rounded-lg bg-white border border-[#E8E2D8] shadow-sm flex items-center justify-center p-1 overflow-hidden">
+				<img src="{base}/logo-nuvem.png" alt="Nuvem Jr." class="w-full h-full object-contain" />
 			</div>
 			<div class="flex items-center gap-2">
 				<span class="font-bold text-lg tracking-tight text-[#1E1D1A]">Nuvem Jr.</span>
@@ -175,8 +176,8 @@
 						</div>
 						<div class="flex items-center justify-center gap-2">
 							<h2 class="text-2xl font-extrabold text-[#0f172a] tracking-tight">Horizonte</h2>
-							<span class="px-2 py-0.5 rounded-md bg-[#f1f5f9] border border-[#cbd5e1] text-[10px] font-bold text-[#475569] tracking-wider uppercase">
-								OKR
+							<span class="px-2 py-0.5 rounded-md bg-[#f1f5f9] border border-[#cbd5e1] text-[10px] font-bold text-[#475569] tracking-wider">
+								OKRs
 							</span>
 						</div>
 						<h3 class="text-[15px] font-bold text-[#0058bd] mt-1 tracking-tight">Acompanhamento e métricas da Nuvem Jr.</h3>
@@ -296,7 +297,7 @@
 									id="corporate-email"
 									name="email"
 									bind:value={email}
-									placeholder="seu.email@nuvemej.com.br"
+									placeholder="seu.email@nuvemjr.com.br"
 									required
 									type="email"
 									autocomplete="username"
@@ -396,7 +397,7 @@
 								Fazer Login com sua conta existente
 							</button>
 						{:else}
-							<div class="text-[#64748b]">Não possui credenciais corporativas?</div>
+							<div class="text-[#64748b]">Não tem credenciais de acesso?</div>
 							<div class="font-semibold text-xs flex items-center justify-center gap-1.5">
 								<button
 									type="button"

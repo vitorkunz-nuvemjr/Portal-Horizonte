@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import type { Profile } from '$lib/types';
 	import { getInitials } from '$lib/utils';
 	import type { Snippet } from 'svelte';
@@ -109,20 +110,20 @@
 		<div class="flex items-center gap-space-md">
 			<a href="/strategy" class="flex items-center gap-space-sm group">
 				<div
-					class="w-9 h-9 rounded-lg bg-surface-container-lowest shadow-[0_2px_5px_rgba(36,34,30,0.1),inset_0_1px_0_#ffffff] flex items-center justify-center text-primary font-bold"
+					class="w-9 h-9 flex items-center justify-center overflow-hidden"
 				>
-					<span class="material-symbols-outlined text-[22px] text-primary">account_tree</span>
+					<img src="{base}/favicon.png" alt="Horizonte OKRs" class="w-full h-full object-contain scale-105" />
 				</div>
 				<div class="flex flex-col">
 					<span
-						class="font-label-md text-label-md tracking-wider uppercase text-on-surface font-bold"
+						class="font-label-md text-label-md tracking-wider text-on-surface font-bold"
 					>
-						ALIGNA
+						Horizonte OKRs
 					</span>
 					<span
-						class="font-label-sm text-label-sm uppercase text-on-surface-variant tracking-widest"
+						class="font-label-sm text-label-sm text-on-surface-variant tracking-wide"
 					>
-						Strategic OKR Matrix
+						Planejamento Estratégico
 					</span>
 				</div>
 			</a>
@@ -241,36 +242,42 @@
 	aria-label="Barra Lateral de Navegação"
 >
 	<div class="flex flex-col gap-space-md {isSidebarExpanded ? 'px-space-md' : 'px-2'}">
-		<!-- Pin / Collapse Control Header -->
-		<div class="flex items-center {isSidebarExpanded ? 'justify-between px-1' : 'justify-center'} pb-1 border-b border-outline-variant/30">
-			{#if isSidebarExpanded}
-				<div class="flex items-center gap-2 min-w-0">
-					<span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant font-bold truncate">
-						Menu
-					</span>
+		<!-- Pin / Collapse Control Header & Brand -->
+		<div class="flex items-center {isSidebarExpanded ? 'justify-between px-1' : 'justify-center'} pb-2 border-b border-outline-variant/30 min-h-[40px]">
+			<div class="flex items-center {isSidebarExpanded ? 'gap-2.5 min-w-0' : 'justify-center'}">
+				<div class="w-7 h-7 flex items-center justify-center shrink-0" title="Nuvem Jr.">
+					<img src="{base}/logo-nuvem.png" alt="Nuvem Jr." class="w-full h-full object-contain" />
 				</div>
-			{/if}
-			<button
-				type="button"
-				id="sidebar-pin-btn"
-				onclick={togglePinSidebar}
-				class="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center justify-center shrink-0"
-				title={sidebarPinned ? 'Desafixar barra lateral (Ctrl+B)' : 'Fixar barra lateral aberta (Ctrl+B)'}
-				aria-label={sidebarPinned ? 'Desafixar barra lateral' : 'Fixar barra lateral aberta'}
-				aria-expanded={sidebarPinned}
-			>
-				{#if sidebarPinned}
-					<!-- Pinned icon -->
-					<span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">
-						keep
-					</span>
-				{:else}
-					<!-- Unpinned icon -->
-					<span class="material-symbols-outlined text-[18px]">
-						keep_off
+				{#if isSidebarExpanded}
+					<span class="font-bold text-sm tracking-tight text-on-surface truncate">
+						Nuvem Jr.
 					</span>
 				{/if}
-			</button>
+			</div>
+
+			{#if isSidebarExpanded}
+				<button
+					type="button"
+					id="sidebar-pin-btn"
+					onclick={togglePinSidebar}
+					class="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all flex items-center justify-center shrink-0"
+					title={sidebarPinned ? 'Desafixar barra lateral (Ctrl+B)' : 'Fixar barra lateral aberta (Ctrl+B)'}
+					aria-label={sidebarPinned ? 'Desafixar barra lateral' : 'Fixar barra lateral aberta'}
+					aria-expanded={sidebarPinned}
+				>
+					{#if sidebarPinned}
+						<!-- Pinned icon -->
+						<span class="material-symbols-outlined text-[18px] text-primary" style="font-variation-settings: 'FILL' 1;">
+							keep
+						</span>
+					{:else}
+						<!-- Unpinned icon -->
+						<span class="material-symbols-outlined text-[18px]">
+							keep_off
+						</span>
+					{/if}
+				</button>
+			{/if}
 		</div>
 
 		<!-- Navigation Links -->
