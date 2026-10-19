@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	html,
+	body {
+		margin: 0;
+		padding: 0;
+		font-family: 'Poppins', sans-serif !important;
+		background-color: #fff8f2;
+		color: #1d1b17;
+	}
+	body {
+		overscroll-behavior: none;
+	}
+	button,
+	input,
+	select,
+	textarea {
+		font-family: 'Poppins', sans-serif !important;
+	}
+}
+
+.mat-ruler-h {
+	background-image: linear-gradient(to right, #d5cebe 1px, transparent 1px);
+	background-size: 24px 100%;
+}
+
+.mat-grid-pattern {
+	background-size: 24px 24px;
+	background-image:
+		linear-gradient(to right, rgba(193, 198, 214, 0.35) 1px, transparent 1px),
+		linear-gradient(to bottom, rgba(193, 198, 214, 0.35) 1px, transparent 1px);
+}
+
+/* ═════════════════════════════════════════════════════════════════
+   Required Field Feedback (:user-invalid + fallback)
+   Only highlight empty required fields AFTER the user visits them.
+   Provide multiple indicators (border shift + helper text/icon)
+   to avoid color-only state communication.
+   ═════════════════════════════════════════════════════════════════ */
+.error-msg {
+	display: none;
+	color: #ba1a1a;
+	font-size: 0.75rem;
+	line-height: 1.125rem;
+	margin-top: 0.25rem;
+	align-items: center;
+	gap: 0.25rem;
+	font-weight: 500;
+}
+
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid,
+input.user-invalid-fallback,
+select.user-invalid-fallback,
+textarea.user-invalid-fallback {
+	border-color: #ba1a1a !important;
+	background-color: #ffdad6 !important;
+}
+
+input:user-invalid + .error-msg,
+select:user-invalid + .error-msg,
+textarea:user-invalid + .error-msg,
+input.user-invalid-fallback + .error-msg,
+select.user-invalid-fallback + .error-msg,
+textarea.user-invalid-fallback + .error-msg {
+	display: flex;
+}
+
+input:required:user-valid,
+select:required:user-valid,
+textarea:required:user-valid {
+	border-color: #0058bd;
+}
+
+/* Custom subtle scrollbars for canvas and drawers */
+::-webkit-scrollbar {
+	width: 6px;
+	height: 6px;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+::-webkit-scrollbar-thumb {
+	background: #d5cebe;
+	border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: #727785;
+}
