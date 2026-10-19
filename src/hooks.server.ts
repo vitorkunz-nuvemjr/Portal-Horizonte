@@ -30,28 +30,32 @@ export const handle: Handle = async ({ event, resolve }) => {
 		);
 
 		event.locals.safeGetSession = async () => {
-			const {
-				data: { user },
-				error
-			} = await event.locals.supabase!.auth.getUser();
-			if (error || !user) return { user: null };
+			try {
+				const {
+					data: { user },
+					error
+				} = await event.locals.supabase!.auth.getUser();
+				if (error || !user) return { user: null };
 
-			const { data: profile } = await event.locals.supabase!
-				.from('profiles')
-				.select('*')
-				.eq('id', user.id)
-				.single();
+				const { data: profile } = await event.locals.supabase!
+					.from('profiles')
+					.select('*')
+					.eq('id', user.id)
+					.single();
 
-			return {
-				user: profile ?? {
-					id: user.id,
-					name: user.email?.split('@')[0] ?? 'User',
-					email: user.email,
-					role: 'member',
-					color: '#2563eb',
-					created_at: new Date().toISOString()
-				}
-			};
+				return {
+					user: profile ?? {
+						id: user.id,
+						name: user.email?.split('@')[0] ?? 'User',
+						email: user.email,
+						role: 'member',
+						color: '#2563eb',
+						created_at: new Date().toISOString()
+					}
+				};
+			} catch {
+				return { user: null };
+			}
 		};
 	} else {
 		event.locals.mode = 'local';

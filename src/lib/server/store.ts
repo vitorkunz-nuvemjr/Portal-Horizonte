@@ -648,69 +648,79 @@ export function generateSeedSnapshot(): DatabaseSnapshot {
 	};
 }
 
+let inMemorySnapshot: DatabaseSnapshot | null = null;
+
 function ensureDbFile(): DatabaseSnapshot {
-	if (!fs.existsSync(DATA_DIR)) {
-		fs.mkdirSync(DATA_DIR, { recursive: true });
+	if (inMemorySnapshot) {
+		return inMemorySnapshot;
 	}
-	if (!fs.existsSync(DB_FILE)) {
-		const initial = generateSeedSnapshot();
-		fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), 'utf-8');
-		return initial;
-	}
+
 	try {
-		const raw = fs.readFileSync(DB_FILE, 'utf-8');
-		const snapshot = JSON.parse(raw) as DatabaseSnapshot;
-		// Migration check: ensure all nodes have start_year / end_year keys
-		let modified = false;
-		for (const n of snapshot.nodes) {
-			if (n.tree === 'identity') {
-				if (n.start_year === undefined) {
-					n.start_year = 2024;
-					modified = true;
+		if (fs.existsSync(DB_FILE)) {
+			const raw = fs.readFileSync(DB_FILE, 'utf-8');
+			const snapshot = JSON.parse(raw) as DatabaseSnapshot;
+			// Migration check: ensure all nodes have start_year / end_year keys
+			let modified = false;
+			for (const n of snapshot.nodes) {
+				if (n.tree === 'identity') {
+					if (n.start_year === undefined) {
+						n.start_year = 2024;
+						modified = true;
+					}
+					if (n.end_year === undefined) {
+						n.end_year = null;
+						modified = true;
+					}
+				} else {
+					if (n.start_year === undefined) n.start_year = null;
+					if (n.end_year === undefined) n.end_year = null;
 				}
-				if (n.end_year === undefined) {
-					n.end_year = null;
-					modified = true;
-				}
-			} else {
-				if (n.start_year === undefined) n.start_year = null;
-				if (n.end_year === undefined) n.end_year = null;
 			}
+			// If DB lacks the archived sample era, inject it
+			if (!snapshot.nodes.some((n) => n.id === 'id-mission-2021')) {
+				const seed = generateSeedSnapshot();
+				const historicalNodes = seed.nodes.filter(
+					(n) => n.id === 'id-mission-2021' || n.parent_id === 'id-mission-2021'
+				);
+				snapshot.nodes.push(...historicalNodes);
+				modified = true;
+			}
+			// Migration check: ensure teams, team_members, node_teams exist
+			if (!Array.isArray(snapshot.teams)) {
+				const seed = generateSeedSnapshot();
+				snapshot.teams = seed.teams;
+				snapshot.team_members = seed.team_members;
+				snapshot.node_teams = seed.node_teams;
+				modified = true;
+			}
+			if (!Array.isArray(snapshot.team_members)) {
+				snapshot.team_members = [];
+				modified = true;
+			}
+			if (!Array.isArray(snapshot.node_teams)) {
+				snapshot.node_teams = [];
+				modified = true;
+			}
+			if (modified) {
+				writeDb(snapshot);
+			}
+			inMemorySnapshot = snapshot;
+			return inMemorySnapshot;
 		}
-		// If DB lacks the archived sample era, inject it
-		if (!snapshot.nodes.some((n) => n.id === 'id-mission-2021')) {
-			const seed = generateSeedSnapshot();
-			const historicalNodes = seed.nodes.filter(
-				(n) => n.id === 'id-mission-2021' || n.parent_id === 'id-mission-2021'
-			);
-			snapshot.nodes.push(...historicalNodes);
-			modified = true;
-		}
-		// Migration check: ensure teams, team_members, node_teams exist
-		if (!Array.isArray(snapshot.teams)) {
-			const seed = generateSeedSnapshot();
-			snapshot.teams = seed.teams;
-			snapshot.team_members = seed.team_members;
-			snapshot.node_teams = seed.node_teams;
-			modified = true;
-		}
-		if (!Array.isArray(snapshot.team_members)) {
-			snapshot.team_members = [];
-			modified = true;
-		}
-		if (!Array.isArray(snapshot.node_teams)) {
-			snapshot.node_teams = [];
-			modified = true;
-		}
-		if (modified) {
-			writeDb(snapshot);
-		}
-		return snapshot;
 	} catch {
-		const initial = generateSeedSnapshot();
-		fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2), 'utf-8');
-		return initial;
+		// Ignore disk read error and fallback to seed
 	}
+
+	inMemorySnapshot = generateSeedSnapshot();
+	try {
+		if (!fs.existsSync(DATA_DIR)) {
+			fs.mkdirSync(DATA_DIR, { recursive: true });
+		}
+		fs.writeFileSync(DB_FILE, JSON.stringify(inMemorySnapshot, null, 2), 'utf-8');
+	} catch {
+		// Ignore EROFS on read-only serverless filesystems (e.g. Vercel)
+	}
+	return inMemorySnapshot;
 }
 
 export function readDb(): DatabaseSnapshot {
@@ -718,11 +728,16 @@ export function readDb(): DatabaseSnapshot {
 }
 
 export function writeDb(snapshot: DatabaseSnapshot): void {
-	if (!fs.existsSync(DATA_DIR)) {
-		fs.mkdirSync(DATA_DIR, { recursive: true });
-	}
+	inMemorySnapshot = snapshot;
 	snapshot.exported_at = new Date().toISOString();
-	fs.writeFileSync(DB_FILE, JSON.stringify(snapshot, null, 2), 'utf-8');
+	try {
+		if (!fs.existsSync(DATA_DIR)) {
+			fs.mkdirSync(DATA_DIR, { recursive: true });
+		}
+		fs.writeFileSync(DB_FILE, JSON.stringify(snapshot, null, 2), 'utf-8');
+	} catch {
+		// Ignore EROFS on read-only serverless filesystems (e.g. Vercel)
+	}
 }
 
 export function resetToSeedTemplate(): DatabaseSnapshot {

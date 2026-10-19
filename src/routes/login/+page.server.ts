@@ -4,6 +4,14 @@ import { readDb } from '$lib/server/store';
 import { SESSION_COOKIE } from '../../hooks.server';
 
 export const load: PageServerLoad = async ({ locals }) => {
+	if (locals.mode === 'supabase' && locals.supabase) {
+		const { data: profiles } = await locals.supabase.from('profiles').select('*');
+		return {
+			mode: locals.mode,
+			profiles: profiles ?? []
+		};
+	}
+
 	const db = readDb();
 	return {
 		mode: locals.mode,
