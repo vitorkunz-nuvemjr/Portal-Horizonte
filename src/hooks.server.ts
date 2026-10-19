@@ -1,20 +1,31 @@
 import { createServerClient } from '@supabase/ssr';
 import type { Handle } from '@sveltejs/kit';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY } from '$env/static/public';
 import { env as pubEnv } from '$env/dynamic/public';
 import { readDb } from '$lib/server/store';
 
 export const SESSION_COOKIE = 'je_session_user_id';
 
+export const resolvedSupabaseUrl =
+	PUBLIC_SUPABASE_URL ||
+	pubEnv.PUBLIC_SUPABASE_URL ||
+	(typeof process !== 'undefined' ? process.env?.PUBLIC_SUPABASE_URL : '') ||
+	'https://ptpcafftqlwxcdexofos.supabase.co';
+
+export const resolvedSupabaseAnonKey =
+	PUBLIC_SUPABASE_ANON_KEY ||
+	pubEnv.PUBLIC_SUPABASE_ANON_KEY ||
+	(typeof process !== 'undefined' ? process.env?.PUBLIC_SUPABASE_ANON_KEY : '') ||
+	'sb_publishable_7dvgutK2lSMz7tzbAc0-jg_T9TQimpb';
+
 export const handle: Handle = async ({ event, resolve }) => {
-	const hasSupabase = Boolean(
-		pubEnv.PUBLIC_SUPABASE_URL && pubEnv.PUBLIC_SUPABASE_ANON_KEY
-	);
+	const hasSupabase = Boolean(resolvedSupabaseUrl && resolvedSupabaseAnonKey);
 
 	if (hasSupabase) {
 		event.locals.mode = 'supabase';
 		event.locals.supabase = createServerClient(
-			pubEnv.PUBLIC_SUPABASE_URL!,
-			pubEnv.PUBLIC_SUPABASE_ANON_KEY!,
+			resolvedSupabaseUrl,
+			resolvedSupabaseAnonKey,
 			{
 				cookies: {
 					getAll() {

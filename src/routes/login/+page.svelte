@@ -6,6 +6,8 @@
 
 	let email = $state('');
 	let password = $state('');
+	let name = $state('');
+	let isSignUp = $state(false);
 	let keepSession = $state(true);
 	let showPassword = $state(false);
 	let isSubmitting = $state(false);
@@ -232,10 +234,17 @@
 						</div>
 					{/if}
 
+					{#if form?.notice}
+						<div class="mb-4 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-800">
+							<span class="material-symbols-outlined text-[16px] text-emerald-600">check_circle</span>
+							<span>{form.notice}</span>
+						</div>
+					{/if}
+
 					<!-- Form -->
 					<form
 						method="POST"
-						action="?/login"
+						action={isSignUp ? '?/signup' : '?/login'}
 						class="space-y-4"
 						id="loginForm"
 						use:enhance={() => {
@@ -246,6 +255,30 @@
 							};
 						}}
 					>
+						{#if isSignUp}
+							<!-- User Full Name (Signup only) -->
+							<div class="space-y-1.5 animate-fadeIn">
+								<label class="block text-xs font-semibold text-[#1e293b]" for="user-name">
+									Nome Completo
+								</label>
+								<div class="relative flex items-center">
+									<span class="material-symbols-outlined text-[18px] text-[#94a3b8] absolute left-3.5 pointer-events-none">
+										person
+									</span>
+									<input
+										class="w-full h-11 pl-10 pr-3.5 rounded-xl bg-[#fdfbf7] border border-[#e2d9cd] text-sm text-[#1e293b] placeholder:text-[#94a3b8] shadow-[inset_0_1px_2px_rgba(0,0,0,0.03)] focus:bg-white focus:outline-none focus:border-[#0058bd] focus:ring-2 focus:ring-[#0058bd]/20 transition-all font-sans"
+										id="user-name"
+										name="name"
+										bind:value={name}
+										placeholder="Vitor Kunz"
+										required
+										type="text"
+										autocomplete="name"
+									/>
+								</div>
+							</div>
+						{/if}
+
 						<!-- Corporate Email -->
 						<div class="space-y-1.5">
 							<div class="flex items-center justify-between">
@@ -277,16 +310,18 @@
 								<label class="block text-xs font-semibold text-[#1e293b]" for="corporate-password">
 									Senha de acesso
 								</label>
-								<button
-									type="button"
-									onclick={() => openInfo(
-										'Redefinição de Senha',
-										'Para redefinir sua senha corporativa, solicite à Governança Institucional da Nuvem Jr. através do e-mail presidencia@nuvemej.com.br ou pelo canal interno de TI.'
-									)}
-									class="text-xs font-medium text-[#0058bd] hover:underline"
-								>
-									Esqueceu a senha?
-								</button>
+								{#if !isSignUp}
+									<button
+										type="button"
+										onclick={() => openInfo(
+											'Redefinição de Senha',
+											'Para redefinir sua senha corporativa, solicite à Governança Institucional da Nuvem Jr. através do e-mail presidencia@nuvemej.com.br ou pelo canal interno de TI.'
+										)}
+										class="text-xs font-medium text-[#0058bd] hover:underline"
+									>
+										Esqueceu a senha?
+									</button>
+								{/if}
 							</div>
 							<div class="relative flex items-center">
 								<span class="material-symbols-outlined text-[18px] text-[#94a3b8] absolute left-3.5 pointer-events-none">
@@ -300,7 +335,7 @@
 									placeholder="••••••••••••"
 									required
 									type={showPassword ? 'text' : 'password'}
-									autocomplete="current-password"
+									autocomplete={isSignUp ? 'new-password' : 'current-password'}
 								/>
 								<button
 									aria-label="Alternar exibição da senha"
@@ -316,19 +351,21 @@
 							</div>
 						</div>
 
-						<!-- Keep Session -->
-						<div class="flex items-center pt-0.5">
-							<label class="flex items-center gap-2.5 cursor-pointer select-none">
-								<input
-									class="w-4 h-4 rounded border-[#cbd5e1] text-[#0058bd] focus:ring-[#0058bd]/30 cursor-pointer"
-									id="keepSession"
-									name="keepSession"
-									type="checkbox"
-									bind:checked={keepSession}
-								/>
-								<span class="text-xs text-[#475569] font-normal">Manter sessão ativa neste dispositivo</span>
-							</label>
-						</div>
+						{#if !isSignUp}
+							<!-- Keep Session -->
+							<div class="flex items-center pt-0.5">
+								<label class="flex items-center gap-2.5 cursor-pointer select-none">
+									<input
+										class="w-4 h-4 rounded border-[#cbd5e1] text-[#0058bd] focus:ring-[#0058bd]/30 cursor-pointer"
+										id="keepSession"
+										name="keepSession"
+										type="checkbox"
+										bind:checked={keepSession}
+									/>
+									<span class="text-xs text-[#475569] font-normal">Manter sessão ativa neste dispositivo</span>
+								</label>
+							</div>
+						{/if}
 
 						<!-- Submit Button -->
 						<button
@@ -339,9 +376,9 @@
 						>
 							{#if isSubmitting}
 								<span class="material-symbols-outlined text-[18px] animate-spin">sync</span>
-								<span>Autenticando...</span>
+								<span>{isSignUp ? 'Criando conta...' : 'Autenticando...'}</span>
 							{:else}
-								<span>Entrar na Plataforma</span>
+								<span>{isSignUp ? 'Criar Conta no Supabase' : 'Entrar na Plataforma'}</span>
 								<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
 							{/if}
 						</button>
@@ -349,30 +386,38 @@
 
 					<!-- Footer Links inside card -->
 					<div class="mt-6 pt-5 border-t border-[#f1ece4] flex flex-col items-center gap-2 text-center text-xs">
-						<div class="text-[#64748b]">Não possui credenciais autorizadas?</div>
-						<div class="font-semibold text-xs flex items-center justify-center gap-1.5">
+						{#if isSignUp}
+							<div class="text-[#64748b]">Já possui uma conta cadastrada?</div>
 							<button
 								type="button"
-								onclick={() => openInfo(
-									'Solicitar Acesso à Governança',
-									'O acesso ao Horizonte OKRs é restrito a membros e conselheiros autorizados da Nuvem Jr. Entre em contato com a Diretoria Executiva ou envie solicitação formal para presidencia@nuvemej.com.br.'
-								)}
-								class="text-[#0058bd] hover:underline"
+								onclick={() => (isSignUp = false)}
+								class="text-[#0058bd] font-semibold hover:underline"
 							>
-								Solicitar acesso à Governança
+								Fazer Login com sua conta existente
 							</button>
-							<span class="text-[#94a3b8]">•</span>
-							<button
-								type="button"
-								onclick={() => openInfo(
-									'Criação de Conta Corporativa',
-									'Novas contas de usuários são provisionadas automaticamente durante os ciclos de integração de trainees e membros pela Diretoria de Gestão de Pessoas.'
-								)}
-								class="text-[#b30069] hover:underline"
-							>
-								Criar Conta
-							</button>
-						</div>
+						{:else}
+							<div class="text-[#64748b]">Não possui credenciais corporativas?</div>
+							<div class="font-semibold text-xs flex items-center justify-center gap-1.5">
+								<button
+									type="button"
+									onclick={() => (isSignUp = true)}
+									class="text-[#0058bd] hover:underline"
+								>
+									Criar Conta
+								</button>
+								<span class="text-[#94a3b8]">•</span>
+								<button
+									type="button"
+									onclick={() => openInfo(
+										'Solicitar Acesso à Governança',
+										'O acesso ao Horizonte OKRs é restrito a membros e conselheiros autorizados da Nuvem Jr. Entre em contato com a Diretoria Executiva ou envie solicitação formal para presidencia@nuvemej.com.br.'
+									)}
+									class="text-[#64748b] hover:underline"
+								>
+									Ajuda da Governança
+								</button>
+							</div>
+						{/if}
 					</div>
 
 					<!-- Micro-Badge at bottom of card -->
