@@ -67,7 +67,7 @@
 		>
 			<AlertCircle class="h-4 w-4 shrink-0 text-secondary" />
 			<span>
-				Você está visualizando como <strong>{data.user?.role === 'admin' ? 'Administrador' : data.user?.role === 'member' ? 'Membro' : 'Visualizador'}</strong>. Alterne para uma conta de <strong>Administrador</strong> no seletor lateral para modificar usuários, ciclos ou dados.
+				Você está visualizando como <strong>{data.user?.role === 'admin' ? 'Administrador' : data.user?.role === 'member' ? 'Membro' : 'Visualizador'}</strong>. Faça login com uma conta de <strong>Administrador</strong> para modificar usuários, ciclos ou dados.
 			</span>
 		</div>
 	{/if}

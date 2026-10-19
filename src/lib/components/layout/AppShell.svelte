@@ -7,7 +7,7 @@
 
 	interface Props {
 		user: Profile;
-		profiles: Profile[];
+		profiles?: Profile[];
 		mode: 'local' | 'supabase';
 		atRiskCount?: number;
 		overallProgressPct?: number;
@@ -16,7 +16,7 @@
 
 	let {
 		user,
-		profiles,
+		profiles = [],
 		mode,
 		atRiskCount = 0,
 		overallProgressPct = 64,
@@ -205,32 +205,10 @@
 							</span>
 						</div>
 
-						{#if mode === 'local'}
-							<form method="POST" action="/login?/switchUser" class="mt-2.5">
-								<label
-									for="header-persona-switcher"
-									class="block font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant mb-1"
-								>
-									Alternar Perfil (Ambiente Local)
-								</label>
-								<select
-									id="header-persona-switcher"
-									name="userId"
-									onchange={(e) => e.currentTarget.form?.requestSubmit()}
-									class="w-full rounded-lg bg-surface-container px-2.5 py-1.5 font-body-sm text-body-sm text-on-surface shadow-[inset_0_1px_2px_rgba(36,34,30,0.06)] focus:outline-none focus:ring-1 focus:ring-primary"
-								>
-									{#each profiles as p}
-										<option value={p.id} selected={p.id === user.id}>
-											[{roleLabels[p.role].toUpperCase()}] {p.name}
-										</option>
-									{/each}
-								</select>
-							</form>
-						{/if}
-
-						<div class="mt-3 pt-2 border-t border-outline-variant/30 flex items-center justify-between">
-							<span class="font-label-sm text-label-sm text-outline">
-								{mode === 'local' ? 'Banco Local (JSON)' : 'Supabase Cloud'}
+						<div class="mt-3 pt-2.5 border-t border-outline-variant/30 flex items-center justify-between">
+							<span class="font-label-sm text-label-sm text-outline flex items-center gap-1.5">
+								<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+								Supabase Cloud
 							</span>
 							<form method="POST" action="/login?/logout">
 								<button
@@ -418,40 +396,34 @@
 		{/if}
 	</div>
 
-	<!-- Bottom Sidebar: Persona Switcher (Local) & Cycle Status -->
+	<!-- Bottom Sidebar: Active User & Cycle Status -->
 	<div class="{isSidebarExpanded ? 'px-space-md' : 'px-2'} pt-space-sm flex flex-col gap-2.5">
-		{#if mode === 'local'}
-			{#if isSidebarExpanded}
-				<form method="POST" action="/login?/switchUser" class="px-0.5">
-					<label
-						for="persona-switcher"
-						class="mb-1 flex items-center justify-between font-label-sm text-label-sm uppercase tracking-wider text-outline"
-					>
-						<span>Perfil Ativo ({roleLabels[user.role]})</span>
-					</label>
-					<select
-						id="persona-switcher"
-						name="userId"
-						onchange={(e) => e.currentTarget.form?.requestSubmit()}
-						class="w-full rounded-lg bg-surface-container px-2.5 py-1.5 font-body-sm text-body-sm text-on-surface shadow-[inset_0_1px_2px_rgba(36,34,30,0.06)] focus:outline-none focus:ring-1 focus:ring-primary"
-					>
-						{#each profiles as p}
-							<option value={p.id} selected={p.id === user.id}>
-								[{roleLabels[p.role].toUpperCase()}] {p.name}
-							</option>
-						{/each}
-					</select>
-				</form>
-			{:else}
-				<div class="flex items-center justify-center" title="Perfil Ativo: {user.name} ({roleLabels[user.role]})">
-					<div
-						class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm"
-						style="background-color: {user.color || '#0058bd'}"
-					>
-						{getInitials(user.name)}
-					</div>
+		{#if isSidebarExpanded}
+			<div class="px-2.5 py-2 rounded-xl bg-surface-container flex items-center gap-2.5 min-w-0 shadow-[inset_0_1px_2px_rgba(36,34,30,0.04)]">
+				<div
+					class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 shadow-xs"
+					style="background-color: {user.color || '#0058bd'}"
+				>
+					{getInitials(user.name)}
 				</div>
-			{/if}
+				<div class="flex flex-col min-w-0">
+					<span class="font-label-sm text-label-sm font-bold text-on-surface truncate">
+						{user.name}
+					</span>
+					<span class="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">
+						{roleLabels[user.role]}
+					</span>
+				</div>
+			</div>
+		{:else}
+			<div class="flex items-center justify-center" title="{user.name} ({roleLabels[user.role]})">
+				<div
+					class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-xs"
+					style="background-color: {user.color || '#0058bd'}"
+				>
+					{getInitials(user.name)}
+				</div>
+			</div>
 		{/if}
 
 		{#if isSidebarExpanded}
