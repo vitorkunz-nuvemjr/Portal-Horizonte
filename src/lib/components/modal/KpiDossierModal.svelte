@@ -388,7 +388,7 @@
 
 			<!-- 2. CORPO DA PASTA FÍSICA: Manilha Elegante com tom suave da cor do indicador -->
 			<div
-				class="w-full border-2 rounded-2xl rounded-tl-none hanging-folder-shadow flex flex-col relative overflow-hidden transition-colors duration-200"
+				class="w-full border-2 rounded-2xl hanging-folder-shadow flex flex-col relative overflow-hidden transition-colors duration-200"
 				style="background-color: {theme.folderBg}; border-color: {theme.folderBorder};"
 			>
 				<!-- Linha de reforço estrutural com gradiente sutil -->

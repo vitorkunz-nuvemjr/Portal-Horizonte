@@ -11,12 +11,14 @@ export function formatPct(val: number): string {
 
 export function formatNumber(val: number | null | undefined, unit?: string | null): string {
 	if (val == null || Number.isNaN(val)) return '—';
+	const isCurrency = unit === 'R$' || unit === '$' || unit === '€';
 	const formatted = new Intl.NumberFormat('pt-BR', {
+		minimumFractionDigits: isCurrency ? 2 : 0,
 		maximumFractionDigits: 2
 	}).format(val);
 	if (!unit) return formatted;
 	if (unit === '%' || unit === 'h' || unit === 'x') return `${formatted}${unit}`;
-	if (unit === 'R$' || unit === '$' || unit === '€') return `${unit} ${formatted}`;
+	if (isCurrency) return `${unit} ${formatted}`;
 	return `${formatted} ${unit}`;
 }
 

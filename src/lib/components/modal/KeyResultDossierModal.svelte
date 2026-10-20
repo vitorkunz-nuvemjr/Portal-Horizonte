@@ -367,7 +367,7 @@
 
 			<!-- MAIN DOSSIER CARRIER (Pasta aberta com textura encorpada de arquivo executivo) -->
 			<div
-				class="relative text-on-surface w-full rounded-2xl rounded-tl-sm sm:rounded-tl-sm shadow-[0_22px_60px_rgba(29,27,23,0.28),0_4px_16px_rgba(29,27,23,0.08),inset_0_1px_0_#ffffff] border-2 flex-1 flex flex-col min-h-0 transition-colors duration-200"
+				class="relative text-on-surface w-full rounded-2xl shadow-[0_22px_60px_rgba(29,27,23,0.28),0_4px_16px_rgba(29,27,23,0.08),inset_0_1px_0_#ffffff] border-2 flex-1 flex flex-col min-h-0 transition-colors duration-200 overflow-hidden"
 				style="background-color: {theme.folderBg}; border-color: {theme.folderBorder};"
 			>
 				<!-- Linha de reforço estrutural -->

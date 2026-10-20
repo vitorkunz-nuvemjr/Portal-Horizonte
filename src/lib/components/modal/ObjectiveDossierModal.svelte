@@ -307,7 +307,7 @@
 				action="/strategy?/updateNode"
 				use:enhanceFormValidation
 				onsubmit={handleSaveSubmit}
-				class="w-full border-2 rounded-2xl rounded-tl-none hanging-folder-shadow flex flex-col relative overflow-hidden transition-colors duration-200"
+				class="w-full border-2 rounded-2xl hanging-folder-shadow flex flex-col relative overflow-hidden transition-colors duration-200"
 				style="background-color: {theme.folderBg}; border-color: {theme.folderBorder};"
 			>
 				<input type="hidden" name="nodeId" value={node.id} />

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import type { NodeValue, NodeWithExtras, StrategicEra } from '$lib/types';
-	import { enhanceFormValidation, getInitials } from '$lib/utils';
+	import type { NodeValue, NodeWithExtras, StrategicEra, StrategyNode } from '$lib/types';
+	import { enhanceFormValidation, formatNumber, getInitials } from '$lib/utils';
 	import { getDossierTheme } from '$lib/dossier-theme';
 	import { AlertCircle, Pencil, Trash2, X } from 'lucide-svelte';
 
@@ -23,11 +23,20 @@
 	let showAddValue = $state(false);
 	let editingValueId = $state<string | null>(null);
 	let showNewEraModal = $state(false);
-	let matrixFilter = $state<'all' | 'restricted' | 'team'>('all');
+	let matrixFilter = $state<string>('all');
+	let showAllRows = $state(false);
+	let currentPage = $state(1);
+	const pageSize = 8;
+
+	$effect(() => {
+		// Reset page when filter changes
+		const _ = matrixFilter;
+		currentPage = 1;
+	});
 
 	const selectedEra = $derived(eras.find((e) => e.key === activeEraKey) ?? eras[0] ?? null);
 
-	// Tonal themes for the 3 Value cards matching Screenshot 2
+	// Tonal themes for Value cards & badges
 	const valueThemes = [
 		{
 			cardBg: 'bg-primary-fixed/20',
@@ -85,8 +94,38 @@
 			pillClass: 'bg-secondary-fixed text-on-secondary-fixed-variant',
 			barClass: 'bg-secondary',
 			tagPrefix: 'CLI'
+		},
+		{
+			cardBg: 'bg-[#ede7f6]',
+			cardShadow:
+				'shadow-[0_1px_2px_rgba(36,34,30,0.05),0_6px_16px_rgba(124,58,237,0.08),0_-1px_0_rgba(255,255,255,0.9)_inset]',
+			cornerBg: 'bg-[#7c3aed]/10',
+			dotBg: 'bg-[#7c3aed]',
+			iconBox:
+				'bg-[#7c3aed]/15 text-[#6d28d9] shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_2px_4px_rgba(124,58,237,0.12)]',
+			iconName: 'lightbulb',
+			pillarLabel: 'Pilar Inovação & Dono',
+			pillarText: 'text-[#6d28d9]',
+			titleText: 'text-[#4c1d95]',
+			gaugeStroke: 'text-[#7c3aed]',
+			btnClass:
+				'bg-surface-container-lowest hover:bg-[#7c3aed] hover:text-white text-[#6d28d9]',
+			pillClass: 'bg-[#ede9fe] text-[#5b21b6]',
+			barClass: 'bg-[#7c3aed]',
+			tagPrefix: 'DON'
 		}
 	];
+
+	function getValueTheme(valOrId: { id: string } | string, fallbackIndex = 0) {
+		const id = typeof valOrId === 'string' ? valOrId : valOrId?.id;
+		if (id === 'val-excelencia') return valueThemes[0];
+		if (id === 'val-jornada-membro') return valueThemes[1];
+		if (id === 'val-desenvolvimento-coletivo') return valueThemes[2];
+		if (id === 'val-sentimento-dono') return valueThemes[3];
+		const idx = valuesList.findIndex((v) => v.id === id);
+		if (idx >= 0) return valueThemes[idx % valueThemes.length];
+		return valueThemes[fallbackIndex % valueThemes.length];
+	}
 
 	function getValueStats(valueId: string) {
 		const alignedNodeIds = new Set(
@@ -123,14 +162,19 @@
 		const rows: {
 			id: string;
 			val: NodeWithExtras;
-			themeIdx: number;
+			theme: (typeof valueThemes)[0];
 			node: NodeWithExtras;
+			isObjective: boolean;
 			subLabel: string;
+			metricLabel: string;
+			targetFormatted: string | null;
+			currentFormatted: string | null;
 			teamName: string;
 			teamColor: string;
 			teamInitials: string;
 			pct: number;
 			atRisk: boolean;
+			otherValues: StrategyNode[];
 		}[] = [];
 
 		const activeValues = selectedEra?.values ?? valuesList;
@@ -142,23 +186,67 @@
 				(n) => linkedIds.has(n.id) && (n.type === 'objective' || n.type === 'key_result')
 			);
 			for (const n of linkedNodes) {
+				const isObjective = n.type === 'objective';
 				const firstChild = n.children[0];
-				const subLabel = firstChild
-					? `${firstChild.type === 'key_result' ? 'KR' : 'KPI'}: ${firstChild.title}`
-					: n.description || 'Iniciativa vinculada na Árvore Estratégica';
+
+				let subLabel = '';
+				let metricLabel = '';
+				let targetFormatted: string | null = null;
+				let currentFormatted: string | null = null;
+
+				if (isObjective) {
+					const krs = n.children.filter((c) => c.type === 'key_result');
+					const completed = krs.filter((c) => c.progress >= 1).length;
+					metricLabel =
+						krs.length > 0 ? `${completed} de ${krs.length} KRs concluídos` : 'Objetivo Estratégico';
+					subLabel = firstChild
+						? `KR: ${firstChild.title}`
+						: n.description || 'Objetivo Estratégico do Ciclo';
+				} else {
+					// It is a key_result
+					const kpi = n.children.find((c) => c.type === 'kpi');
+					if (kpi && kpi.target_value != null) {
+						const cur = kpi.current_value ?? 0;
+						const tgt = kpi.target_value;
+						currentFormatted = formatNumber(cur, kpi.unit);
+						targetFormatted = formatNumber(tgt, kpi.unit);
+						metricLabel = `${currentFormatted} de ${targetFormatted}`;
+						subLabel = `KPI: ${kpi.title}`;
+					} else if (n.target_value != null) {
+						const cur = n.current_value ?? 0;
+						const tgt = n.target_value;
+						currentFormatted = formatNumber(cur, n.unit);
+						targetFormatted = formatNumber(tgt, n.unit);
+						metricLabel = `${currentFormatted} de ${targetFormatted}`;
+						subLabel = n.description || 'Resultado-Chave';
+					} else {
+						metricLabel = `${Math.round(n.progress * 100)}% concluído`;
+						subLabel = firstChild
+							? `${firstChild.type === 'key_result' ? 'KR' : 'KPI'}: ${firstChild.title}`
+							: n.description || 'Iniciativa vinculada';
+					}
+				}
+
 				const teamName = n.teams[0]?.name ?? n.assignees[0]?.name ?? 'Diretoria Executiva';
 				const teamColor = n.teams[0]?.color || n.color || '#0058bd';
+				const otherValues = (n.alignedValues ?? []).filter((v) => v.id !== val.id);
+
 				rows.push({
 					id: `${val.id}-${n.id}`,
 					val,
-					themeIdx: vIdx % valueThemes.length,
+					theme: getValueTheme(val, vIdx),
 					node: n,
+					isObjective,
 					subLabel,
+					metricLabel,
+					targetFormatted,
+					currentFormatted,
 					teamName,
 					teamColor,
 					teamInitials: getInitials(teamName),
 					pct: Math.round(n.progress * 100),
-					atRisk: Boolean(n.atRisk || n.status === 'at_risk' || n.status === 'off_track')
+					atRisk: Boolean(n.atRisk || n.status === 'at_risk' || n.status === 'off_track'),
+					otherValues
 				});
 			}
 		});
@@ -173,8 +261,18 @@
 		if (matrixFilter === 'team') {
 			return [...allMatrixRows].sort((a, b) => a.teamName.localeCompare(b.teamName));
 		}
+		if (matrixFilter !== 'all') {
+			return allMatrixRows.filter((r) => r.val.id === matrixFilter);
+		}
 		return allMatrixRows;
 	});
+
+	const totalPages = $derived(Math.max(1, Math.ceil(filteredMatrixRows.length / pageSize)));
+	const displayedMatrixRows = $derived(
+		showAllRows
+			? filteredMatrixRows
+			: filteredMatrixRows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+	);
 </script>
 
 <div class="relative w-full pb-16 flex flex-col gap-8">
@@ -373,9 +471,9 @@
 						</div>
 					{/if}
 
-					<div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+					<div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 						{#each era.values as val, vIdx (val.id)}
-							{@const theme = valueThemes[vIdx % valueThemes.length]}
+							{@const theme = getValueTheme(val, vIdx)}
 							<div class="rounded-xl {theme.cardBg} p-4 {theme.cardShadow}">
 								<div class="flex items-center gap-2">
 									<span class="w-2 h-2 rounded-full {theme.dotBg}"></span>
@@ -709,10 +807,10 @@
 					</div>
 				</div>
 
-				<!-- 3 Colorful Skeuomorphic Cards Mosaic Grid -->
-				<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+				<!-- Colorful Skeuomorphic Cards Mosaic Grid -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 					{#each valuesInEra as val, idx (val.id)}
-						{@const theme = valueThemes[idx % valueThemes.length]}
+						{@const theme = getValueTheme(val, idx)}
 						{@const stats = getValueStats(val.id)}
 						{@const tagCode = `TAG #${theme.tagPrefix}-${String(era.start_year).slice(-2)}`}
 
@@ -926,19 +1024,19 @@
 								Matriz de Alinhamento Rápido: Valores x OKRs Vigentes
 							</h3>
 							<p class="font-body-sm text-body-sm text-on-surface-variant">
-								Distribuição cruzada de iniciativas de liderança por esquadrão no Ciclo {era.start_year}-S1
+								Distribuição cruzada de iniciativas de liderança por equipe no Ciclo {era.start_year}-S1
 							</p>
 						</div>
 					</div>
 
 					<!-- Filter Pill Buttons -->
-					<div class="flex items-center gap-2">
+					<div class="flex items-center gap-2 flex-wrap">
 						<span
 							class="font-label-sm text-label-sm text-outline uppercase tracking-wider hidden sm:inline"
 						>
 							Exibir:
 						</span>
-						<div class="flex bg-surface-container p-1 rounded-lg">
+						<div class="flex flex-wrap bg-surface-container p-1 rounded-lg gap-1">
 							<button
 								type="button"
 								onclick={() => (matrixFilter = 'all')}
@@ -949,6 +1047,33 @@
 							>
 								Todos ({allMatrixRows.length})
 							</button>
+
+							{#each (selectedEra?.values ?? valuesList) as val, vIdx}
+								{@const count = allMatrixRows.filter((r) => r.val.id === val.id).length}
+								{@const vTheme = getValueTheme(val, vIdx)}
+								<button
+									type="button"
+									onclick={() => (matrixFilter = val.id)}
+									class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded font-label-sm text-label-sm transition-all {matrixFilter ===
+									val.id
+										? 'bg-surface-container-lowest text-primary font-bold shadow-sm'
+										: 'text-on-surface-variant hover:text-on-surface'}"
+								>
+									<span class="w-1.5 h-1.5 rounded-full {vTheme.dotBg}"></span>
+									<span>{val.title} ({count})</span>
+								</button>
+							{/each}
+
+							<button
+								type="button"
+								onclick={() => (matrixFilter = 'team')}
+								class="px-2.5 py-1 rounded font-label-sm text-label-sm transition-all {matrixFilter ===
+								'team'
+									? 'bg-surface-container-lowest text-primary font-bold shadow-sm'
+									: 'text-on-surface-variant hover:text-on-surface'}"
+							>
+								Por Equipe
+							</button>
 							<button
 								type="button"
 								onclick={() => (matrixFilter = 'restricted')}
@@ -958,16 +1083,6 @@
 									: 'text-on-surface-variant hover:text-on-surface'}"
 							>
 								Com Restrições
-							</button>
-							<button
-								type="button"
-								onclick={() => (matrixFilter = 'team')}
-								class="px-2.5 py-1 rounded font-label-sm text-label-sm transition-all {matrixFilter ===
-								'team'
-									? 'bg-surface-container-lowest text-primary font-bold shadow-sm'
-									: 'text-on-surface-variant hover:text-on-surface'}"
-							>
-								Por Time
 							</button>
 						</div>
 					</div>
@@ -982,33 +1097,68 @@
 							>
 								<th class="py-3 px-4 rounded-l-lg">Valor Vinculado</th>
 								<th class="py-3 px-4">Objetivo Estratégico (OKR)</th>
-								<th class="py-3 px-4">Esquadrão Responsável</th>
+								<th class="py-3 px-4">Equipe Responsável</th>
 								<th class="py-3 px-4">Progresso do Ciclo</th>
 								<th class="py-3 px-4 text-right rounded-r-lg">Ação</th>
 							</tr>
 						</thead>
 						<tbody class="font-body-md text-body-md divide-y divide-surface-container">
-							{#each filteredMatrixRows.slice(0, 8) as row (row.id)}
-								{@const theme = valueThemes[row.themeIdx]}
+							{#each displayedMatrixRows as row (row.id)}
+								{@const theme = row.theme}
 								{@const tTheme = getDossierTheme(row.teamColor)}
 								<tr class="hover:bg-surface-container/60 transition-colors">
-									<td class="py-4 px-4">
-										<span
-											class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full {theme.pillClass} font-label-sm text-label-sm font-bold"
-										>
-											<span class="w-1.5 h-1.5 rounded-full {theme.dotBg}"></span>
-											{row.val.title}
-										</span>
+									<td class="py-4 px-4 align-top">
+										<div class="flex flex-col items-start gap-1">
+											<span
+												class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full {theme.pillClass} font-label-sm text-label-sm font-bold shadow-xs"
+											>
+												<span class="w-1.5 h-1.5 rounded-full {theme.dotBg}"></span>
+												{row.val.title}
+											</span>
+											{#if row.otherValues.length > 0}
+												<div class="flex flex-wrap items-center gap-1 mt-0.5">
+													{#each row.otherValues as ov}
+														{@const ovTheme = getValueTheme(ov)}
+														<span
+															class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold {ovTheme.pillClass}"
+															title={`Também alinhado a ${ov.title}`}
+														>
+															<span class="w-1 h-1 rounded-full {ovTheme.dotBg}"></span>
+															{ov.title}
+														</span>
+													{/each}
+												</div>
+											{/if}
+										</div>
 									</td>
-									<td class="py-4 px-4 font-semibold text-on-surface">
-										{row.node.title}
-										<span
-											class="block font-body-sm text-body-sm text-on-surface-variant font-normal line-clamp-1"
-										>
-											{row.subLabel}
-										</span>
+									<td class="py-4 px-4 align-top">
+										<div class="flex items-start gap-2">
+											<span
+												class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider shrink-0 mt-0.5 {row.isObjective
+													? 'bg-primary/10 text-primary'
+													: 'bg-surface-container-high text-on-surface-variant'}"
+											>
+												{row.isObjective ? 'OKR' : 'KR'}
+											</span>
+											<div class="flex flex-col">
+												<span class="font-semibold text-on-surface leading-snug">
+													{row.node.title}
+												</span>
+												<div
+													class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-body-sm text-body-sm text-on-surface-variant"
+												>
+													<span>{row.subLabel}</span>
+													{#if row.targetFormatted}
+														<span class="text-outline">•</span>
+														<span class="font-medium text-on-surface">
+															Meta: {row.targetFormatted}
+														</span>
+													{/if}
+												</div>
+											</div>
+										</div>
 									</td>
-									<td class="py-4 px-4">
+									<td class="py-4 px-4 align-top">
 										<div
 											class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border"
 											style="background-color: {tTheme.badgeBg}; color: {tTheme.badgeText}; border-color: {tTheme.badgeBorder};"
@@ -1022,22 +1172,30 @@
 											<span class="font-label-sm text-label-sm font-bold">{row.teamName}</span>
 										</div>
 									</td>
-									<td class="py-4 px-4">
-										<div class="flex items-center gap-3">
-											<div
-												class="w-28 h-2 rounded-full bg-surface-container shadow-[inset_0_1px_2px_rgba(36,34,30,0.06)] overflow-hidden"
-											>
+									<td class="py-4 px-4 align-top">
+										<div class="flex flex-col gap-1 min-w-[160px]">
+											<div class="flex items-center gap-3">
 												<div
-													class="h-full {theme.barClass} rounded-full"
-													style="width: {row.pct}%"
-												></div>
+													class="flex-1 h-2 rounded-full bg-surface-container shadow-[inset_0_1px_2px_rgba(36,34,30,0.06)] overflow-hidden"
+												>
+													<div
+														class="h-full {theme.barClass} rounded-full transition-all duration-300"
+														style="width: {row.pct}%"
+													></div>
+												</div>
+												<span
+													class="font-label-sm text-label-sm font-bold text-on-surface w-9 text-right shrink-0"
+												>
+													{row.pct}%
+												</span>
 											</div>
-											<span class="font-label-sm text-label-sm font-bold text-on-surface">
-												{row.pct}%
+											<!-- Valores métricos dos OKRs e KPIs -->
+											<span class="text-[11px] text-on-surface-variant font-mono font-medium">
+												{row.metricLabel}
 											</span>
 										</div>
 									</td>
-									<td class="py-4 px-4 text-right">
+									<td class="py-4 px-4 text-right align-top">
 										<button
 											type="button"
 											onclick={() => goto(`/strategy?lens=${row.val.id}`)}
@@ -1058,6 +1216,61 @@
 						</tbody>
 					</table>
 				</div>
+
+				<!-- Pagination & Summary Controls -->
+				{#if filteredMatrixRows.length > 0}
+					<div
+						class="mt-4 pt-4 border-t border-surface-container flex flex-wrap items-center justify-between text-on-surface-variant font-body-sm text-body-sm gap-3"
+					>
+						<div class="flex items-center gap-2">
+							<span class="material-symbols-outlined text-[16px] text-tertiary">info</span>
+							<span>
+								Exibindo <strong class="text-on-surface">{displayedMatrixRows.length}</strong> de <strong class="text-on-surface">{filteredMatrixRows.length}</strong> conexões
+								{#if matrixFilter !== 'all'}
+									(filtrado)
+								{/if}
+							</span>
+						</div>
+
+						<div class="flex items-center gap-2">
+							{#if filteredMatrixRows.length > pageSize}
+								<button
+									type="button"
+									onclick={() => (showAllRows = !showAllRows)}
+									class="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm transition-colors"
+								>
+									{showAllRows ? `Mostrar ${pageSize} por página` : `Ver todos (${filteredMatrixRows.length})`}
+								</button>
+							{/if}
+
+							{#if !showAllRows && totalPages > 1}
+								<div class="flex items-center gap-1 bg-surface-container rounded-lg p-0.5">
+									<button
+										type="button"
+										onclick={() => (currentPage = Math.max(1, currentPage - 1))}
+										disabled={currentPage === 1}
+										class="p-1 rounded hover:bg-surface-container-lowest disabled:opacity-30 disabled:pointer-events-none text-on-surface"
+										title="Página Anterior"
+									>
+										<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+									</button>
+									<span class="px-2 font-label-sm text-xs font-semibold text-on-surface">
+										{currentPage} / {totalPages}
+									</span>
+									<button
+										type="button"
+										onclick={() => (currentPage = Math.min(totalPages, currentPage + 1))}
+										disabled={currentPage === totalPages}
+										class="p-1 rounded hover:bg-surface-container-lowest disabled:opacity-30 disabled:pointer-events-none text-on-surface"
+										title="Próxima Página"
+									>
+										<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+									</button>
+								</div>
+							{/if}
+						</div>
+					</div>
+				{/if}
 
 				<!-- Quick Ledger Footer -->
 				<div

@@ -746,19 +746,23 @@
 									class="flex items-center justify-between pt-2 border-t border-dashed"
 									style="border-color: {visual.theme.cardBorder};"
 								>
-									<div class="flex -space-x-1.5 overflow-hidden">
+									<div class="flex -space-x-1.5 items-center">
 										{#each members.slice(0, 3) as mem (mem.id)}
 											<div
-												class="w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white shrink-0 shadow-xs"
+												class="w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs overflow-hidden"
 												style="background-color: {mem.color || visual.dotColor}"
 												title="{mem.name}"
 											>
-												{getInitials(mem.name)}
+												{#if mem.avatar_url || mem.image}
+													<img src={mem.avatar_url || mem.image} alt={mem.name} class="w-full h-full object-cover" />
+												{:else}
+													{getInitials(mem.name)}
+												{/if}
 											</div>
 										{/each}
 										{#if members.length > 3}
 											<div
-												class="w-6 h-6 rounded-full text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white shrink-0 shadow-xs"
+												class="w-6 h-6 rounded-full text-white text-[9px] font-bold flex items-center justify-center shrink-0 shadow-xs overflow-hidden"
 												style="background-color: {visual.theme.accentDark};"
 												title="{members.length - 3} outros membros"
 											>
@@ -819,18 +823,22 @@
 						</div>
 						<div class="flex items-center justify-between md:justify-end gap-4 shrink-0">
 							<div class="flex items-center gap-2">
-								<div class="flex -space-x-1.5 overflow-hidden">
+								<div class="flex -space-x-1.5 items-center">
 									{#each data.profiles.slice(0, 4) as p (p.id)}
 										<div
-											class="w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white shrink-0 shadow-xs"
+											class="w-6 h-6 rounded-full text-white text-[10px] font-bold flex items-center justify-center shrink-0 shadow-xs overflow-hidden"
 											style="background-color: {p.color || '#004190'}"
 											title="{p.name}"
 										>
-											{getInitials(p.name)}
+											{#if p.avatar_url || p.image}
+												<img src={p.avatar_url || p.image} alt={p.name} class="w-full h-full object-cover" />
+											{:else}
+												{getInitials(p.name)}
+											{/if}
 										</div>
 									{/each}
 									{#if data.profiles.length > 4}
-										<div class="w-6 h-6 rounded-full bg-[#0058bd] text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white shrink-0 shadow-xs">
+										<div class="w-6 h-6 rounded-full bg-[#0058bd] text-white text-[9px] font-bold flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
 											+{data.profiles.length - 4}
 										</div>
 									{/if}
@@ -912,10 +920,14 @@
 										<td class="py-4 px-5">
 											<div class="flex items-center gap-3">
 												<div
-													class="w-9 h-9 rounded-full text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-xs"
+													class="w-9 h-9 rounded-full text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-xs overflow-hidden"
 													style="background-color: {prof.color || '#004190'}"
 												>
-													{getInitials(prof.name)}
+													{#if prof.avatar_url || prof.image}
+														<img src={prof.avatar_url || prof.image} alt={prof.name} class="w-full h-full object-cover" />
+													{:else}
+														{getInitials(prof.name)}
+													{/if}
 												</div>
 												<div>
 													<div class="flex items-center gap-2">
@@ -1581,10 +1593,14 @@
 														>
 															<div class="flex items-center gap-2 min-w-0">
 																<div
-																	class="w-6 h-6 rounded-full text-white text-[9px] font-bold flex items-center justify-center shrink-0"
+																	class="w-6 h-6 rounded-full text-white text-[9px] font-bold flex items-center justify-center shrink-0 overflow-hidden"
 																	style="background-color: {p.color || '#004190'}"
 																>
-																	{getInitials(p.name)}
+																	{#if p.avatar_url || p.image}
+																		<img src={p.avatar_url || p.image} alt={p.name} class="w-full h-full object-cover" />
+																	{:else}
+																		{getInitials(p.name)}
+																	{/if}
 																</div>
 																<span class="text-[12px] font-semibold text-[#1d1b17] truncate">{p.name}</span>
 															</div>
@@ -1615,10 +1631,14 @@
 												>
 													<div class="flex items-center gap-2.5 min-w-0">
 														<div
-															class="w-8 h-8 rounded-full text-white font-bold text-[11.5px] flex items-center justify-center shrink-0 ring-2 ring-white shadow-xs"
+															class="w-8 h-8 rounded-full text-white font-bold text-[11.5px] flex items-center justify-center shrink-0 shadow-xs overflow-hidden"
 															style="background-color: {mem.color || activeTeamModal.color}"
 														>
-															{getInitials(mem.name)}
+															{#if mem.avatar_url || mem.image}
+																<img src={mem.avatar_url || mem.image} alt={mem.name} class="w-full h-full object-cover" />
+															{:else}
+																{getInitials(mem.name)}
+															{/if}
 														</div>
 														<div class="min-w-0">
 															<div class="flex items-center gap-1.5">
