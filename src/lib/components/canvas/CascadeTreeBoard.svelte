@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { NodeWithExtras } from '$lib/types';
 	import { formatNumber, getInitials } from '$lib/utils';
+	import { getDossierTheme } from '$lib/dossier-theme';
+	import { valueColor } from '$lib/value-colors';
 	import { onMount, tick } from 'svelte';
 
 	interface Props {
@@ -228,43 +230,6 @@
 		};
 	});
 
-	// KPI card pastel themes cycling through Mint Green, Sky Blue, Terracotta Peach
-	const kpiThemes = [
-		{
-			cardBg: 'bg-[#DCFCE7] text-[#166534]',
-			badgeBg: 'bg-[#BBF7D0] text-[#14532D]',
-			subText: 'text-[#15803D]',
-			titleText: 'text-[#14532D]',
-			valText: 'text-emerald-800',
-			stroke: '#16A34A',
-			dot: '#15803D',
-			trendIcon: 'trending_up',
-			trendLabel: 'No Ritmo'
-		},
-		{
-			cardBg: 'bg-[#E0F2FE] text-[#1E40AF]',
-			badgeBg: 'bg-[#BAE6FD] text-[#0C4A6E]',
-			subText: 'text-[#0369A1]',
-			titleText: 'text-[#0C4A6E]',
-			valText: 'text-blue-900',
-			stroke: '#0284C7',
-			dot: '#0369A1',
-			trendIcon: 'arrow_upward',
-			trendLabel: 'Saudável'
-		},
-		{
-			cardBg: 'bg-[#FFEDD5] text-[#9A3412]',
-			badgeBg: 'bg-[#FED7AA] text-[#7C2D12]',
-			subText: 'text-[#C2410C]',
-			titleText: 'text-[#7C2D12]',
-			valText: 'text-orange-950',
-			stroke: '#EA580C',
-			dot: '#9A3412',
-			trendIcon: 'south_east',
-			trendLabel: 'Monitorado'
-		}
-	];
-
 	function buildMiniSparkline(kpi: NodeWithExtras): { path: string; endY: number } {
 		const updates = [...kpi.metricUpdates].reverse();
 		const vals = updates.map((u) => u.value);
@@ -474,6 +439,8 @@
 						obj.teams.length > 0
 							? obj.teams.map((t) => t.name).join(' & ')
 							: 'Diretoria Executiva'}
+					{@const objColor = obj.color || (obj.alignedValues.length > 0 ? valueColor(obj.alignedValues[0].id) : (obj.teams[0]?.color || '#0058bd'))}
+					{@const objTheme = getDossierTheme(objColor)}
 
 					{#if isFocused}
 						<!-- Expanded Tactile Executive Archival Paper Objective Card -->
@@ -493,19 +460,21 @@
 								}
 							}}
 							class="group relative cursor-pointer bg-surface-container-lowest rounded-xl p-space-md shadow-[0_1px_1px_rgba(36,34,30,0.05),0_4px_10px_-1px_rgba(36,34,30,0.06),0_-1px_0_rgba(255,255,255,0.9)_inset] hover:shadow-[0_8px_18px_-2px_rgba(36,34,30,0.1),0_2px_4px_rgba(36,34,30,0.04)] transition-all {isSelected
-								? 'ring-2 ring-primary'
+								? 'ring-2'
 								: ''} {isHighlighted ? 'ring-2 ring-tertiary-container scale-[1.01]' : ''} {isDimmed
 								? 'opacity-40 hover:opacity-90'
 								: ''}"
+							style="border: 1.5px solid {objTheme.cardBorder}; {isSelected ? `ring-color: ${objTheme.accent}; --tw-ring-color: ${objTheme.accent};` : ''}"
 						>
 							<!-- Category Indicator Spine -->
-							<div class="absolute left-0 top-3 bottom-3 w-1 bg-primary rounded-r"></div>
+							<div class="absolute left-0 top-3 bottom-3 w-1.5 rounded-r shadow-xs" style="background-color: {objTheme.accent};"></div>
 
 							<!-- Top Meta Bar -->
 							<div class="flex items-center justify-between gap-2 mb-space-sm pl-2">
 								<div class="flex items-center gap-2">
 									<span
-										class="font-label-md text-label-md font-bold px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed shadow-[0_1px_1px_rgba(36,34,30,0.05)]"
+										class="font-label-md text-label-md font-bold px-2 py-0.5 rounded shadow-xs"
+										style="background-color: {objTheme.badgeBg}; color: {objTheme.badgeText}; border: 1px solid {objTheme.badgeBorder};"
 									>
 										{code}
 									</span>
@@ -556,14 +525,14 @@
 									>
 										Progresso Consolidado
 									</span>
-									<span class="font-label-md text-label-md font-bold text-primary">{pct}%</span>
+									<span class="font-label-md text-label-md font-bold" style="color: {objTheme.accentDark};">{pct}%</span>
 								</div>
 								<div
 									class="w-full h-3 rounded-full bg-surface-container-high p-0.5 shadow-[inset_0_2px_4px_rgba(36,34,30,0.09)]"
 								>
 									<div
-										class="h-full bg-primary rounded-full transition-all duration-700 shadow-[0_1px_2px_rgba(0,88,189,0.3)]"
-										style="width: {pct}%;"
+										class="h-full rounded-full transition-all duration-700 shadow-xs"
+										style="width: {pct}%; background-color: {objTheme.accent};"
 									></div>
 								</div>
 							</div>
@@ -642,18 +611,19 @@
 							class="relative cursor-pointer bg-surface-container-lowest/75 hover:bg-surface-container-lowest rounded-xl p-space-md shadow-[0_1px_2px_rgba(36,34,30,0.04)] opacity-80 hover:opacity-100 transition-all {isDimmed
 								? 'opacity-35'
 								: ''}"
+							style="border: 1px solid {objTheme.cardBorder};"
 						>
 							<div
-								class="absolute left-0 top-3 bottom-3 w-1 rounded-r {idx % 2 === 1
-									? 'bg-secondary'
-									: 'bg-tertiary-container'}"
+								class="absolute left-0 top-3 bottom-3 w-1.5 rounded-r shadow-xs"
+								style="background-color: {objTheme.accent};"
 							></div>
 							<div class="flex items-center justify-between gap-2 mb-1 pl-2">
 								<span class="font-label-md text-label-md font-bold text-on-surface-variant">
 									{code} · ANNUAL {obj.year ?? activeYear}
 								</span>
 								<span
-									class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-bold"
+									class="font-label-sm text-label-sm px-2 py-0.5 rounded font-bold shadow-xs"
+									style="background-color: {objTheme.badgeBg}; color: {objTheme.badgeText}; border: 1px solid {objTheme.badgeBorder};"
 								>
 									{pct}%
 								</span>
@@ -698,216 +668,146 @@
 						(c) => c.type === 'kpi' && visibleIds.has(c.id)
 					).length}
 					{@const owner = kr.assignees[0]}
+					{@const krColor = kr.color || (isAtRisk ? '#be123c' : '#ca8a04')}
+					{@const krTheme = getDossierTheme(krColor)}
 
-					{#if isAtRisk}
-						<!-- KR Pastel Soft Rose / Raspberry Card (At Risk) -->
+					<!-- KR Pastel Tactile Dossier Card (Color reflects chosen theme) -->
+					<div
+						data-node-card={kr.id}
+						role="button"
+						tabindex="0"
+						onclick={() => onSelectNode(kr.id)}
+						onkeydown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault();
+								onSelectNode(kr.id);
+							}
+						}}
+						class="relative cursor-pointer rounded-xl p-space-md shadow-[0_2px_6px_rgba(36,34,30,0.06),0_1px_0_rgba(255,255,255,0.8)_inset] hover:shadow-[0_8px_16px_rgba(36,34,30,0.09)] transition-all {isSelected
+							? 'ring-2 ring-on-surface'
+							: ''} {isHighlighted ? 'ring-2 ring-primary scale-[1.01]' : ''} {isDimmed
+							? 'opacity-40'
+							: ''}"
+						style="background-color: {krTheme.folderBg}; border: 1.5px solid {krTheme.folderBorder}; color: {krTheme.accentDark};"
+					>
+						<!-- Tactile Folded Corner Tab -->
 						<div
-							data-node-card={kr.id}
-							role="button"
-							tabindex="0"
-							onclick={() => onSelectNode(kr.id)}
-							onkeydown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ') {
-									e.preventDefault();
-									onSelectNode(kr.id);
-								}
-							}}
-							class="relative cursor-pointer bg-[#FFE4E6] text-[#9F1239] rounded-xl p-space-md shadow-[0_2px_6px_rgba(36,34,30,0.06),0_1px_0_rgba(255,255,255,0.8)_inset] hover:shadow-[0_8px_16px_rgba(36,34,30,0.09)] transition-all {isSelected
-								? 'ring-2 ring-[#BE123C]'
-								: ''} {isHighlighted ? 'ring-2 ring-primary scale-[1.01]' : ''} {isDimmed
-								? 'opacity-40'
-								: ''}"
-						>
-							<!-- Hot magenta folded corner accent -->
-							<div
-								class="absolute top-0 right-0 w-5 h-5 bg-[#FDA4AF] rounded-bl-lg shadow-[-1px_1px_2px_rgba(36,34,30,0.08)]"
-							></div>
+							class="absolute top-0 right-0 w-5 h-5 rounded-bl-lg shadow-[-1px_1px_2px_rgba(36,34,30,0.08)]"
+							style="background-color: {krTheme.folderBorder};"
+						></div>
 
-							<div class="flex items-center justify-between gap-2 mb-2 pr-3">
-								<div class="flex items-center gap-1.5">
-									<span
-										class="font-label-sm text-label-sm font-bold px-2 py-0.5 rounded bg-[#FECDD3] text-[#881337] shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)]"
-									>
-										{item.code}
-									</span>
-									<span
-										class="font-label-sm text-label-sm uppercase tracking-wider font-semibold text-[#BE123C]"
-									>
-										{kr.cycle?.code ?? activeCycleCode}
-									</span>
-								</div>
+						<div class="flex items-center justify-between gap-2 mb-2 pr-3">
+							<div class="flex items-center gap-1.5">
+								<span
+									class="font-label-sm text-label-sm font-bold px-2 py-0.5 rounded shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)]"
+									style="background-color: {krTheme.badgeBg}; color: {krTheme.badgeText}; border: 1px solid {krTheme.badgeBorder};"
+								>
+									{item.code}
+								</span>
+								<span
+									class="font-label-sm text-label-sm uppercase tracking-wider font-semibold"
+									style="color: {krTheme.accent};"
+								>
+									{kr.cycle?.code ?? activeCycleCode}
+								</span>
+							</div>
+
+							{#if isAtRisk}
 								<span
 									class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 font-label-sm text-label-sm font-bold text-[#BE123C] shadow-[0_1px_2px_rgba(36,34,30,0.04)]"
 								>
 									<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
 									Em Risco ({pct}%)
 								</span>
-							</div>
-
-							<h3 class="font-title-md text-title-md text-[#881337] mb-space-sm leading-snug">
-								{kr.title}
-							</h3>
-
-							<!-- Progress Ledger Row -->
-							<div
-								class="mb-space-md bg-white/60 p-2.5 rounded-lg shadow-[inset_0_1px_2px_rgba(36,34,30,0.05)]"
-							>
-								<div
-									class="flex justify-between items-center text-xs font-semibold mb-1 text-[#9F1239]"
-								>
-									<span class="truncate">
-										{kr.description ? kr.description : 'Progresso Semestral'}
-									</span>
-									<span class="font-bold text-[#881337] shrink-0 ml-2">{pct}%</span>
-								</div>
-								<div class="w-full h-2.5 rounded-full bg-[#FECDD3] p-0.5">
-									<div
-										class="h-full bg-[#E11D48] rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
-										style="width: {pct}%;"
-									></div>
-								</div>
-							</div>
-
-							<!-- Responsible -->
-							<div
-								class="flex items-center justify-between text-xs pt-1 border-t border-dashed border-[#FDA4AF]/60"
-							>
-								<div class="flex items-center gap-2 min-w-0">
-									<div
-										class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-[0_1px_2px_rgba(0,0,0,0.15)] shrink-0"
-										style="background-color: {owner?.color || '#BE123C'}"
-									>
-										{getInitials(owner?.name || kr.teams[0]?.name || 'KR')}
-									</div>
-									<span class="font-label-sm text-label-sm font-bold text-[#881337] truncate">
-										{owner?.name ?? kr.teams[0]?.name ?? 'Equipe Responsável'}
-									</span>
-								</div>
-								<div class="flex items-center gap-1.5 shrink-0">
-									<span class="font-label-sm text-label-sm font-semibold text-[#BE123C]">
-										{kpiCount} {kpiCount === 1 ? 'Indicador' : 'Indicadores'}
-									</span>
-									{#if canEdit}
-										<button
-											type="button"
-											onclick={(e) => {
-												e.stopPropagation();
-												onAddChild(kr);
-											}}
-											title="Adicionar Indicador KPI"
-											class="p-0.5 rounded bg-white/70 hover:bg-white text-[#881337]"
-										>
-											<span class="material-symbols-outlined text-[14px]">add</span>
-										</button>
-									{/if}
-								</div>
-							</div>
-						</div>
-					{:else}
-						<!-- KR Pastel Butter Warm Amber Card (On Track / Done) -->
-						<div
-							data-node-card={kr.id}
-							role="button"
-							tabindex="0"
-							onclick={() => onSelectNode(kr.id)}
-							onkeydown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ') {
-									e.preventDefault();
-									onSelectNode(kr.id);
-								}
-							}}
-							class="relative cursor-pointer bg-[#FEF9C3] text-[#92400E] rounded-xl p-space-md shadow-[0_2px_6px_rgba(36,34,30,0.06),0_1px_0_rgba(255,255,255,0.8)_inset] hover:shadow-[0_8px_16px_rgba(36,34,30,0.09)] transition-all {isSelected
-								? 'ring-2 ring-[#B45309]'
-								: ''} {isHighlighted ? 'ring-2 ring-primary scale-[1.01]' : ''} {isDimmed
-								? 'opacity-40'
-								: ''}"
-						>
-							<!-- Tactile Folded Corner Tab -->
-							<div
-								class="absolute top-0 right-0 w-5 h-5 bg-[#FDE047] rounded-bl-lg shadow-[-1px_1px_2px_rgba(36,34,30,0.08)]"
-							></div>
-
-							<div class="flex items-center justify-between gap-2 mb-2 pr-3">
-								<div class="flex items-center gap-1.5">
-									<span
-										class="font-label-sm text-label-sm font-bold px-2 py-0.5 rounded bg-[#FDE047] text-[#78350F] shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)]"
-									>
-										{item.code}
-									</span>
-									<span
-										class="font-label-sm text-label-sm uppercase tracking-wider font-semibold text-[#B45309]"
-									>
-										{kr.cycle?.code ?? activeCycleCode}
-									</span>
-								</div>
+							{:else if pct >= 100}
 								<span
 									class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 font-label-sm text-label-sm font-bold text-[#166534] shadow-[0_1px_2px_rgba(36,34,30,0.04)]"
 								>
 									<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+									Concluído
+								</span>
+							{:else}
+								<span
+									class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 font-label-sm text-label-sm font-bold shadow-[0_1px_2px_rgba(36,34,30,0.04)]"
+									style="color: {krTheme.accentDark};"
+								>
+									<span class="w-1.5 h-1.5 rounded-full" style="background-color: {krTheme.accent};"></span>
 									No Alvo
 								</span>
-							</div>
+							{/if}
+						</div>
 
-							<h3 class="font-title-md text-title-md text-[#78350F] mb-space-sm leading-snug">
-								{kr.title}
-							</h3>
+						<h3
+							class="font-title-md text-title-md mb-space-sm leading-snug"
+							style="color: {krTheme.accentShadow};"
+						>
+							{kr.title}
+						</h3>
 
-							<!-- Progress Ledger Row -->
+						<!-- Progress Ledger Row -->
+						<div
+							class="mb-space-md bg-white/60 p-2.5 rounded-lg shadow-[inset_0_1px_2px_rgba(36,34,30,0.05)]"
+							style="border: 1px solid {krTheme.cardBorder};"
+						>
 							<div
-								class="mb-space-md bg-white/60 p-2.5 rounded-lg shadow-[inset_0_1px_2px_rgba(36,34,30,0.05)]"
+								class="flex justify-between items-center text-xs font-semibold mb-1"
+								style="color: {krTheme.accentDark};"
+							>
+								<span class="truncate">
+									{kr.description ? kr.description : 'Execução no Ciclo'}
+								</span>
+								<span class="font-bold shrink-0 ml-2" style="color: {krTheme.accentShadow};">
+									{pct}% Concluído
+								</span>
+							</div>
+							<div
+								class="w-full h-2.5 rounded-full p-0.5"
+								style="background-color: {krTheme.badgeBg}; border: 1px solid {krTheme.badgeBorder};"
 							>
 								<div
-									class="flex justify-between items-center text-xs font-semibold mb-1 text-[#92400E]"
-								>
-									<span class="truncate">
-										{kr.description ? kr.description : 'Execução no Ciclo'}
-									</span>
-									<span class="font-bold text-[#78350F] shrink-0 ml-2">{pct}% Concluído</span>
-								</div>
-								<div class="w-full h-2.5 rounded-full bg-[#FEF08A] p-0.5">
-									<div
-										class="h-full bg-[#CA8A04] rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
-										style="width: {pct}%;"
-									></div>
-								</div>
-							</div>
-
-							<!-- Responsible & Duo-tone action -->
-							<div
-								class="flex items-center justify-between text-xs pt-1 border-t border-dashed border-[#FBBF24]/60"
-							>
-								<div class="flex items-center gap-2 min-w-0">
-									<div
-										class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-[0_1px_2px_rgba(0,0,0,0.15)] shrink-0"
-										style="background-color: {owner?.color || '#B45309'}"
-									>
-										{getInitials(owner?.name || kr.teams[0]?.name || 'KR')}
-									</div>
-									<span class="font-label-sm text-label-sm font-bold text-[#78350F] truncate">
-										{owner?.name ?? kr.teams[0]?.name ?? 'Equipe Responsável'}
-									</span>
-								</div>
-								<div class="flex items-center gap-1.5 shrink-0">
-									<span class="font-label-sm text-label-sm font-semibold text-[#B45309]">
-										{kpiCount} {kpiCount === 1 ? 'Indicador' : 'Indicadores'}
-									</span>
-									{#if canEdit}
-										<button
-											type="button"
-											onclick={(e) => {
-												e.stopPropagation();
-												onAddChild(kr);
-											}}
-											title="Adicionar Indicador KPI"
-											class="p-0.5 rounded bg-white/70 hover:bg-white text-[#78350F]"
-										>
-											<span class="material-symbols-outlined text-[14px]">add</span>
-										</button>
-									{/if}
-								</div>
+									class="h-full rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.1)] transition-all duration-500"
+									style="width: {pct}%; background-color: {krTheme.accent};"
+								></div>
 							</div>
 						</div>
-					{/if}
+
+						<!-- Responsible & Duo-tone action -->
+						<div
+							class="flex items-center justify-between text-xs pt-1 border-t border-dashed"
+							style="border-color: {krTheme.cardBorder};"
+						>
+							<div class="flex items-center gap-2 min-w-0">
+								<div
+									class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-[0_1px_2px_rgba(0,0,0,0.15)] shrink-0"
+									style="background-color: {owner?.color || krTheme.accent};"
+								>
+									{getInitials(owner?.name || kr.teams[0]?.name || 'KR')}
+								</div>
+								<span class="font-label-sm text-label-sm font-bold truncate" style="color: {krTheme.accentShadow};">
+									{owner?.name ?? kr.teams[0]?.name ?? 'Equipe Responsável'}
+								</span>
+							</div>
+							<div class="flex items-center gap-1.5 shrink-0">
+								<span class="font-label-sm text-label-sm font-semibold" style="color: {krTheme.accent};">
+									{kpiCount} {kpiCount === 1 ? 'Indicador' : 'Indicadores'}
+								</span>
+								{#if canEdit}
+									<button
+										type="button"
+										onclick={(e) => {
+											e.stopPropagation();
+											onAddChild(kr);
+										}}
+										title="Adicionar Indicador KPI"
+										class="p-0.5 rounded bg-white/70 hover:bg-white transition-colors"
+										style="color: {krTheme.accentShadow};"
+									>
+										<span class="material-symbols-outlined text-[14px]">add</span>
+									</button>
+								{/if}
+							</div>
+						</div>
+					</div>
 				{:else}
 					<div
 						class="rounded-xl bg-surface-container-lowest/60 border border-dashed border-outline-variant p-6 text-center"
@@ -932,7 +832,9 @@
 			<div class="col-span-4 flex flex-col gap-space-md relative z-10">
 				{#each displayedKPIs as item, kIdx (item.kpi.id)}
 					{@const kpi = item.kpi}
-					{@const theme = kpiThemes[kIdx % kpiThemes.length]}
+					{@const defaultKpiColors = ['#059669', '#0058bd', '#ea580c', '#7c3aed', '#00665a']}
+					{@const kpiColor = kpi.color || (kpi.teams[0]?.color || defaultKpiColors[kIdx % defaultKpiColors.length])}
+					{@const kpiTheme = getDossierTheme(kpiColor)}
 					{@const isSelected = selectedNodeId === kpi.id}
 					{@const isHighlighted = highlightedIds.has(kpi.id)}
 					{@const isDimmed = dimmedIds.has(kpi.id)}
@@ -940,6 +842,7 @@
 					{@const lastUpdate = kpi.metricUpdates[0]}
 					{@const owner = kpi.assignees[0]}
 					{@const pct = Math.round(kpi.progress * 100)}
+					{@const trendIcon = kpi.direction === 'down' ? 'trending_down' : pct >= 100 ? 'check_circle' : 'trending_up'}
 
 					<div
 						data-node-card={kpi.id}
@@ -952,81 +855,92 @@
 								onSelectNode(kpi.id);
 							}
 						}}
-						class="relative cursor-pointer {theme.cardBg} rounded-xl p-space-md shadow-[0_2px_5px_rgba(36,34,30,0.05),0_1px_0_rgba(255,255,255,0.7)_inset] hover:shadow-[0_6px_14px_rgba(36,34,30,0.08)] transition-all {isSelected
+						class="relative cursor-pointer rounded-xl p-space-md shadow-[0_2px_5px_rgba(36,34,30,0.05),0_1px_0_rgba(255,255,255,0.7)_inset] hover:shadow-[0_6px_14px_rgba(36,34,30,0.08)] transition-all {isSelected
 							? 'ring-2 ring-on-surface'
 							: ''} {isHighlighted ? 'ring-2 ring-primary scale-[1.01]' : ''} {isDimmed
 							? 'opacity-40'
 							: ''}"
+						style="background-color: {kpiTheme.folderBg}; border: 1.5px solid {kpiTheme.folderBorder}; color: {kpiTheme.accentDark};"
 					>
 						<div class="flex items-center justify-between gap-2 mb-2">
 							<div class="flex items-center gap-1.5">
 								<span
-									class="font-label-sm text-label-sm font-bold px-1.5 py-0.5 rounded {theme.badgeBg}"
+									class="font-label-sm text-label-sm font-bold px-1.5 py-0.5 rounded shadow-xs"
+									style="background-color: {kpiTheme.badgeBg}; color: {kpiTheme.badgeText}; border: 1px solid {kpiTheme.badgeBorder};"
 								>
 									{item.code}
 								</span>
 								<span
-									class="font-label-sm text-label-sm {theme.subText} uppercase tracking-wider font-semibold"
+									class="font-label-sm text-label-sm uppercase tracking-wider font-semibold"
+									style="color: {kpiTheme.accentDark};"
 								>
 									{kpi.cycle?.code ?? 'Operacional'}
 								</span>
 							</div>
 							<div
-								class="flex items-center gap-1 {theme.subText} font-bold text-xs bg-white/70 px-2 py-0.5 rounded-full"
+								class="flex items-center gap-1 font-bold text-xs bg-white/80 px-2 py-0.5 rounded-full shadow-xs"
+								style="color: {kpiTheme.accentDark}; border: 1px solid {kpiTheme.cardBorder};"
 							>
-								<span class="material-symbols-outlined text-[14px]">{theme.trendIcon}</span>
+								<span class="material-symbols-outlined text-[14px]">{trendIcon}</span>
 								<span>{pct}%</span>
 							</div>
 						</div>
 
-						<h4 class="font-title-md text-title-md {theme.titleText} {compactKpis ? 'mb-1' : 'mb-space-sm'} leading-tight">
+						<h4
+							class="font-title-md text-title-md {compactKpis ? 'mb-1' : 'mb-space-sm'} leading-tight"
+							style="color: {kpiTheme.accentShadow};"
+						>
 							{kpi.title}
 						</h4>
 
 						{#if compactKpis}
 							<!-- Compact Metric Snapshot -->
-							<div class="flex items-center justify-between pt-1 border-t border-black/10 text-xs">
-								<span class="font-label-sm text-label-sm {theme.subText}">
-									Meta: <strong class="{theme.titleText}">{formatNumber(kpi.target_value, kpi.unit)}</strong>
+							<div
+								class="flex items-center justify-between pt-1 border-t text-xs"
+								style="border-color: {kpiTheme.cardBorder};"
+							>
+								<span class="font-label-sm text-label-sm" style="color: {kpiTheme.accentDark};">
+									Meta: <strong style="color: {kpiTheme.accentShadow};">{formatNumber(kpi.target_value, kpi.unit)}</strong>
 								</span>
-								<span class="font-label-sm text-label-sm {theme.valText} font-bold">
+								<span class="font-label-sm text-label-sm font-bold" style="color: {kpiTheme.accent};">
 									Atual: {formatNumber(kpi.current_value, kpi.unit)}
 								</span>
 							</div>
 						{:else}
 							<!-- Detailed Metric Comparison Ledger -->
 							<div
-								class="grid grid-cols-3 gap-2 bg-white/60 p-2.5 rounded-lg mb-space-sm shadow-[inset_0_1px_2px_rgba(36,34,30,0.04)]"
+								class="grid grid-cols-3 gap-2 bg-white/70 p-2.5 rounded-lg mb-space-sm shadow-[inset_0_1px_2px_rgba(36,34,30,0.04)]"
+								style="border: 1px solid {kpiTheme.cardBorder};"
 							>
 								<div>
-									<span class="block font-label-sm text-label-sm uppercase {theme.subText}">
+									<span class="block font-label-sm text-label-sm uppercase" style="color: {kpiTheme.accent};">
 										Base
 									</span>
-									<span class="font-label-md text-label-md font-bold {theme.titleText}">
+									<span class="font-label-md text-label-md font-bold" style="color: {kpiTheme.accentDark};">
 										{formatNumber(kpi.baseline, kpi.unit)}
 									</span>
 								</div>
 								<div>
-									<span class="block font-label-sm text-label-sm uppercase {theme.subText}">
+									<span class="block font-label-sm text-label-sm uppercase" style="color: {kpiTheme.accent};">
 										Meta
 									</span>
-									<span class="font-label-md text-label-md font-bold {theme.titleText}">
+									<span class="font-label-md text-label-md font-bold" style="color: {kpiTheme.accentDark};">
 										{formatNumber(kpi.target_value, kpi.unit)}
 									</span>
 								</div>
 								<div>
-									<span class="block font-label-sm text-label-sm uppercase {theme.subText}">
+									<span class="block font-label-sm text-label-sm uppercase" style="color: {kpiTheme.accent};">
 										Atual
 									</span>
-									<span class="font-label-md text-label-md font-bold {theme.valText}">
+									<span class="font-label-md text-label-md font-bold" style="color: {kpiTheme.accentDark}; font-weight: 800;">
 										{formatNumber(kpi.current_value, kpi.unit)}
 									</span>
 								</div>
 							</div>
 
 							<!-- Sparkline Mini Chart Visualizer -->
-							<div class="flex items-center justify-between pt-1">
-								<div class="flex items-center gap-1 text-[11px] {theme.subText} truncate pr-2">
+							<div class="flex items-center justify-between pt-1 border-t border-dashed" style="border-color: {kpiTheme.cardBorder};">
+								<div class="flex items-center gap-1 text-[11px] truncate pr-2" style="color: {kpiTheme.accentDark};">
 									<span class="material-symbols-outlined text-[14px]">history</span>
 									<span class="truncate">
 										{#if lastUpdate}
@@ -1043,11 +957,11 @@
 								<svg class="w-20 h-5 shrink-0" fill="none" viewBox="0 0 80 20">
 									<path
 										d={spark.path}
-										stroke={theme.stroke}
+										stroke={kpiTheme.accent}
 										stroke-linecap="round"
 										stroke-width="2"
 									></path>
-									<circle cx="80" cy={spark.endY} fill={theme.dot} r="2.5"></circle>
+									<circle cx="80" cy={spark.endY} fill={kpiTheme.accentDark} r="2.5"></circle>
 								</svg>
 							</div>
 						{/if}

@@ -6,7 +6,9 @@
 	import StrategyCanvas from '$lib/components/canvas/StrategyCanvas.svelte';
 	import OutlineView from '$lib/components/canvas/OutlineView.svelte';
 	import NodeDrawer from '$lib/components/drawer/NodeDrawer.svelte';
+	import ObjectiveDossierModal from '$lib/components/modal/ObjectiveDossierModal.svelte';
 	import KeyResultDossierModal from '$lib/components/modal/KeyResultDossierModal.svelte';
+	import KpiDossierModal from '$lib/components/modal/KpiDossierModal.svelte';
 	import {
 		applyValueLens,
 		enrichNodes,
@@ -350,8 +352,21 @@
 	{/if}
 </div>
 
-<!-- Node Edit: Dossier Modal for Key Results, Drawer for Objectives & KPIs -->
-{#if selectedNode?.type === 'key_result'}
+<!-- Node Edit: Dossier Modals for Objectives, Key Results, and KPIs; Drawer for Identity nodes (Mission, Value) -->
+{#if selectedNode?.type === 'objective'}
+	<ObjectiveDossierModal
+		node={selectedNode}
+		allNodes={data.nodes}
+		cycles={data.cycles}
+		profiles={enriched.profilesWithTeams}
+		teams={data.teams}
+		valuesList={enriched.valuesList}
+		{canEdit}
+		onClose={() => (selectedNodeId = null)}
+		onAddChild={openCreateChild}
+		onOpenNode={(id: string) => (selectedNodeId = id)}
+	/>
+{:else if selectedNode?.type === 'key_result'}
 	<KeyResultDossierModal
 		node={selectedNode}
 		allNodes={data.nodes}
@@ -362,8 +377,20 @@
 		{canEdit}
 		onClose={() => (selectedNodeId = null)}
 		onAddChild={openCreateChild}
+		onOpenNode={(id: string) => (selectedNodeId = id)}
 	/>
-{:else}
+{:else if selectedNode?.type === 'kpi'}
+	<KpiDossierModal
+		node={selectedNode}
+		allNodes={data.nodes}
+		cycles={data.cycles}
+		profiles={enriched.profilesWithTeams}
+		teams={data.teams}
+		{canEdit}
+		onClose={() => (selectedNodeId = null)}
+		onOpenParent={(id: string) => (selectedNodeId = id)}
+	/>
+{:else if selectedNode}
 	<NodeDrawer
 		node={selectedNode}
 		allNodes={data.nodes}

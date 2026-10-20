@@ -411,24 +411,17 @@
 									type="button"
 									onclick={() => openInfo(
 										'Solicitar Acesso à Governança',
-										'O acesso ao Horizonte OKRs é restrito a membros e conselheiros autorizados da Nuvem Jr. Entre em contato com a Diretoria Executiva ou envie solicitação formal para presidencia@nuvemej.com.br.'
+										'O acesso ao Horizonte OKRs é restrito a membros e conselheiros autorizados da Nuvem Jr. Entre em contato com a Diretoria Executiva ou envie solicitação para adm.fin@nuvemjr.com.br.'
 									)}
-									class="text-[#64748b] hover:underline"
+									class="text-pink-600 hover:text-pink-700 hover:underline"
 								>
-									Ajuda da Governança
+									Solicitar Acesso
 								</button>
 							</div>
 						{/if}
 					</div>
 
-					<!-- Micro-Badge at bottom of card -->
-					<div class="mt-5 pt-3 border-t border-dashed border-[#e8e2d8] flex items-center justify-between text-[10px] text-[#94a3b8] tracking-wider uppercase font-medium">
-						<span class="flex items-center">
-							<span class="material-symbols-outlined text-[12px] align-middle mr-1">verified_user</span>
-							SOC2 TIPO II • 256-BIT ENCRYPTED
-						</span>
-						<span>NODE #BR-GRU-01</span>
-					</div>
+
 				</div>
 			</div>
 		</main>

@@ -110,6 +110,7 @@ create table if not exists nodes (
   type          node_type not null,
   title         text not null,
   description   text,
+  color         text,
 
   year          int,
   quarter       smallint check (quarter between 1 and 4),

@@ -44,6 +44,7 @@ export interface StrategyNode {
 	type: NodeType;
 	title: string;
 	description: string | null;
+	color?: string | null;
 
 	// Scope columns
 	year: number | null;

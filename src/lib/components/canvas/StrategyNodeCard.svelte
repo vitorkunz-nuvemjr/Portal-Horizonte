@@ -3,6 +3,7 @@
 	import type { NodeWithExtras } from '$lib/types';
 	import { formatNumber, formatPct, getInitials } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
+	import { getDossierTheme } from '$lib/dossier-theme';
 	import {
 		Target,
 		Flag,
@@ -35,6 +36,7 @@
 
 	const node = $derived(data.node);
 	const pct = $derived(Math.round(node.progress * 100));
+	const customTheme = $derived(node.color ? getDossierTheme(node.color) : null);
 
 	const typeMeta = $derived.by(() => {
 		switch (node.type) {
@@ -94,17 +96,19 @@
 				data.onSelect(node.id);
 			}
 		}}
-		class="group relative w-full cursor-pointer rounded-xl border bg-white p-3.5 text-left shadow-xs transition-all duration-200 {data.childCount > 0 ? 'pb-4' : ''} {typeMeta.borderClass} {data.selected
+		class="group relative w-full cursor-pointer rounded-xl border bg-white p-3.5 text-left shadow-xs transition-all duration-200 {data.childCount > 0 ? 'pb-4' : ''} {customTheme ? '' : typeMeta.borderClass} {data.selected
 			? 'ring-2 ring-slate-900 shadow-md'
 			: ''} {data.highlighted
 			? 'ring-2 ring-amber-500 shadow-lg scale-[1.02]'
 			: ''} {data.dimmed ? 'opacity-25 saturate-50 hover:opacity-60' : ''}"
+		style={customTheme ? `background-color: ${customTheme.folderBg}; border-color: ${customTheme.folderBorder};` : ''}
 	>
 	<!-- Top Row: Type Badge + Scope + Status -->
 	<div class="flex items-center justify-between gap-1.5">
 		<div class="flex items-center gap-1.5">
 			<span
-				class="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold tracking-wider {typeMeta.badgeClass}"
+				class="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[10px] font-bold tracking-wider {customTheme ? '' : typeMeta.badgeClass}"
+				style={customTheme ? `background-color: ${customTheme.badgeBg}; color: ${customTheme.badgeText}; border-color: ${customTheme.badgeBorder};` : ''}
 			>
 				{#if node.type === 'objective'}
 					<Target class="h-2.5 w-2.5" />
@@ -169,8 +173,8 @@
 			<div
 				class="h-full rounded-full transition-all duration-300 {node.atRisk
 					? 'bg-amber-500'
-					: typeMeta.barClass}"
-				style="width: {pct}%"
+					: customTheme ? '' : typeMeta.barClass}"
+				style="width: {pct}%; {customTheme && !node.atRisk ? `background-color: ${customTheme.accent};` : ''}"
 			></div>
 		</div>
 	</div>

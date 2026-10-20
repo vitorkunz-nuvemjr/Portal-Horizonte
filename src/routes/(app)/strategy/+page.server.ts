@@ -28,30 +28,47 @@ export const actions: Actions = {
 		const targetStr = formData.get('target_value') as string | null;
 		const currentStr = formData.get('current_value') as string | null;
 		const direction = ((formData.get('direction') as KpiDirection) || 'up') as KpiDirection;
+		const color = ((formData.get('color') as string) || '').trim() || null;
 
 		if (locals.mode === 'supabase' && locals.supabase) {
 			try {
 				const tree = type === 'mission' || type === 'value' ? 'identity' : 'strategy';
-				const { data, error } = await locals.supabase
+				const insertPayload: Record<string, any> = {
+					parent_id,
+					tree,
+					type,
+					title,
+					description,
+					color,
+					year: yearStr ? Number(yearStr) : null,
+					quarter: quarterStr ? Number(quarterStr) : null,
+					cycle_id,
+					unit,
+					baseline: baselineStr != null && baselineStr !== '' ? Number(baselineStr) : null,
+					target_value: targetStr != null && targetStr !== '' ? Number(targetStr) : null,
+					current_value: currentStr != null && currentStr !== '' ? Number(currentStr) : null,
+					direction,
+					created_by: user?.id ?? null
+				};
+
+				let { data, error } = await locals.supabase
 					.from('nodes')
-					.insert({
-						parent_id,
-						tree,
-						type,
-						title,
-						description,
-						year: yearStr ? Number(yearStr) : null,
-						quarter: quarterStr ? Number(quarterStr) : null,
-						cycle_id,
-						unit,
-						baseline: baselineStr != null && baselineStr !== '' ? Number(baselineStr) : null,
-						target_value: targetStr != null && targetStr !== '' ? Number(targetStr) : null,
-						current_value: currentStr != null && currentStr !== '' ? Number(currentStr) : null,
-						direction,
-						created_by: user?.id ?? null
-					})
+					.insert(insertPayload)
 					.select()
 					.single();
+
+				// Graceful schema fallback: if 'color' column doesn't exist yet in Supabase schema cache
+				if (error && error.message?.includes('color') && 'color' in insertPayload) {
+					delete insertPayload.color;
+					const retry = await locals.supabase
+						.from('nodes')
+						.insert(insertPayload)
+						.select()
+						.single();
+					data = retry.data;
+					error = retry.error;
+				}
+
 				if (error) return fail(400, { message: error.message });
 				return { success: true, createdId: data.id };
 			} catch (e: any) {
@@ -72,7 +89,8 @@ export const actions: Actions = {
 				baseline: baselineStr != null && baselineStr !== '' ? Number(baselineStr) : null,
 				target_value: targetStr != null && targetStr !== '' ? Number(targetStr) : null,
 				current_value: currentStr != null && currentStr !== '' ? Number(currentStr) : null,
-				direction
+				direction,
+				color
 			});
 			return { success: true, createdId: created.id };
 		} catch (e: any) {
@@ -99,6 +117,7 @@ export const actions: Actions = {
 		const baselineStr = formData.get('baseline') as string | null;
 		const targetStr = formData.get('target_value') as string | null;
 		const direction = formData.get('direction') as KpiDirection | null;
+		const color = formData.get('color') as string | null;
 
 		if (locals.mode === 'supabase' && locals.supabase) {
 			try {
@@ -119,8 +138,17 @@ export const actions: Actions = {
 				if (baselineStr != null && baselineStr !== '') payload.baseline = Number(baselineStr);
 				if (targetStr != null && targetStr !== '') payload.target_value = Number(targetStr);
 				if (direction) payload.direction = direction;
+				if (color !== null) payload.color = color.trim() || null;
 
-				const { error } = await locals.supabase.from('nodes').update(payload).eq('id', nodeId);
+				let { error } = await locals.supabase.from('nodes').update(payload).eq('id', nodeId);
+
+				// Graceful schema fallback: if 'color' column doesn't exist yet in Supabase schema cache
+				if (error && error.message?.includes('color') && 'color' in payload) {
+					delete payload.color;
+					const retry = await locals.supabase.from('nodes').update(payload).eq('id', nodeId);
+					error = retry.error;
+				}
+
 				if (error) return fail(400, { message: error.message });
 				return { success: true };
 			} catch (e: any) {
@@ -144,7 +172,8 @@ export const actions: Actions = {
 				...(unit !== null ? { unit: unit.trim() || null } : {}),
 				...(baselineStr != null && baselineStr !== '' ? { baseline: Number(baselineStr) } : {}),
 				...(targetStr != null && targetStr !== '' ? { target_value: Number(targetStr) } : {}),
-				...(direction ? { direction } : {})
+				...(direction ? { direction } : {}),
+				...(color !== null ? { color: color.trim() || null } : {})
 			});
 			return { success: true };
 		} catch (e: any) {

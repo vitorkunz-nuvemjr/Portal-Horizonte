@@ -901,6 +901,7 @@ export function createNodeRecord(
 		type: NodeType;
 		title: string;
 		description?: string | null;
+		color?: string | null;
 		year?: number | null;
 		quarter?: number | null;
 		cycle_id?: string | null;
@@ -943,6 +944,7 @@ export function createNodeRecord(
 		type: validated.type,
 		title,
 		description: input.description?.trim() || null,
+		color: input.color?.trim() || null,
 		year: validated.year,
 		quarter: validated.quarter,
 		cycle_id: validated.cycle_id,
@@ -1387,6 +1389,22 @@ export function setUserTeamsRecord(
 	const uniqueIds = Array.from(new Set(teamIds)).filter((tid) => validTeams.has(tid));
 	for (const tid of uniqueIds) {
 		db.team_members.push({ team_id: tid, user_id: userId });
+	}
+	writeDb(db);
+}
+
+export function setTeamMembersRecord(
+	user: Profile | null,
+	teamId: string,
+	userIds: string[]
+): void {
+	requireAdmin(user);
+	const db = readDb();
+	const validUsers = new Set(db.profiles.map((p) => p.id));
+	db.team_members = db.team_members.filter((tm) => tm.team_id !== teamId);
+	const uniqueIds = Array.from(new Set(userIds)).filter((uid) => validUsers.has(uid));
+	for (const uid of uniqueIds) {
+		db.team_members.push({ team_id: teamId, user_id: uid });
 	}
 	writeDb(db);
 }

@@ -8,6 +8,7 @@ import {
 	importDatabaseSnapshot,
 	readDb,
 	resetToSeedTemplate,
+	setTeamMembersRecord,
 	setUserTeamsRecord,
 	updateTeamRecord,
 	upsertProfileRecord
@@ -139,6 +140,7 @@ export const actions: Actions = {
 		const name = (formData.get('name') as string) ?? '';
 		const description = (formData.get('description') as string) || null;
 		const color = (formData.get('color') as string) || '#2563eb';
+		const memberIds = formData.getAll('memberIds').map(String).filter(Boolean);
 
 		if (locals.mode === 'supabase' && locals.supabase) {
 			try {
@@ -148,6 +150,11 @@ export const actions: Actions = {
 					.select()
 					.single();
 				if (error) return fail(400, { message: error.message });
+				if (memberIds.length > 0) {
+					await locals.supabase
+						.from('team_members')
+						.insert(memberIds.map((uid) => ({ team_id: data.id, user_id: uid })));
+				}
 				return { success: true, notice: `Equipe "${data.name}" criada com sucesso.` };
 			} catch (e: any) {
 				return fail(400, { message: e?.message ?? 'Falha ao criar equipe.' });
@@ -156,6 +163,9 @@ export const actions: Actions = {
 
 		try {
 			const team = createTeamRecord(user, { name, description, color });
+			if (memberIds.length > 0) {
+				setTeamMembersRecord(user, team.id, memberIds);
+			}
 			return { success: true, notice: `Equipe "${team.name}" criada com sucesso.` };
 		} catch (e: any) {
 			return fail(400, { message: e?.message ?? 'Falha ao criar equipe.' });
@@ -169,6 +179,8 @@ export const actions: Actions = {
 		const name = formData.get('name') as string;
 		const description = (formData.get('description') as string) ?? null;
 		const color = formData.get('color') as string;
+		const hasMemberIds = formData.has('hasMemberIds');
+		const memberIds = formData.getAll('memberIds').map(String).filter(Boolean);
 
 		if (locals.mode === 'supabase' && locals.supabase) {
 			try {
@@ -177,6 +189,14 @@ export const actions: Actions = {
 					.update({ name, description, color })
 					.eq('id', teamId);
 				if (error) return fail(400, { message: error.message });
+				if (hasMemberIds) {
+					await locals.supabase.from('team_members').delete().eq('team_id', teamId);
+					if (memberIds.length > 0) {
+						await locals.supabase
+							.from('team_members')
+							.insert(memberIds.map((uid) => ({ team_id: teamId, user_id: uid })));
+					}
+				}
 				return { success: true, notice: `Equipe "${name}" atualizada com sucesso.` };
 			} catch (e: any) {
 				return fail(400, { message: e?.message ?? 'Falha ao atualizar equipe.' });
@@ -185,6 +205,9 @@ export const actions: Actions = {
 
 		try {
 			const team = updateTeamRecord(user, teamId, { name, description, color });
+			if (hasMemberIds) {
+				setTeamMembersRecord(user, teamId, memberIds);
+			}
 			return { success: true, notice: `Equipe "${team.name}" atualizada com sucesso.` };
 		} catch (e: any) {
 			return fail(400, { message: e?.message ?? 'Falha ao atualizar equipe.' });

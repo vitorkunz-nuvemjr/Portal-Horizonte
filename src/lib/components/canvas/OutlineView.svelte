@@ -81,11 +81,12 @@
 			>
 				<!-- Left Spine Accent -->
 				<div
-					class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r {node.type === 'objective'
+					class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r {node.color ? '' : (node.type === 'objective'
 						? 'bg-primary'
 						: node.type === 'key_result'
 							? 'bg-secondary'
-							: 'bg-tertiary-container'}"
+							: 'bg-tertiary-container')}"
+					style={node.color ? `background-color: ${node.color};` : ''}
 				></div>
 
 				<!-- Left: Expand button + Type icon + Title + Meta -->

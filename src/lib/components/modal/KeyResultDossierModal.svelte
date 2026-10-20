@@ -2,6 +2,7 @@
 	import type { Cycle, NodeStatus, NodeWithExtras, Profile, StrategyNode, Team } from '$lib/types';
 	import { enhanceFormValidation, formatNumber, formatPct, getInitials } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
+	import { getDossierTheme } from '$lib/dossier-theme';
 	import { onMount } from 'svelte';
 
 	interface Props {
@@ -14,6 +15,7 @@
 		canEdit: boolean;
 		onClose: () => void;
 		onAddChild: (parent: NodeWithExtras) => void;
+		onOpenNode?: (id: string) => void;
 	}
 
 	let {
@@ -25,7 +27,8 @@
 		valuesList,
 		canEdit,
 		onClose,
-		onAddChild
+		onAddChild,
+		onOpenNode
 	}: Props = $props();
 
 	// Active tab inside the Dossier
@@ -56,6 +59,9 @@
 	// Delete confirmation modal state
 	let showDeleteConfirm = $state(false);
 
+	// Theme color state
+	let accentColor = $state('#b30069');
+
 	// Sync states when node prop changes
 	$effect(() => {
 		if (node) {
@@ -72,6 +78,16 @@
 			direction = node.direction ?? 'up';
 			manualProgressPct = Math.round((node.manual_progress ?? 0) * 100);
 
+			if (node.color) {
+				accentColor = node.color;
+			} else if (node.teams.length > 0 && node.teams[0].color) {
+				accentColor = node.teams[0].color;
+			} else if (node.alignedValues.length > 0) {
+				accentColor = valueColor(node.alignedValues[0].id);
+			} else {
+				accentColor = '#b30069';
+			}
+
 			const kpiChildren = node.children.filter((c) => c.type === 'kpi');
 			progressMode =
 				kpiChildren.length > 0 && (node.manual_progress === null || node.manual_progress === 0)
@@ -79,6 +95,8 @@
 					: 'manual';
 		}
 	});
+
+	const theme = $derived(getDossierTheme(accentColor));
 
 	// Child KPIs
 	const childKpis = $derived(node ? node.children.filter((c) => c.type === 'kpi') : []);
@@ -120,6 +138,17 @@
 		if (!node || node.metricUpdates.length === 0) return null;
 		return node.metricUpdates[0];
 	});
+
+	// Color swatches for KR customization
+	const colorSwatches = [
+		{ name: 'Framboesa Magenta', hex: '#b30069' },
+		{ name: 'Azul Horizonte', hex: '#0058bd' },
+		{ name: 'Verde Floresta', hex: '#059669' },
+		{ name: 'Roxo Estratégico', hex: '#7c3aed' },
+		{ name: 'Âmbar Solar', hex: '#c2ac00' },
+		{ name: 'Laranja Terracota', hex: '#ea580c' },
+		{ name: 'Teal Esmeralda', hex: '#00665a' }
+	];
 
 	// Keyboard dismiss listener
 	function handleKeyDown(e: KeyboardEvent) {
@@ -319,11 +348,19 @@
 
 			<!-- MAIN DOSSIER CARRIER (Pasta aberta com textura encorpada de arquivo executivo) -->
 			<div
-				class="relative bg-[#FFFDF8] text-on-surface w-full rounded-2xl rounded-tl-sm sm:rounded-tl-sm shadow-[0_22px_60px_rgba(29,27,23,0.28),0_4px_16px_rgba(29,27,23,0.08),inset_0_1px_0_#ffffff] border-2 border-[#E7E2DB] overflow-hidden flex-1 flex flex-col min-h-0"
+				class="relative text-on-surface w-full rounded-2xl rounded-tl-sm sm:rounded-tl-sm shadow-[0_22px_60px_rgba(29,27,23,0.28),0_4px_16px_rgba(29,27,23,0.08),inset_0_1px_0_#ffffff] border-2 overflow-hidden flex-1 flex flex-col min-h-0 transition-colors duration-200"
+				style="background-color: {theme.folderBg}; border-color: {theme.folderBorder};"
 			>
+				<!-- Linha de reforço estrutural -->
+				<div
+					class="h-1.5 w-full relative z-10 border-b transition-colors duration-200"
+					style="background: linear-gradient(to right, color-mix(in srgb, {accentColor} 25%, transparent), color-mix(in srgb, {accentColor} 45%, transparent), color-mix(in srgb, {accentColor} 20%, transparent)); border-color: {theme.folderBorder};"
+				></div>
+
 				<!-- Archival Folder Header Strip -->
 				<div
-					class="bg-gradient-to-r from-[#FAF5EC] via-[#F6F0E7] to-[#F1ECE3] px-5 py-3 sm:px-6 sm:py-3.5 border-b border-[#E3DDD3] flex items-center justify-between shrink-0"
+					class="bg-gradient-to-r from-[#FAF5EC] via-[#F6F0E7] to-[#F1ECE3] px-5 py-3 sm:px-6 sm:py-3.5 border-b flex items-center justify-between shrink-0"
+					style="border-color: {theme.folderBorder};"
 				>
 					<div class="flex flex-wrap items-center gap-3">
 						<!-- Physical Tag Badge -->
@@ -348,6 +385,20 @@
 					</div>
 
 					<div class="flex items-center gap-2">
+						<!-- Mini paleta para alternar cor suave do KR -->
+						<div class="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 border border-[#d5cebe] shadow-xs">
+							<span class="font-mono text-[9px] uppercase font-bold text-[#727784] mr-0.5 hidden sm:inline">Cor:</span>
+							{#each colorSwatches as sw}
+								<button
+									type="button"
+									onclick={() => (accentColor = sw.hex)}
+									class="w-4 h-4 rounded-full transition-transform hover:scale-125 {accentColor === sw.hex ? 'ring-2 ring-offset-1 scale-110 shadow-xs' : 'opacity-70'}"
+									style="background-color: {sw.hex}; ring-color: {sw.hex};"
+									title={sw.name}
+								></button>
+							{/each}
+						</div>
+
 						<span
 							class="text-[11px] font-semibold text-on-surface-variant bg-surface-container-low px-2 py-1 rounded border border-outline-variant/30 hidden sm:inline-flex items-center gap-1"
 						>
@@ -378,6 +429,7 @@
 							class="flex flex-col gap-5"
 						>
 							<input type="hidden" name="nodeId" value={node.id} />
+							<input type="hidden" name="color" value={accentColor} />
 							<input type="hidden" name="status" value={status} />
 							<input
 								type="hidden"
@@ -421,14 +473,26 @@
 										{/if}
 									</div>
 								</div>
-								<button
-									type="button"
-									onclick={onClose}
-									class="px-2.5 py-1 rounded bg-surface-container-lowest border border-outline-variant/40 text-[11px] font-bold text-primary hover:bg-surface-container flex items-center gap-1 transition-colors cursor-pointer"
-								>
-									<span>Visualizar Árvore</span>
-									<span class="material-symbols-outlined text-[14px]">open_in_new</span>
-								</button>
+								{#if onOpenNode && parentId}
+									<button
+										type="button"
+										onclick={() => onOpenNode(parentId)}
+										class="px-2.5 py-1 rounded bg-surface-container-lowest border border-outline-variant/40 text-[11px] font-bold text-primary hover:bg-surface-container flex items-center gap-1 transition-colors cursor-pointer"
+										title="Abrir Dossiê do Objetivo Pai"
+									>
+										<span>Abrir Dossiê Pai</span>
+										<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+									</button>
+								{:else}
+									<button
+										type="button"
+										onclick={onClose}
+										class="px-2.5 py-1 rounded bg-surface-container-lowest border border-outline-variant/40 text-[11px] font-bold text-primary hover:bg-surface-container flex items-center gap-1 transition-colors cursor-pointer"
+									>
+										<span>Visualizar Árvore</span>
+										<span class="material-symbols-outlined text-[14px]">open_in_new</span>
+									</button>
+								{/if}
 							</div>
 
 							<!-- KR Title Input with Dynamic Counter -->
@@ -905,16 +969,28 @@
 															Peso: {kpi.weight}
 														</span>
 													</div>
-													<span
-														class="px-2 py-0.5 rounded-full bg-white/90 text-[11px] font-bold shadow-xs flex items-center gap-1 {isHealthy
-															? 'text-[#15803D]'
-															: 'text-amber-700'}"
-													>
-														<span class="material-symbols-outlined text-[13px]"
-															>{isHealthy ? 'trending_up' : 'trending_flat'}</span
+													<div class="flex items-center gap-1">
+														{#if onOpenNode}
+															<button
+																type="button"
+																onclick={() => onOpenNode(kpi.id)}
+																class="p-1 rounded bg-white/80 hover:bg-white text-[#727784] hover:text-[#0058bd] transition-colors cursor-pointer shadow-xs"
+																title="Abrir Dossiê deste KPI"
+															>
+																<span class="material-symbols-outlined text-[15px]">open_in_new</span>
+															</button>
+														{/if}
+														<span
+															class="px-2 py-0.5 rounded-full bg-white/90 text-[11px] font-bold shadow-xs flex items-center gap-1 {isHealthy
+																? 'text-[#15803D]'
+																: 'text-amber-700'}"
 														>
-														{formatPct(kpi.progress)}
-													</span>
+															<span class="material-symbols-outlined text-[13px]"
+																>{isHealthy ? 'trending_up' : 'trending_flat'}</span
+															>
+															{formatPct(kpi.progress)}
+														</span>
+													</div>
 												</div>
 												<h4
 													class="text-sm font-bold {idx % 2 === 0
@@ -1416,18 +1492,26 @@
 
 				<!-- Dossier Footer Ribbon -->
 				<div
-					class="bg-gradient-to-r from-[#FAF5EC] to-[#F1ECE3] px-5 py-3 sm:px-6 sm:py-3.5 border-t border-[#E3DDD3] flex flex-wrap items-center justify-between gap-3 shrink-0"
+					class="px-5 py-3 sm:px-6 sm:py-3.5 border-t flex flex-col gap-2 shrink-0 transition-colors duration-200"
+					style="background-color: {theme.footerBg}; border-color: {theme.folderBorder};"
 				>
-					<div class="flex items-center gap-2 text-xs text-on-surface-variant font-medium">
-						<span class="material-symbols-outlined text-[16px] text-primary">schedule</span>
-						<span>
-							{#if latestMetricUpdate}
-								Último check-in auditado {timeAgo(latestMetricUpdate.created_at)}
-							{:else}
-								Sem check-in auditado no período
-							{/if}
-						</span>
-					</div>
+					<!-- Linha de Costura / Picote Sutil de Papel Manilha -->
+					<div
+						class="h-[1.5px] w-full opacity-75"
+						style="background-image: repeating-linear-gradient(to right, {theme.stitchedColor} 0px, {theme.stitchedColor} 6px, transparent 6px, transparent 11px);"
+					></div>
+
+					<div class="flex flex-wrap items-center justify-between gap-3">
+						<div class="flex items-center gap-2 text-xs text-on-surface-variant font-medium">
+							<span class="material-symbols-outlined text-[16px]" style="color: {theme.accent};">schedule</span>
+							<span>
+								{#if latestMetricUpdate}
+									Último check-in auditado {timeAgo(latestMetricUpdate.created_at)}
+								{:else}
+									Sem check-in auditado no período
+								{/if}
+							</span>
+						</div>
 
 					<div class="flex items-center gap-2.5">
 						{#if canEdit}
@@ -1461,6 +1545,7 @@
 				</div>
 			</div>
 		</div>
+	</div>
 	</div>
 
 	<!-- Delete KR Confirmation Modal -->
