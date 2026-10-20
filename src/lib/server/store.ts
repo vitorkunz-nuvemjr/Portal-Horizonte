@@ -1312,7 +1312,7 @@ export function upsertProfileRecord(
 
 export function createTeamRecord(
 	user: Profile | null,
-	input: { name: string; description?: string | null; color?: string | null }
+	input: { name: string; description?: string | null; color?: string | null; icon?: string | null }
 ): Team {
 	requireAdmin(user);
 	const db = readDb();
@@ -1329,6 +1329,7 @@ export function createTeamRecord(
 		name: trimmed,
 		description: input.description?.trim() || null,
 		color: input.color || '#2563eb',
+		icon: input.icon?.trim() || null,
 		created_at: new Date().toISOString()
 	};
 
@@ -1340,7 +1341,7 @@ export function createTeamRecord(
 export function updateTeamRecord(
 	user: Profile | null,
 	teamId: string,
-	input: { name?: string; description?: string | null; color?: string | null }
+	input: { name?: string; description?: string | null; color?: string | null; icon?: string | null }
 ): Team {
 	requireAdmin(user);
 	const db = readDb();
@@ -1357,6 +1358,9 @@ export function updateTeamRecord(
 	}
 	if (input.color !== undefined) {
 		team.color = input.color;
+	}
+	if (input.icon !== undefined) {
+		team.icon = input.icon?.trim() || null;
 	}
 
 	writeDb(db);

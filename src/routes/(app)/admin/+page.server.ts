@@ -140,15 +140,28 @@ export const actions: Actions = {
 		const name = (formData.get('name') as string) ?? '';
 		const description = (formData.get('description') as string) || null;
 		const color = (formData.get('color') as string) || '#2563eb';
+		const icon = (formData.get('icon') as string) || null;
 		const memberIds = formData.getAll('memberIds').map(String).filter(Boolean);
 
 		if (locals.mode === 'supabase' && locals.supabase) {
 			try {
-				const { data, error } = await locals.supabase
+				const insertPayload: any = { name, description, color };
+				if (icon) insertPayload.icon = icon;
+				let { data, error } = await locals.supabase
 					.from('teams')
-					.insert({ name, description, color })
+					.insert(insertPayload)
 					.select()
 					.single();
+				if (error && error.message?.includes('icon') && 'icon' in insertPayload) {
+					delete insertPayload.icon;
+					const retry = await locals.supabase
+						.from('teams')
+						.insert(insertPayload)
+						.select()
+						.single();
+					data = retry.data;
+					error = retry.error;
+				}
 				if (error) return fail(400, { message: error.message });
 				if (memberIds.length > 0) {
 					await locals.supabase
@@ -162,7 +175,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			const team = createTeamRecord(user, { name, description, color });
+			const team = createTeamRecord(user, { name, description, color, icon });
 			if (memberIds.length > 0) {
 				setTeamMembersRecord(user, team.id, memberIds);
 			}
@@ -179,15 +192,26 @@ export const actions: Actions = {
 		const name = formData.get('name') as string;
 		const description = (formData.get('description') as string) ?? null;
 		const color = formData.get('color') as string;
+		const icon = (formData.get('icon') as string) || null;
 		const hasMemberIds = formData.has('hasMemberIds');
 		const memberIds = formData.getAll('memberIds').map(String).filter(Boolean);
 
 		if (locals.mode === 'supabase' && locals.supabase) {
 			try {
-				const { error } = await locals.supabase
+				const updatePayload: any = { name, description, color };
+				if (icon !== null) updatePayload.icon = icon;
+				let { error } = await locals.supabase
 					.from('teams')
-					.update({ name, description, color })
+					.update(updatePayload)
 					.eq('id', teamId);
+				if (error && error.message?.includes('icon') && 'icon' in updatePayload) {
+					delete updatePayload.icon;
+					const retry = await locals.supabase
+						.from('teams')
+						.update(updatePayload)
+						.eq('id', teamId);
+					error = retry.error;
+				}
 				if (error) return fail(400, { message: error.message });
 				if (hasMemberIds) {
 					await locals.supabase.from('team_members').delete().eq('team_id', teamId);
@@ -204,7 +228,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			const team = updateTeamRecord(user, teamId, { name, description, color });
+			const team = updateTeamRecord(user, teamId, { name, description, color, icon });
 			if (hasMemberIds) {
 				setTeamMembersRecord(user, teamId, memberIds);
 			}

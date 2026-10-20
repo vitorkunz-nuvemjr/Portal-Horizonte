@@ -2,6 +2,7 @@
 	import { enhanceFormValidation, getInitials } from '$lib/utils';
 	import { getDossierTheme } from '$lib/dossier-theme';
 	import PaperColorPicker from '$lib/components/ui/PaperColorPicker.svelte';
+	import PaperIconPicker from '$lib/components/ui/PaperIconPicker.svelte';
 	import type { Profile, Team, Cycle } from '$lib/types';
 
 	let { data, form } = $props();
@@ -114,32 +115,34 @@
 	}
 
 	// Visual theme mappings matching the Paper Strategist design system with muted tones
-	function getTeamVisual(name: string, fallbackColor?: string | null) {
+	function getTeamVisual(name: string, fallbackColor?: string | null, fallbackIcon?: string | null) {
 		const n = (name || '').toLowerCase();
-		let icon = 'apartment';
+		let icon = fallbackIcon && fallbackIcon.trim() ? fallbackIcon.trim() : 'apartment';
 		let defaultHex = '#0058bd';
 
-		if (n.includes('presid') || n.includes('governan') || n.includes('institu')) {
-			icon = 'account_balance';
-			defaultHex = '#0058bd';
-		} else if (n.includes('finan') || n.includes('adm') || n.includes('juríd') || n.includes('jurid')) {
-			icon = 'payments';
-			defaultHex = '#0284c7';
-		} else if (n.includes('comerc') || n.includes('venda')) {
-			icon = 'storefront';
-			defaultHex = '#059669';
-		} else if (n.includes('market') || n.includes('mkt') || n.includes('comunic')) {
-			icon = 'campaign';
-			defaultHex = '#ea580c';
-		} else if (n.includes('projet') || n.includes('dev') || n.includes('consult')) {
-			icon = 'rocket_launch';
-			defaultHex = '#7c3aed';
-		} else if (n.includes('pesso') || n.includes('gp') || n.includes('gente') || n.includes('rh')) {
-			icon = 'groups';
-			defaultHex = '#ca8a04';
-		} else if (n.includes('todas') || n.includes('geral')) {
-			icon = 'hub';
-			defaultHex = '#ca8a04';
+		if (!fallbackIcon || !fallbackIcon.trim()) {
+			if (n.includes('presid') || n.includes('governan') || n.includes('institu')) {
+				icon = 'account_balance';
+				defaultHex = '#0058bd';
+			} else if (n.includes('finan') || n.includes('adm') || n.includes('juríd') || n.includes('jurid')) {
+				icon = 'payments';
+				defaultHex = '#0284c7';
+			} else if (n.includes('comerc') || n.includes('venda')) {
+				icon = 'storefront';
+				defaultHex = '#059669';
+			} else if (n.includes('market') || n.includes('mkt') || n.includes('comunic')) {
+				icon = 'campaign';
+				defaultHex = '#ea580c';
+			} else if (n.includes('projet') || n.includes('dev') || n.includes('consult')) {
+				icon = 'rocket_launch';
+				defaultHex = '#7c3aed';
+			} else if (n.includes('pesso') || n.includes('gp') || n.includes('gente') || n.includes('rh')) {
+				icon = 'groups';
+				defaultHex = '#ca8a04';
+			} else if (n.includes('todas') || n.includes('geral')) {
+				icon = 'hub';
+				defaultHex = '#ca8a04';
+			}
 		}
 
 		const activeHex = fallbackColor && fallbackColor.trim() ? fallbackColor : defaultHex;
@@ -177,19 +180,6 @@
 		{ hex: '#ca8a04', name: 'Âmbar' },
 		{ hex: '#7c3aed', name: 'Violeta' },
 		{ hex: '#0284c7', name: 'Ciano' }
-	];
-
-	// Team icons selectable in modal
-	const teamIcons = [
-		{ name: 'storefront', label: 'Storefront', desc: 'Comercial' },
-		{ name: 'handshake', label: 'Handshake', desc: 'Parcerias' },
-		{ name: 'trending_up', label: 'Trending Up', desc: 'Vendas' },
-		{ name: 'campaign', label: 'Campaign', desc: 'Marketing' },
-		{ name: 'groups', label: 'Groups', desc: 'Pessoas' },
-		{ name: 'rocket_launch', label: 'Rocket Launch', desc: 'Projetos' },
-		{ name: 'account_balance', label: 'Account Balance', desc: 'Presidência' },
-		{ name: 'payments', label: 'Payments', desc: 'Financeiro' },
-		{ name: 'hub', label: 'Hub', desc: 'Transversal' }
 	];
 
 	// Dynamic soft-tone theme generator: the modal color is a softer tone of the selected team color
@@ -369,7 +359,7 @@
 	}
 
 	function openEditTeamModal(team: Team) {
-		const visual = getTeamVisual(team.name, team.color);
+		const visual = getTeamVisual(team.name, team.color, team.icon);
 		const currentMemberIds = getTeamMembers(team.id).map((m) => m.id);
 		activeTeamModal = {
 			mode: 'edit',
@@ -377,7 +367,7 @@
 			name: team.name,
 			description: team.description ?? '',
 			color: team.color || visual.dotColor,
-			icon: visual.icon,
+			icon: team.icon || visual.icon,
 			memberIds: currentMemberIds
 		};
 		showAddMemberDropdown = false;
@@ -706,7 +696,7 @@
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 						{#each departmentalTeams as team (team.id)}
 							{@const members = getTeamMembers(team.id)}
-							{@const visual = getTeamVisual(team.name, team.color)}
+							{@const visual = getTeamVisual(team.name, team.color, team.icon)}
 							<div
 								class="p-4 rounded-xl border transition-all flex flex-col justify-between group shadow-sm hover:shadow-md"
 								style="{visual.bgStyle}"
@@ -791,7 +781,7 @@
 					</div>
 
 					<!-- Wide Transversal Card at bottom: Todas as Diretorias (Geral) -->
-					{@const transVisual = getTeamVisual(transversalTeam?.name || 'Todas as Diretorias (Geral)', transversalTeam?.color || '#ca8a04')}
+					{@const transVisual = getTeamVisual(transversalTeam?.name || 'Todas as Diretorias (Geral)', transversalTeam?.color || '#ca8a04', transversalTeam?.icon)}
 					<div
 						class="p-4 sm:p-5 rounded-xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm hover:shadow-md"
 						style="{transVisual.bgStyle}"
@@ -944,7 +934,7 @@
 											{#if userTeams.length > 0}
 												<div class="flex flex-wrap items-center gap-1.5">
 													{#each userTeams as uTeam (uTeam.id)}
-														{@const visual = getTeamVisual(uTeam.name, uTeam.color)}
+														{@const visual = getTeamVisual(uTeam.name, uTeam.color, uTeam.icon)}
 														<button
 															type="button"
 															onclick={() => openUserTeamsModal(prof)}
@@ -1348,9 +1338,11 @@
 						style="border-color: {modalTheme.badgeBorder};"
 					>
 						<span
-							class="w-2.5 h-2.5 rounded-full shadow-sm animate-pulse"
-							style="background-color: {activeTeamModal.color};"
-						></span>
+							class="material-symbols-outlined text-[15px] shrink-0"
+							style="color: {activeTeamModal.color};"
+						>
+							{activeTeamModal.icon || 'storefront'}
+						</span>
 						<span
 							class="font-mono text-[11.5px] font-bold tracking-wider uppercase"
 							style="color: {modalTheme.accentDark};"
@@ -1404,6 +1396,7 @@
 					<input type="hidden" name="teamId" value={activeTeamModal.id} />
 				{/if}
 				<input type="hidden" name="color" value={activeTeamModal.color} />
+				<input type="hidden" name="icon" value={activeTeamModal.icon} />
 				<input type="hidden" name="hasMemberIds" value="true" />
 				{#each activeTeamModal.memberIds as mid}
 					<input type="hidden" name="memberIds" value={mid} />
@@ -1467,32 +1460,19 @@
 								<!-- Seletor de Ícone & Cor da Equipe (Grid 2 colunas internas) -->
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 border-t border-[#edf4ee] items-start">
 									<!-- Seletor de Ícone -->
-									<div class="space-y-2">
+									<div class="space-y-2.5">
 										<div class="flex items-center justify-between">
 											<span class="font-mono text-[10.5px] uppercase tracking-wider font-bold text-[#424753]">
 												Ícone da Equipe
 											</span>
-											<span class="text-[11px] font-sans font-medium" style="color: {modalTheme.accent};">
-												{teamIcons.find((i) => i.name === activeTeamModal!.icon)?.label || 'Storefront'}
-											</span>
 										</div>
-										<div class="grid grid-cols-3 gap-1.5 pt-0.5">
-											{#each teamIcons as ic}
-												{@const isSelected = activeTeamModal.icon === ic.name}
-												<button
-													type="button"
-													onclick={() => (activeTeamModal!.icon = ic.name)}
-													class="h-10 rounded-xl flex items-center justify-center transition-all cursor-pointer {isSelected
-														? 'text-white shadow-md ring-2 ring-offset-2 scale-105'
-														: 'bg-[#f8fbf8] hover:bg-[#eef5ef] text-[#424753] border hover:scale-105 active:scale-95'}"
-													style={isSelected
-														? `background-color: ${activeTeamModal.color}; ring-color: ${activeTeamModal.color};`
-														: `border-color: ${modalTheme.inputBorder};`}
-													title="{ic.label} ({ic.desc})"
-												>
-													<span class="material-symbols-outlined text-[19px]">{ic.name}</span>
-												</button>
-											{/each}
+										<div class="pt-0.5">
+											<PaperIconPicker
+												bind:value={activeTeamModal.icon}
+												color={activeTeamModal.color}
+												label="Alterar Ícone"
+												align="left"
+											/>
 										</div>
 									</div>
 
@@ -1891,7 +1871,7 @@
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-72 overflow-y-auto p-1">
 					{#each data.teams as team (team.id)}
 						{@const isChecked = currentTeamIds.includes(team.id)}
-						{@const visual = getTeamVisual(team.name, team.color)}
+						{@const visual = getTeamVisual(team.name, team.color, team.icon)}
 						<label
 							class="flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all {isChecked ? 'shadow-xs' : 'border-[#e8e2d8] hover:bg-[#f9f3ec]'}"
 							style={isChecked ? visual.pillStyle : ''}
