@@ -4,6 +4,7 @@
 	import { getDossierTheme } from '$lib/dossier-theme';
 	import { valueColor } from '$lib/value-colors';
 	import { onMount, tick } from 'svelte';
+	import AttributionPile from '$lib/components/ui/AttributionPile.svelte';
 
 	interface Props {
 		roots: NodeWithExtras[];
@@ -36,58 +37,100 @@
 	// Visible Objectives in Column 1
 	const visibleObjectives = $derived(roots.filter((r) => visibleIds.has(r.id)));
 
-	let focusedObjId = $state<string | null>(null);
-	let expandAllObjectives = $state(false);
-	let expandAllKpis = $state(true);
+	// Sets tracking which cards have their children expanded/visible
+	let expandedObjIds = $state<Set<string>>(new Set());
+	let expandedKrIds = $state<Set<string>>(new Set());
 	let compactKpis = $state(false);
+	let hasInitialized = false;
 
-	const activeObj = $derived.by(() => {
-		if (visibleObjectives.length === 0) return null;
-		if (focusedObjId) {
-			const found = visibleObjectives.find((o) => o.id === focusedObjId);
-			if (found) return found;
-		}
-		return visibleObjectives[0];
-	});
-
-	const activeObjIndex = $derived(
-		activeObj ? visibleObjectives.findIndex((o) => o.id === activeObj.id) : 0
-	);
-
-	// Key Results displayed in Column 2
-	const displayedKRs = $derived.by(() => {
-		if (expandAllObjectives) {
-			return visibleObjectives.flatMap((o, oIdx) =>
-				o.children
-					.filter((c) => c.type === 'key_result' && visibleIds.has(c.id))
-					.map((kr, kIdx) => ({
-						kr,
-						code: `KR ${oIdx + 1}.${kIdx + 1}`,
-						parentIndex: oIdx + 1
-					}))
+	// Automatically expand the first visible objective on initial mount
+	$effect(() => {
+		if (!hasInitialized && visibleObjectives.length > 0) {
+			hasInitialized = true;
+			expandedObjIds = new Set([visibleObjectives[0].id]);
+			const firstKrs = visibleObjectives[0].children.filter(
+				(c) => c.type === 'key_result' && visibleIds.has(c.id)
 			);
+			if (firstKrs.length > 0) {
+				expandedKrIds = new Set([firstKrs[0].id]);
+			}
 		}
-		if (!activeObj) return [];
-		const oIdx = activeObjIndex + 1;
-		return activeObj.children
-			.filter((c) => c.type === 'key_result' && visibleIds.has(c.id))
-			.map((kr, kIdx) => ({
-				kr,
-				code: `KR ${oIdx}.${kIdx + 1}`,
-				parentIndex: oIdx
-			}));
 	});
+
+	function toggleObjExpand(objId: string) {
+		const next = new Set(expandedObjIds);
+		if (next.has(objId)) {
+			next.delete(objId);
+		} else {
+			next.add(objId);
+		}
+		expandedObjIds = next;
+	}
+
+	function toggleKrExpand(krId: string) {
+		const next = new Set(expandedKrIds);
+		if (next.has(krId)) {
+			next.delete(krId);
+		} else {
+			next.add(krId);
+		}
+		expandedKrIds = next;
+	}
+
+	// Key Result Clusters grouped by Parent Objective (ordered top to bottom by number)
+	const krClusters = $derived.by(() => {
+		const clusters: {
+			parentId: string;
+			parentIndex: number;
+			items: {
+				kr: NodeWithExtras;
+				code: string;
+				parentIndex: number;
+				parentId: string;
+			}[];
+		}[] = [];
+
+		visibleObjectives.forEach((obj, oIdx) => {
+			if (expandedObjIds.has(obj.id)) {
+				const rawKrs = obj.children.filter(
+					(c) => c.type === 'key_result' && visibleIds.has(c.id)
+				);
+				// Order top to bottom by number / sort_order
+				const sortedKrs = [...rawKrs].sort((a, b) => {
+					if (a.sort_order != null && b.sort_order != null && a.sort_order !== b.sort_order) {
+						return a.sort_order - b.sort_order;
+					}
+					return (a.title || '').localeCompare(b.title || '', undefined, { numeric: true });
+				});
+				const items = sortedKrs.map((kr, kIdx) => ({
+					kr,
+					code: `KR ${oIdx + 1}.${kIdx + 1}`,
+					parentIndex: oIdx + 1,
+					parentId: obj.id
+				}));
+				if (items.length > 0) {
+					clusters.push({
+						parentId: obj.id,
+						parentIndex: oIdx + 1,
+						items
+					});
+				}
+			}
+		});
+
+		return clusters;
+	});
+
+	// Key Results displayed in Column 2 (all KRs belonging to expanded objectives)
+	const displayedKRs = $derived(krClusters.flatMap((c) => c.items));
 
 	// Total available KPIs for displayed KRs & Objs
 	const totalDisplayedKpisCount = $derived.by(() => {
-		const targetObjs = expandAllObjectives
-			? visibleObjectives
-			: activeObj
-				? [activeObj]
-				: [];
 		let count = 0;
-		for (const obj of targetObjs) {
-			count += obj.children.filter((c) => c.type === 'kpi' && visibleIds.has(c.id)).length;
+		for (const obj of visibleObjectives) {
+			if (expandedObjIds.has(obj.id)) {
+				count += obj.children.filter((c) => c.type === 'kpi' && visibleIds.has(c.id)).length;
+			}
 		}
 		for (const item of displayedKRs) {
 			count += item.kr.children.filter((c) => c.type === 'kpi' && visibleIds.has(c.id)).length;
@@ -95,58 +138,169 @@
 		return count;
 	});
 
-	// Operational KPIs displayed in Column 3
-	const displayedKPIs = $derived.by(() => {
-		if (!expandAllKpis) return [];
-
-		const list: {
-			kpi: NodeWithExtras;
-			code: string;
+	// KPI Clusters grouped by Parent KR (ordered top to bottom by number)
+	const kpiClusters = $derived.by(() => {
+		const clusters: {
 			parentId: string;
+			items: {
+				kpi: NodeWithExtras;
+				code: string;
+				parentId: string;
+			}[];
 		}[] = [];
 
-		// Direct KPIs on active objective(s)
-		const targetObjs = expandAllObjectives
-			? visibleObjectives
-			: activeObj
-				? [activeObj]
-				: [];
-
-		for (const obj of targetObjs) {
-			const oIdx = visibleObjectives.findIndex((o) => o.id === obj.id) + 1;
-			const directKpis = obj.children.filter((c) => c.type === 'kpi' && visibleIds.has(c.id));
-			directKpis.forEach((kpi, idx) => {
-				list.push({
-					kpi,
-					code: `KPI ${oIdx}.0.${idx + 1}`,
-					parentId: obj.id
-				});
-			});
+		// Direct KPIs on expanded objectives
+		for (const obj of visibleObjectives) {
+			if (expandedObjIds.has(obj.id)) {
+				const oIdx = visibleObjectives.findIndex((o) => o.id === obj.id) + 1;
+				const directKpis = obj.children
+					.filter((c) => c.type === 'kpi' && visibleIds.has(c.id))
+					.sort((a, b) => {
+						if (a.sort_order != null && b.sort_order != null && a.sort_order !== b.sort_order) {
+							return a.sort_order - b.sort_order;
+						}
+						return (a.title || '').localeCompare(b.title || '', undefined, { numeric: true });
+					});
+				if (directKpis.length > 0) {
+					clusters.push({
+						parentId: obj.id,
+						items: directKpis.map((kpi, idx) => ({
+							kpi,
+							code: `KPI ${oIdx}.0.${idx + 1}`,
+							parentId: obj.id
+						}))
+					});
+				}
+			}
 		}
 
-		// KPIs under displayed KRs
+		// KPIs under expanded KRs
 		for (const item of displayedKRs) {
-			const kpis = item.kr.children.filter((c) => c.type === 'kpi' && visibleIds.has(c.id));
-			const krShort = item.code.replace('KR ', '');
-			kpis.forEach((kpi, idx) => {
-				list.push({
-					kpi,
-					code: `KPI ${krShort}.${idx + 1}`,
-					parentId: item.kr.id
+			if (expandedKrIds.has(item.kr.id)) {
+				const rawKpis = item.kr.children.filter((c) => c.type === 'kpi' && visibleIds.has(c.id));
+				const sortedKpis = [...rawKpis].sort((a, b) => {
+					if (a.sort_order != null && b.sort_order != null && a.sort_order !== b.sort_order) {
+						return a.sort_order - b.sort_order;
+					}
+					return (a.title || '').localeCompare(b.title || '', undefined, { numeric: true });
 				});
-			});
+				const krShort = item.code.replace('KR ', '');
+				if (sortedKpis.length > 0) {
+					clusters.push({
+						parentId: item.kr.id,
+						items: sortedKpis.map((kpi, idx) => ({
+							kpi,
+							code: `KPI ${krShort}.${idx + 1}`,
+							parentId: item.kr.id
+						}))
+					});
+				}
+			}
 		}
 
-		return list;
+		return clusters;
 	});
+
+	// Operational KPIs displayed in Column 3
+	const displayedKPIs = $derived(kpiClusters.flatMap((c) => c.items));
+
+	// Dynamic vertical alignment offsets for child clusters so they appear right on the side of their parent node
+	let krOffsets = $state<Record<string, number>>({});
+	let kpiOffsets = $state<Record<string, number>>({});
 
 	// Dynamic SVG Bezier Curve Measurements
 	let gridEl = $state<HTMLElement | null>(null);
 	let objToKrPaths = $state<{ d: string; x2: number; y2: number }[]>([]);
 	let krToKpiPaths = $state<{ d: string; x2: number; y2: number }[]>([]);
 
-	async function recomputeConnectors() {
+	let layoutRunId = 0;
+
+	async function updateClusterLayout() {
+		const runId = ++layoutRunId;
 		await tick();
+		if (runId !== layoutRunId || !gridEl) return;
+
+		const GAP = 16;
+		const col1El = gridEl.querySelector('[data-column="objs"]') as HTMLElement | null;
+		const col2El = gridEl.querySelector('[data-column="krs"]') as HTMLElement | null;
+		const col3El = gridEl.querySelector('[data-column="kpis"]') as HTMLElement | null;
+
+		if (!col1El || !col2El) return;
+
+		// Pass 1: Compute Column 2 KR cluster offsets based on Column 1 Objective cards
+		const nextKrOffsets: Record<string, number> = {};
+		let currentY2 = 0;
+		const col2Rect = col2El.getBoundingClientRect();
+
+		for (const cluster of krClusters) {
+			const parentCard = col1El.querySelector(
+				`[data-node-card="${cluster.parentId}"]`
+			) as HTMLElement | null;
+			const clusterEl = col2El.querySelector(
+				`[data-cluster-parent="${cluster.parentId}"]`
+			) as HTMLElement | null;
+
+			if (parentCard) {
+				const parentRect = parentCard.getBoundingClientRect();
+				const parentTop = Math.round(parentRect.top - col2Rect.top);
+				const nextMinTop = currentY2 === 0 ? 0 : currentY2 + GAP;
+				const targetTop = Math.max(parentTop, nextMinTop);
+				const marginTop = Math.max(0, targetTop - currentY2);
+				nextKrOffsets[cluster.parentId] = marginTop;
+
+				const clusterHeight = clusterEl?.offsetHeight || 180;
+				currentY2 = targetTop + clusterHeight;
+			}
+		}
+
+		krOffsets = nextKrOffsets;
+		await tick();
+		if (runId !== layoutRunId || !gridEl) return;
+
+		// Pass 2: Compute Column 3 KPI cluster offsets based on Column 2 KR cards (or Column 1 Objectives)
+		if (col3El) {
+			const nextKpiOffsets: Record<string, number> = {};
+			let currentY3 = 0;
+			const col3Rect = col3El.getBoundingClientRect();
+
+			for (const cluster of kpiClusters) {
+				const parentCard = (col2El.querySelector(
+					`[data-node-card="${cluster.parentId}"]`
+				) ||
+					col1El.querySelector(
+						`[data-node-card="${cluster.parentId}"]`
+					)) as HTMLElement | null;
+				const clusterEl = col3El.querySelector(
+					`[data-cluster-parent="${cluster.parentId}"]`
+				) as HTMLElement | null;
+
+				if (parentCard) {
+					const parentRect = parentCard.getBoundingClientRect();
+					const parentTop = Math.round(parentRect.top - col3Rect.top);
+					const nextMinTop = currentY3 === 0 ? 0 : currentY3 + GAP;
+					const targetTop = Math.max(parentTop, nextMinTop);
+					const marginTop = Math.max(0, targetTop - currentY3);
+					nextKpiOffsets[cluster.parentId] = marginTop;
+
+					const clusterHeight = clusterEl?.offsetHeight || 140;
+					currentY3 = targetTop + clusterHeight;
+				}
+			}
+
+			kpiOffsets = nextKpiOffsets;
+			await tick();
+			if (runId !== layoutRunId || !gridEl) return;
+		}
+
+		recomputeConnectors();
+		requestAnimationFrame(() => {
+			if (runId === layoutRunId) {
+				recomputeConnectors();
+			}
+		});
+	}
+
+	function recomputeConnectors() {
 		if (!gridEl) return;
 		const gridRect = gridEl.getBoundingClientRect();
 		if (gridRect.width < 900) {
@@ -159,19 +313,25 @@
 		const nextKrKpi: { d: string; x2: number; y2: number }[] = [];
 
 		for (const item of displayedKRs) {
-			const parentEl = gridEl.querySelector(
-				`[data-node-card="${item.kr.parent_id}"]`
-			) as HTMLElement | null;
+			const parentId = item.parentId || item.kr.parent_id;
+			const parentEl = parentId
+				? (gridEl.querySelector(`[data-node-card="${parentId}"]`) as HTMLElement | null)
+				: null;
 			const krEl = gridEl.querySelector(`[data-node-card="${item.kr.id}"]`) as HTMLElement | null;
+
 			if (parentEl && krEl) {
-				const pRect = parentEl.getBoundingClientRect();
+				const expEl = parentEl.querySelector('.group\\/expander') as HTMLElement | null;
+				const pRect = expEl ? expEl.getBoundingClientRect() : parentEl.getBoundingClientRect();
 				const kRect = krEl.getBoundingClientRect();
+
 				const x1 = Math.round(pRect.right - gridRect.left);
-				const y1 = Math.round(pRect.top - gridRect.top + Math.min(pRect.height * 0.55, 160));
+				const y1 = Math.round(pRect.top - gridRect.top + pRect.height * 0.5);
 				const x2 = Math.round(kRect.left - gridRect.left);
-				const y2 = Math.round(kRect.top - gridRect.top + kRect.height * 0.45);
-				const cx1 = Math.round(x1 + (x2 - x1) * 0.45);
-				const cx2 = Math.round(x1 + (x2 - x1) * 0.55);
+				const y2 = Math.round(kRect.top - gridRect.top + kRect.height * 0.5);
+				const dx = x2 - x1;
+				const cx1 = Math.round(x1 + dx * 0.45);
+				const cx2 = Math.round(x1 + dx * 0.55);
+
 				nextObjKr.push({
 					d: `M ${x1} ${y1} C ${cx1} ${y1}, ${cx2} ${y2}, ${x2} ${y2}`,
 					x2,
@@ -181,21 +341,27 @@
 		}
 
 		for (const item of displayedKPIs) {
-			const parentEl = gridEl.querySelector(
-				`[data-node-card="${item.parentId}"]`
-			) as HTMLElement | null;
+			const parentId = item.parentId || item.kpi.parent_id;
+			const parentEl = parentId
+				? (gridEl.querySelector(`[data-node-card="${parentId}"]`) as HTMLElement | null)
+				: null;
 			const kpiEl = gridEl.querySelector(
 				`[data-node-card="${item.kpi.id}"]`
 			) as HTMLElement | null;
+
 			if (parentEl && kpiEl) {
-				const pRect = parentEl.getBoundingClientRect();
+				const expEl = parentEl.querySelector('.group\\/expander') as HTMLElement | null;
+				const pRect = expEl ? expEl.getBoundingClientRect() : parentEl.getBoundingClientRect();
 				const kRect = kpiEl.getBoundingClientRect();
+
 				const x1 = Math.round(pRect.right - gridRect.left);
 				const y1 = Math.round(pRect.top - gridRect.top + pRect.height * 0.5);
 				const x2 = Math.round(kRect.left - gridRect.left);
 				const y2 = Math.round(kRect.top - gridRect.top + kRect.height * 0.5);
-				const cx1 = Math.round(x1 + (x2 - x1) * 0.45);
-				const cx2 = Math.round(x1 + (x2 - x1) * 0.55);
+				const dx = x2 - x1;
+				const cx1 = Math.round(x1 + dx * 0.45);
+				const cx2 = Math.round(x1 + dx * 0.55);
+
 				nextKrKpi.push({
 					d: `M ${x1} ${y1} C ${cx1} ${y1}, ${cx2} ${y2}, ${x2} ${y2}`,
 					x2,
@@ -209,24 +375,39 @@
 	}
 
 	$effect(() => {
-		// Re-run whenever displayed nodes change
-		displayedKRs;
-		displayedKPIs;
-		activeObj;
-		expandAllObjectives;
-		expandAllKpis;
+		// Re-run whenever displayed nodes, clusters or expanded sets change
+		krClusters;
+		kpiClusters;
+		expandedObjIds;
+		expandedKrIds;
 		compactKpis;
-		recomputeConnectors();
+		updateClusterLayout();
 	});
 
 	onMount(() => {
-		recomputeConnectors();
-		const ro = new ResizeObserver(() => recomputeConnectors());
+		updateClusterLayout();
+		let lastGridWidth = 0;
+		const ro = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				const width = Math.round(entry.contentRect.width);
+				if (width !== lastGridWidth) {
+					lastGridWidth = width;
+					updateClusterLayout();
+				} else {
+					recomputeConnectors();
+				}
+			}
+		});
 		if (gridEl) ro.observe(gridEl);
-		window.addEventListener('resize', recomputeConnectors);
+		window.addEventListener('resize', updateClusterLayout);
+		if (typeof document !== 'undefined' && 'fonts' in document) {
+			document.fonts.ready.then(() => {
+				updateClusterLayout();
+			});
+		}
 		return () => {
 			ro.disconnect();
-			window.removeEventListener('resize', recomputeConnectors);
+			window.removeEventListener('resize', updateClusterLayout);
 		};
 	});
 
@@ -295,16 +476,23 @@
 					Nível 1 · Objetivos Anuais ({activeYear})
 				</span>
 			</div>
-			{#if visibleObjectives.length > 1}
+			{#if visibleObjectives.length > 0}
+				{@const allExpanded = visibleObjectives.every((o) => expandedObjIds.has(o.id))}
 				<button
 					type="button"
-					onclick={() => (expandAllObjectives = !expandAllObjectives)}
+					onclick={() => {
+						if (allExpanded) {
+							expandedObjIds = new Set();
+						} else {
+							expandedObjIds = new Set(visibleObjectives.map((o) => o.id));
+						}
+					}}
 					class="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-highest font-label-sm text-label-sm text-primary font-bold transition-all shadow-[0_1px_2px_rgba(36,34,30,0.05)] flex items-center gap-1.5"
 				>
 					<span class="material-symbols-outlined text-[16px]">
-						{expandAllObjectives ? 'filter_center_focus' : 'unfold_more'}
+						{allExpanded ? 'unfold_less' : 'unfold_more'}
 					</span>
-					<span>{expandAllObjectives ? 'Focar 1 Objetivo' : `Expandir Todos (${visibleObjectives.length})`}</span>
+					<span>{allExpanded ? 'Recolher Todos' : `Expandir Todos (${visibleObjectives.length})`}</span>
 				</button>
 			{/if}
 		</div>
@@ -321,16 +509,23 @@
 					Nível 2 · Key Results (Ciclo {activeCycleCode})
 				</span>
 			</div>
-			{#if totalDisplayedKpisCount > 0}
+			{#if displayedKRs.length > 0}
+				{@const allKrsExpanded = displayedKRs.every((item) => expandedKrIds.has(item.kr.id))}
 				<button
 					type="button"
-					onclick={() => (expandAllKpis = !expandAllKpis)}
+					onclick={() => {
+						if (allKrsExpanded) {
+							expandedKrIds = new Set();
+						} else {
+							expandedKrIds = new Set(displayedKRs.map((item) => item.kr.id));
+						}
+					}}
 					class="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-highest font-label-sm text-label-sm text-secondary font-bold transition-all shadow-[0_1px_2px_rgba(36,34,30,0.05)] flex items-center gap-1.5"
 				>
 					<span class="material-symbols-outlined text-[16px]">
-						{expandAllKpis ? 'visibility_off' : 'visibility'}
+						{allKrsExpanded ? 'visibility_off' : 'visibility'}
 					</span>
-					<span>{expandAllKpis ? 'Recolher KPIs Filhos' : `Expandir Filhos (${totalDisplayedKpisCount} KPIs)`}</span>
+					<span>{allKrsExpanded ? 'Recolher KPIs Filhos' : `Expandir Filhos (${totalDisplayedKpisCount} KPIs)`}</span>
 				</button>
 			{/if}
 		</div>
@@ -423,52 +618,50 @@
 			</svg>
 
 			<!-- ================= COLUMN 1: OBJECTIVES (OKRs) ================= -->
-			<div class="col-span-4 flex flex-col gap-space-md relative z-10">
+			<div data-column="objs" class="col-span-4 flex flex-col gap-space-md relative z-10">
 				{#each visibleObjectives as obj, idx (obj.id)}
-					{@const isFocused = expandAllObjectives || activeObj?.id === obj.id}
 					{@const isSelected = selectedNodeId === obj.id}
 					{@const isHighlighted = highlightedIds.has(obj.id)}
 					{@const isDimmed = dimmedIds.has(obj.id)}
+					{@const isExpanded = expandedObjIds.has(obj.id)}
 					{@const pct = Math.round(obj.progress * 100)}
 					{@const code = `OBJ-${String(idx + 1).padStart(2, '0')}`}
 					{@const krChildren = obj.children.filter(
 						(c) => c.type === 'key_result' && visibleIds.has(c.id)
 					)}
 					{@const leader = obj.assignees[0]}
-					{@const teamNames =
-						obj.teams.length > 0
-							? obj.teams.map((t) => t.name).join(' & ')
-							: 'Diretoria Executiva'}
 					{@const objColor = obj.color || (obj.alignedValues.length > 0 ? valueColor(obj.alignedValues[0].id) : (obj.teams[0]?.color || '#0058bd'))}
 					{@const objTheme = getDossierTheme(objColor)}
 
-					{#if isFocused}
-						<!-- Expanded Tactile Executive Archival Paper Objective Card -->
+					<!-- Tactile Executive Archival Paper Objective Card (with thin right section and attribution pile) -->
+					<div
+						data-node-card={obj.id}
+						class="group/card relative rounded-xl shadow-[0_1px_1px_rgba(36,34,30,0.05),0_4px_10px_-1px_rgba(36,34,30,0.06),0_-1px_0_rgba(255,255,255,0.9)_inset] hover:shadow-[0_8px_18px_-2px_rgba(36,34,30,0.1),0_2px_4px_rgba(36,34,30,0.04)] transition-[box-shadow,background-color,border-color,opacity] duration-150 flex overflow-hidden {isSelected
+							? 'ring-2'
+							: ''} {isHighlighted ? 'ring-2 ring-tertiary-container scale-[1.01]' : ''} {isDimmed
+							? 'opacity-40 hover:opacity-90'
+							: ''}"
+						style="background-color: {objTheme.folderBg}; border: 1.5px solid {objTheme.folderBorder}; {isSelected ? `ring-color: ${objTheme.accent}; --tw-ring-color: ${objTheme.accent};` : ''}"
+					>
+						<!-- Category Indicator Spine -->
 						<div
-							data-node-card={obj.id}
+							class="absolute left-0 top-3 bottom-3 w-1.5 rounded-r shadow-xs z-10"
+							style="background-color: {objTheme.accent};"
+						></div>
+
+						<!-- Main Card Interactive Area -->
+						<div
 							role="button"
 							tabindex="0"
-							onclick={() => {
-								focusedObjId = obj.id;
-								onSelectNode(obj.id);
-							}}
+							onclick={() => onSelectNode(obj.id)}
 							onkeydown={(e) => {
 								if (e.key === 'Enter' || e.key === ' ') {
 									e.preventDefault();
-									focusedObjId = obj.id;
 									onSelectNode(obj.id);
 								}
 							}}
-							class="group relative cursor-pointer rounded-xl p-space-md shadow-[0_1px_1px_rgba(36,34,30,0.05),0_4px_10px_-1px_rgba(36,34,30,0.06),0_-1px_0_rgba(255,255,255,0.9)_inset] hover:shadow-[0_8px_18px_-2px_rgba(36,34,30,0.1),0_2px_4px_rgba(36,34,30,0.04)] transition-all {isSelected
-								? 'ring-2'
-								: ''} {isHighlighted ? 'ring-2 ring-tertiary-container scale-[1.01]' : ''} {isDimmed
-								? 'opacity-40 hover:opacity-90'
-								: ''}"
-							style="background-color: {objTheme.folderBg}; border: 1.5px solid {objTheme.folderBorder}; {isSelected ? `ring-color: ${objTheme.accent}; --tw-ring-color: ${objTheme.accent};` : ''}"
+							class="flex-1 min-w-0 p-space-md pr-2 sm:pr-3 text-left cursor-pointer"
 						>
-							<!-- Category Indicator Spine -->
-							<div class="absolute left-0 top-3 bottom-3 w-1.5 rounded-r shadow-xs" style="background-color: {objTheme.accent};"></div>
-
 							<!-- Top Meta Bar -->
 							<div class="flex items-center justify-between gap-2 mb-space-sm pl-2">
 								<div class="flex items-center gap-2">
@@ -518,7 +711,7 @@
 
 							{#if obj.description}
 								<p
-									class="font-body-sm text-body-sm pl-2 mb-space-md"
+									class="font-body-sm text-body-sm pl-2 mb-space-md line-clamp-2"
 									style="color: {objTheme.accentDark};"
 								>
 									{obj.description}
@@ -552,49 +745,17 @@
 								class="pt-space-sm pl-2 flex items-center justify-between border-t border-dashed"
 								style="border-color: {objTheme.cardBorder};"
 							>
-								<div class="flex items-center gap-space-xs min-w-0">
-									<div class="relative shrink-0">
-										<div
-											class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-[0_1px_2px_rgba(36,34,30,0.1)]"
-											style="background-color: {leader?.color || '#0058bd'}"
-										>
-											{getInitials(leader?.name || teamNames)}
-										</div>
-										<span
-											class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary ring-1 ring-white"
-										></span>
-									</div>
-									<div class="flex flex-col min-w-0 gap-1">
-										{#if obj.teams.length > 0}
-											<div class="flex flex-wrap items-center gap-1">
-												{#each obj.teams.slice(0, 2) as tm (tm.id)}
-													{@const tmTheme = getDossierTheme(tm.color || '#0058bd')}
-													<span
-														class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border shadow-2xs"
-														style="background-color: {tmTheme.badgeBg}; border-color: {tmTheme.badgeBorder}; color: {tmTheme.badgeText};"
-													>
-														<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {tmTheme.accent};"></span>
-														<span class="max-w-[96px] truncate">{tm.name}</span>
-													</span>
-												{/each}
-											</div>
-										{:else}
-											<span class="font-label-sm text-label-sm font-bold text-on-surface truncate">
-												{teamNames}
-											</span>
-										{/if}
-										<span
-											class="font-label-sm text-label-sm truncate font-medium"
-											style="color: {objTheme.accentDark};"
-										>
-											{leader ? leader.name : 'Liderança Executiva'}
-										</span>
-									</div>
-								</div>
+								<!-- Left: Attribution Pile (Squircle Team Icon + Circle Member Initials/Photo) -->
+								<AttributionPile
+									teams={obj.teams}
+									assignees={obj.assignees}
+									leader={leader}
+								/>
 
+								<!-- Right: Active KRs indicator + Quick Actions -->
 								<div class="flex items-center gap-1 shrink-0">
 									<span
-										class="px-2 py-0.5 rounded font-label-sm text-label-sm font-bold border"
+										class="px-2.5 py-0.5 rounded font-label-sm text-label-sm font-bold border"
 										style="background-color: {objTheme.badgeBg}; color: {objTheme.badgeText}; border-color: {objTheme.badgeBorder};"
 									>
 										{krChildren.length} {krChildren.length === 1 ? 'KR Ativo' : 'KRs Ativos'}
@@ -626,431 +787,442 @@
 								</div>
 							</div>
 						</div>
-					{:else}
-						<!-- Compact Objective Preview Card (like OBJ-02 in Screenshot 1) -->
-						<div
-							role="button"
-							tabindex="0"
-							onclick={() => (focusedObjId = obj.id)}
-							onkeydown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ') {
-									e.preventDefault();
-									focusedObjId = obj.id;
-								}
+
+						<!-- Small Thin Section on Right Side with Arrow -->
+						<button
+							type="button"
+							onclick={(e) => {
+								e.stopPropagation();
+								toggleObjExpand(obj.id);
 							}}
-							class="relative cursor-pointer rounded-xl p-space-md shadow-[0_1px_2px_rgba(36,34,30,0.04)] opacity-85 hover:opacity-100 transition-all {isDimmed
-								? 'opacity-35'
-								: ''}"
-							style="background-color: {objTheme.folderBg}; border: 1.5px solid {objTheme.folderBorder};"
+							disabled={krChildren.length === 0}
+							class="group/expander w-8 sm:w-9 shrink-0 flex items-center justify-center border-l border-dashed transition-colors select-none hover:bg-black/5 active:bg-black/10 {krChildren.length === 0 ? 'opacity-40 pointer-events-none cursor-default' : 'cursor-pointer'}"
+							style="border-color: {objTheme.cardBorder};"
+							title={krChildren.length === 0
+								? 'Sem Key Results vinculados'
+								: isExpanded
+									? `Ocultar ${krChildren.length} KRs filhos`
+									: `Mostrar ${krChildren.length} KRs filhos`}
+							aria-expanded={isExpanded}
 						>
-							<div
-								class="absolute left-0 top-3 bottom-3 w-1.5 rounded-r shadow-xs"
-								style="background-color: {objTheme.accent};"
-							></div>
-							<div class="flex items-center justify-between gap-2 mb-1 pl-2">
-								<span
-									class="font-label-md text-label-md font-bold"
-									style="color: {objTheme.accent};"
-								>
-									{code} · ANNUAL {obj.year ?? activeYear}
-								</span>
-								<span
-									class="font-label-sm text-label-sm px-2 py-0.5 rounded font-bold shadow-xs"
-									style="background-color: {objTheme.badgeBg}; color: {objTheme.badgeText}; border: 1px solid {objTheme.badgeBorder};"
-								>
-									{pct}%
-								</span>
-							</div>
-							<h3
-								class="font-title-md text-title-md pl-2 line-clamp-1"
-								style="color: {objTheme.accentShadow};"
-							>
-								{obj.title}
-							</h3>
-							<div
-								class="mt-2 pl-2 flex items-center justify-between font-body-sm text-body-sm"
+							<span
+								class="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover/expander:scale-115 {isExpanded ? 'group-hover/expander:-translate-x-0.5' : 'group-hover/expander:translate-x-0.5'}"
 								style="color: {objTheme.accentDark};"
 							>
-								<div class="flex items-center gap-1.5 min-w-0">
-									{#if obj.teams.length > 0}
-										{@const tmTheme = getDossierTheme(obj.teams[0].color || '#0058bd')}
-										<span
-											class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border truncate"
-											style="background-color: {tmTheme.badgeBg}; border-color: {tmTheme.badgeBorder}; color: {tmTheme.badgeText};"
-										>
-											<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {tmTheme.accent};"></span>
-											<span class="max-w-[90px] truncate">{obj.teams[0].name}</span>
-										</span>
-									{:else}
-										<span class="truncate">{teamNames}</span>
-									{/if}
-									<span class="text-xs font-semibold shrink-0">· {krChildren.length} KRs</span>
-								</div>
-								<div class="flex items-center gap-1">
-									<button
-										type="button"
-										onclick={(e) => {
-											e.stopPropagation();
-											onSelectNode(obj.id);
-										}}
-										title="Abrir detalhes"
-										class="p-0.5 rounded hover:bg-surface-container"
-									>
-										<span class="material-symbols-outlined text-[16px]">edit</span>
-									</button>
-									<span class="material-symbols-outlined text-[16px]">chevron_right</span>
-								</div>
-							</div>
-						</div>
-					{/if}
+								{isExpanded ? 'chevron_left' : 'chevron_right'}
+							</span>
+						</button>
+					</div>
 				{/each}
 			</div>
 
 			<!-- ================= COLUMN 2: KEY RESULTS (KRs) ================= -->
-			<div class="col-span-4 flex flex-col gap-space-lg relative z-10">
-				{#each displayedKRs as item (item.kr.id)}
-					{@const kr = item.kr}
-					{@const pct = Math.round(kr.progress * 100)}
-					{@const isAtRisk = kr.atRisk || kr.status === 'at_risk' || kr.status === 'off_track'}
-					{@const isSelected = selectedNodeId === kr.id}
-					{@const isHighlighted = highlightedIds.has(kr.id)}
-					{@const isDimmed = dimmedIds.has(kr.id)}
-					{@const kpiCount = kr.children.filter(
-						(c) => c.type === 'kpi' && visibleIds.has(c.id)
-					).length}
-					{@const owner = kr.assignees[0]}
-					{@const krColor = kr.color || (kr.teams[0]?.color || (isAtRisk ? '#be123c' : '#ca8a04'))}
-					{@const krTheme = getDossierTheme(krColor)}
-
-					<!-- KR Pastel Tactile Dossier Card (Color reflects chosen theme) -->
+			<div data-column="krs" class="col-span-4 flex flex-col relative z-10">
+				{#each krClusters as cluster (cluster.parentId)}
+					{@const marginTop = krOffsets[cluster.parentId] ?? 0}
 					<div
-						data-node-card={kr.id}
-						role="button"
-						tabindex="0"
-						onclick={() => onSelectNode(kr.id)}
-						onkeydown={(e) => {
-							if (e.key === 'Enter' || e.key === ' ') {
-								e.preventDefault();
-								onSelectNode(kr.id);
-							}
-						}}
-						class="relative cursor-pointer rounded-xl p-space-md shadow-[0_2px_6px_rgba(36,34,30,0.06),0_1px_0_rgba(255,255,255,0.8)_inset] hover:shadow-[0_8px_16px_rgba(36,34,30,0.09)] transition-all {isSelected
-							? 'ring-2 ring-on-surface'
-							: ''} {isHighlighted ? 'ring-2 ring-primary scale-[1.01]' : ''} {isDimmed
-							? 'opacity-40'
-							: ''}"
-						style="background-color: {krTheme.folderBg}; border: 1.5px solid {krTheme.folderBorder}; color: {krTheme.accentDark};"
+						data-cluster-parent={cluster.parentId}
+						class="flex flex-col gap-space-lg"
+						style={marginTop > 0 ? `margin-top: ${marginTop}px;` : ''}
 					>
-						<!-- Tactile Folded Corner Tab -->
-						<div
-							class="absolute top-0 right-0 w-5 h-5 rounded-bl-lg shadow-[-1px_1px_2px_rgba(36,34,30,0.08)]"
-							style="background-color: {krTheme.folderBorder};"
-						></div>
+						{#each cluster.items as item (item.kr.id)}
+							{@const kr = item.kr}
+							{@const pct = Math.round(kr.progress * 100)}
+							{@const isAtRisk = kr.atRisk || kr.status === 'at_risk' || kr.status === 'off_track'}
+							{@const isSelected = selectedNodeId === kr.id}
+							{@const isHighlighted = highlightedIds.has(kr.id)}
+							{@const isDimmed = dimmedIds.has(kr.id)}
+							{@const isKrExpanded = expandedKrIds.has(kr.id)}
+							{@const kpiCount = kr.children.filter(
+								(c) => c.type === 'kpi' && visibleIds.has(c.id)
+							).length}
+							{@const owner = kr.assignees[0]}
+							{@const krColor = kr.color || (kr.teams[0]?.color || (isAtRisk ? '#be123c' : '#ca8a04'))}
+							{@const krTheme = getDossierTheme(krColor)}
 
-						<div class="flex items-center justify-between gap-2 mb-2 pr-3">
-							<div class="flex items-center gap-1.5">
-								<span
-									class="font-label-sm text-label-sm font-bold px-2 py-0.5 rounded shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)]"
-									style="background-color: {krTheme.badgeBg}; color: {krTheme.badgeText}; border: 1px solid {krTheme.badgeBorder};"
-								>
-									{item.code}
-								</span>
-								<span
-									class="font-label-sm text-label-sm uppercase tracking-wider font-semibold"
-									style="color: {krTheme.accent};"
-								>
-									{kr.cycle?.code ?? activeCycleCode}
-								</span>
-							</div>
-
-							{#if isAtRisk}
-								<span
-									class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 font-label-sm text-label-sm font-bold text-[#BE123C] shadow-[0_1px_2px_rgba(36,34,30,0.04)]"
-								>
-									<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
-									Em Risco ({pct}%)
-								</span>
-							{:else if pct >= 100}
-								<span
-									class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 font-label-sm text-label-sm font-bold text-[#166534] shadow-[0_1px_2px_rgba(36,34,30,0.04)]"
-								>
-									<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-									Concluído
-								</span>
-							{:else}
-								<span
-									class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 font-label-sm text-label-sm font-bold shadow-[0_1px_2px_rgba(36,34,30,0.04)]"
-									style="color: {krTheme.accentDark};"
-								>
-									<span class="w-1.5 h-1.5 rounded-full" style="background-color: {krTheme.accent};"></span>
-									No Alvo
-								</span>
-							{/if}
-						</div>
-
-						<h3
-							class="font-title-md text-title-md mb-space-sm leading-snug"
-							style="color: {krTheme.accentShadow};"
-						>
-							{kr.title}
-						</h3>
-
-						<!-- Progress Ledger Row -->
-						<div
-							class="mb-space-md bg-white/60 p-2.5 rounded-lg shadow-[inset_0_1px_2px_rgba(36,34,30,0.05)]"
-							style="border: 1px solid {krTheme.cardBorder};"
-						>
+							<!-- KR Pastel Tactile Dossier Card with Right Thin Section and Attribution Pile -->
 							<div
-								class="flex justify-between items-center text-xs font-semibold mb-1"
-								style="color: {krTheme.accentDark};"
+								data-node-card={kr.id}
+								class="group/card relative rounded-xl shadow-[0_2px_6px_rgba(36,34,30,0.06),0_1px_0_rgba(255,255,255,0.8)_inset] hover:shadow-[0_8px_16px_rgba(36,34,30,0.09)] transition-[box-shadow,background-color,border-color,opacity] duration-150 flex overflow-hidden {isSelected
+									? 'ring-2 ring-on-surface'
+									: ''} {isHighlighted ? 'ring-2 ring-primary scale-[1.01]' : ''} {isDimmed
+									? 'opacity-40'
+									: ''}"
+								style="background-color: {krTheme.folderBg}; border: 1.5px solid {krTheme.folderBorder}; color: {krTheme.accentDark};"
 							>
-								<span class="truncate">
-									{kr.description ? kr.description : 'Execução no Ciclo'}
-								</span>
-								<span class="font-bold shrink-0 ml-2" style="color: {krTheme.accentShadow};">
-									{pct}% Concluído
-								</span>
-							</div>
-							<div
-								class="w-full h-2.5 rounded-full p-0.5"
-								style="background-color: {krTheme.badgeBg}; border: 1px solid {krTheme.badgeBorder};"
-							>
+								<!-- Main Card Interactive Area -->
 								<div
-									class="h-full rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.1)] transition-all duration-500"
-									style="width: {pct}%; background-color: {krTheme.accent};"
-								></div>
-							</div>
-						</div>
-
-						<!-- Responsible & Duo-tone action -->
-						<div
-							class="flex items-center justify-between text-xs pt-1 border-t border-dashed"
-							style="border-color: {krTheme.cardBorder};"
-						>
-							<div class="flex items-center gap-1.5 min-w-0 flex-wrap">
-								<div
-									class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-[0_1px_2px_rgba(0,0,0,0.15)] shrink-0"
-									style="background-color: {owner?.color || krTheme.accent};"
+									role="button"
+									tabindex="0"
+									onclick={() => onSelectNode(kr.id)}
+									onkeydown={(e) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.preventDefault();
+											onSelectNode(kr.id);
+										}
+									}}
+									class="flex-1 min-w-0 p-space-md pr-2 sm:pr-3 text-left cursor-pointer"
 								>
-									{getInitials(owner?.name || kr.teams[0]?.name || 'KR')}
-								</div>
-								{#if kr.teams.length > 0}
-									{#each kr.teams.slice(0, 1) as kt (kt.id)}
-										{@const ktTheme = getDossierTheme(kt.color || '#0058bd')}
-										<span
-											class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border shadow-2xs"
-											style="background-color: {ktTheme.badgeBg}; border-color: {ktTheme.badgeBorder}; color: {ktTheme.badgeText};"
-										>
-											<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {ktTheme.accent};"></span>
-											<span class="max-w-[90px] truncate">{kt.name}</span>
-										</span>
-									{/each}
-								{:else}
-									<span class="font-label-sm text-label-sm font-bold truncate" style="color: {krTheme.accentShadow};">
-										{owner?.name ?? 'Equipe Responsável'}
-									</span>
-								{/if}
-							</div>
-							<div class="flex items-center gap-1.5 shrink-0">
-								<span class="font-label-sm text-label-sm font-semibold" style="color: {krTheme.accent};">
-									{kpiCount} {kpiCount === 1 ? 'Indicador' : 'Indicadores'}
-								</span>
-								{#if canEdit}
-									<button
-										type="button"
-										onclick={(e) => {
-											e.stopPropagation();
-											onAddChild(kr);
-										}}
-										title="Adicionar Indicador KPI"
-										class="p-0.5 rounded bg-white/70 hover:bg-white transition-colors"
+									<div class="flex items-center justify-between gap-2 mb-2 pr-1">
+										<div class="flex items-center gap-1.5">
+											<span
+												class="font-label-sm text-label-sm font-bold px-2 py-0.5 rounded shadow-[inset_0_1px_1px_rgba(255,255,255,0.6)]"
+												style="background-color: {krTheme.badgeBg}; color: {krTheme.badgeText}; border: 1px solid {krTheme.badgeBorder};"
+											>
+												{item.code}
+											</span>
+											<span
+												class="font-label-sm text-label-sm uppercase tracking-wider font-semibold"
+												style="color: {krTheme.accent};"
+											>
+												{kr.cycle?.code ?? activeCycleCode}
+											</span>
+										</div>
+
+										{#if isAtRisk}
+											<span
+												class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 font-label-sm text-label-sm font-bold text-[#BE123C] shadow-[0_1px_2px_rgba(36,34,30,0.04)]"
+											>
+												<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+												Em Risco ({pct}%)
+											</span>
+										{:else if pct >= 100}
+											<span
+												class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 font-label-sm text-label-sm font-bold text-[#166534] shadow-[0_1px_2px_rgba(36,34,30,0.04)]"
+											>
+												<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+												Concluído
+											</span>
+										{:else}
+											<span
+												class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/80 font-label-sm text-label-sm font-bold shadow-[0_1px_2px_rgba(36,34,30,0.04)]"
+												style="color: {krTheme.accentDark};"
+											>
+												<span class="w-1.5 h-1.5 rounded-full" style="background-color: {krTheme.accent};"></span>
+												No Alvo
+											</span>
+										{/if}
+									</div>
+
+									<h3
+										class="font-title-md text-title-md mb-space-sm leading-snug line-clamp-2"
 										style="color: {krTheme.accentShadow};"
 									>
-										<span class="material-symbols-outlined text-[14px]">add</span>
-									</button>
-								{/if}
+										{kr.title}
+									</h3>
+
+									<!-- Progress Ledger Row -->
+									<div
+										class="mb-space-md bg-white/60 p-2.5 rounded-lg shadow-[inset_0_1px_2px_rgba(36,34,30,0.05)]"
+										style="border: 1px solid {krTheme.cardBorder};"
+									>
+										<div
+											class="flex justify-between items-center text-xs font-semibold mb-1"
+											style="color: {krTheme.accentDark};"
+										>
+											<span class="truncate">
+												{kr.description ? kr.description : 'Execução no Ciclo'}
+											</span>
+											<span class="font-bold shrink-0 ml-2" style="color: {krTheme.accentShadow};">
+												{pct}% Concluído
+											</span>
+										</div>
+										<div
+											class="w-full h-2.5 rounded-full p-0.5"
+											style="background-color: {krTheme.badgeBg}; border: 1px solid {krTheme.badgeBorder};"
+										>
+											<div
+												class="h-full rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.1)] transition-all duration-500"
+												style="width: {pct}%; background-color: {krTheme.accent};"
+											></div>
+										</div>
+									</div>
+
+									<!-- Footer: Attribution Pile + Indicator Count & Quick Add -->
+									<div
+										class="flex items-center justify-between text-xs pt-2 border-t border-dashed"
+										style="border-color: {krTheme.cardBorder};"
+									>
+										<AttributionPile
+											teams={kr.teams}
+											assignees={kr.assignees}
+											leader={owner}
+										/>
+
+										<div class="flex items-center gap-1.5 shrink-0">
+											<span
+												class="px-2 py-0.5 rounded font-label-sm text-label-sm font-bold border"
+												style="background-color: {krTheme.badgeBg}; color: {krTheme.badgeText}; border-color: {krTheme.badgeBorder};"
+											>
+												{kpiCount} {kpiCount === 1 ? 'Indicador' : 'Indicadores'}
+											</span>
+											{#if canEdit}
+												<button
+													type="button"
+													onclick={(e) => {
+														e.stopPropagation();
+														onAddChild(kr);
+													}}
+													title="Adicionar Indicador KPI"
+													class="p-1 rounded bg-white/70 hover:bg-white transition-colors"
+													style="color: {krTheme.accentShadow};"
+												>
+													<span class="material-symbols-outlined text-[14px]">add</span>
+												</button>
+											{/if}
+											<button
+												type="button"
+												onclick={(e) => {
+													e.stopPropagation();
+													onSelectNode(kr.id);
+												}}
+												title="Inspecionar Key Result"
+												class="p-1 rounded hover:bg-white/60 transition-colors"
+												style="color: {krTheme.accentShadow};"
+											>
+												<span class="material-symbols-outlined text-[16px]">more_horiz</span>
+											</button>
+										</div>
+									</div>
+								</div>
+
+								<!-- Small Thin Section on Right Side with Chevron Expander -->
+								<button
+									type="button"
+									onclick={(e) => {
+										e.stopPropagation();
+										toggleKrExpand(kr.id);
+									}}
+									disabled={kpiCount === 0}
+									class="group/expander w-8 sm:w-9 shrink-0 flex items-center justify-center border-l border-dashed transition-colors select-none hover:bg-black/5 active:bg-black/10 {kpiCount === 0 ? 'opacity-40 pointer-events-none cursor-default' : 'cursor-pointer'}"
+									style="border-color: {krTheme.cardBorder};"
+									title={kpiCount === 0
+										? 'Sem indicadores vinculados'
+										: isKrExpanded
+											? `Ocultar ${kpiCount} KPIs filhos`
+											: `Mostrar ${kpiCount} KPIs filhos`}
+									aria-expanded={isKrExpanded}
+								>
+									<span
+										class="material-symbols-outlined text-[18px] transition-transform duration-200 group-hover/expander:scale-115 {isKrExpanded ? 'group-hover/expander:-translate-x-0.5' : 'group-hover/expander:translate-x-0.5'}"
+										style="color: {krTheme.accentDark};"
+									>
+										{isKrExpanded ? 'chevron_left' : 'chevron_right'}
+									</span>
+								</button>
 							</div>
-						</div>
+						{/each}
 					</div>
 				{:else}
 					<div
 						class="rounded-xl bg-surface-container-lowest/60 border border-dashed border-outline-variant p-6 text-center"
 					>
-						<p class="font-title-md text-title-md text-on-surface-variant">
-							Nenhum Key Result neste objetivo
-						</p>
-						{#if canEdit && activeObj}
-							<button
-								type="button"
-								onclick={() => onAddChild(activeObj)}
-								class="mt-3 px-3 py-1.5 rounded-lg bg-secondary text-on-secondary font-label-sm text-label-sm font-bold shadow-[0_2px_0_#8d0051]"
-							>
-								+ Adicionar Key Result
-							</button>
+						{#if expandedObjIds.size === 0}
+							<span class="material-symbols-outlined text-[28px] text-outline mb-2">subdirectory_arrow_right</span>
+							<p class="font-title-md text-title-md text-on-surface-variant">
+								Nenhum Key Result visível
+							</p>
+							<p class="font-body-sm text-body-sm text-outline mt-1">
+								Clique na seta lateral (&gt;) de um Objetivo para exibir seus Key Results.
+							</p>
+						{:else}
+							<p class="font-title-md text-title-md text-on-surface-variant">
+								Nenhum Key Result neste objetivo
+							</p>
+							{#if canEdit && visibleObjectives.length > 0}
+								{@const targetObj = visibleObjectives.find((o) => expandedObjIds.has(o.id)) || visibleObjectives[0]}
+								<button
+									type="button"
+									onclick={() => onAddChild(targetObj)}
+									class="mt-3 px-3 py-1.5 rounded-lg bg-secondary text-on-secondary font-label-sm text-label-sm font-bold shadow-[0_2px_0_#8d0051]"
+								>
+									+ Adicionar Key Result
+								</button>
+							{/if}
 						{/if}
 					</div>
 				{/each}
 			</div>
 
 			<!-- ================= COLUMN 3: OPERATIONAL KPIS ================= -->
-			<div class="col-span-4 flex flex-col gap-space-md relative z-10">
-				{#each displayedKPIs as item, kIdx (item.kpi.id)}
-					{@const kpi = item.kpi}
-					{@const defaultKpiColors = ['#059669', '#0058bd', '#ea580c', '#7c3aed', '#00665a']}
-					{@const kpiColor = kpi.color || (kpi.teams[0]?.color || defaultKpiColors[kIdx % defaultKpiColors.length])}
-					{@const kpiTheme = getDossierTheme(kpiColor)}
-					{@const isSelected = selectedNodeId === kpi.id}
-					{@const isHighlighted = highlightedIds.has(kpi.id)}
-					{@const isDimmed = dimmedIds.has(kpi.id)}
-					{@const spark = buildMiniSparkline(kpi)}
-					{@const lastUpdate = kpi.metricUpdates[0]}
-					{@const owner = kpi.assignees[0]}
-					{@const pct = Math.round(kpi.progress * 100)}
-					{@const trendIcon = kpi.direction === 'down' ? 'trending_down' : pct >= 100 ? 'check_circle' : 'trending_up'}
-
+			<div data-column="kpis" class="col-span-4 flex flex-col relative z-10">
+				{#each kpiClusters as cluster (cluster.parentId)}
+					{@const marginTop = kpiOffsets[cluster.parentId] ?? 0}
 					<div
-						data-node-card={kpi.id}
-						role="button"
-						tabindex="0"
-						onclick={() => onSelectNode(kpi.id)}
-						onkeydown={(e) => {
-							if (e.key === 'Enter' || e.key === ' ') {
-								e.preventDefault();
-								onSelectNode(kpi.id);
-							}
-						}}
-						class="relative cursor-pointer rounded-xl p-space-md shadow-[0_2px_5px_rgba(36,34,30,0.05),0_1px_0_rgba(255,255,255,0.7)_inset] hover:shadow-[0_6px_14px_rgba(36,34,30,0.08)] transition-all {isSelected
-							? 'ring-2 ring-on-surface'
-							: ''} {isHighlighted ? 'ring-2 ring-primary scale-[1.01]' : ''} {isDimmed
-							? 'opacity-40'
-							: ''}"
-						style="background-color: {kpiTheme.folderBg}; border: 1.5px solid {kpiTheme.folderBorder}; color: {kpiTheme.accentDark};"
+						data-cluster-parent={cluster.parentId}
+						class="flex flex-col gap-space-md"
+						style={marginTop > 0 ? `margin-top: ${marginTop}px;` : ''}
 					>
-						<div class="flex items-center justify-between gap-2 mb-2">
-							<div class="flex items-center gap-1.5 flex-wrap">
-								<span
-									class="font-label-sm text-label-sm font-bold px-1.5 py-0.5 rounded shadow-xs"
-									style="background-color: {kpiTheme.badgeBg}; color: {kpiTheme.badgeText}; border: 1px solid {kpiTheme.badgeBorder};"
+						{#each cluster.items as item, kIdx (item.kpi.id)}
+							{@const kpi = item.kpi}
+							{@const defaultKpiColors = ['#059669', '#0058bd', '#ea580c', '#7c3aed', '#00665a']}
+							{@const kpiColor = kpi.color || (kpi.teams[0]?.color || defaultKpiColors[kIdx % defaultKpiColors.length])}
+							{@const kpiTheme = getDossierTheme(kpiColor)}
+							{@const isSelected = selectedNodeId === kpi.id}
+							{@const isHighlighted = highlightedIds.has(kpi.id)}
+							{@const isDimmed = dimmedIds.has(kpi.id)}
+							{@const spark = buildMiniSparkline(kpi)}
+							{@const lastUpdate = kpi.metricUpdates[0]}
+							{@const owner = kpi.assignees[0]}
+							{@const pct = Math.round(kpi.progress * 100)}
+							{@const trendIcon = kpi.direction === 'down' ? 'trending_down' : pct >= 100 ? 'check_circle' : 'trending_up'}
+
+							<div
+								data-node-card={kpi.id}
+								role="button"
+								tabindex="0"
+								onclick={() => onSelectNode(kpi.id)}
+								onkeydown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault();
+										onSelectNode(kpi.id);
+									}
+								}}
+								class="relative cursor-pointer rounded-xl p-space-md shadow-[0_2px_5px_rgba(36,34,30,0.05),0_1px_0_rgba(255,255,255,0.7)_inset] hover:shadow-[0_6px_14px_rgba(36,34,30,0.08)] transition-[box-shadow,background-color,border-color,opacity] duration-150 {isSelected
+									? 'ring-2 ring-on-surface'
+									: ''} {isHighlighted ? 'ring-2 ring-primary scale-[1.01]' : ''} {isDimmed
+									? 'opacity-40'
+									: ''}"
+								style="background-color: {kpiTheme.folderBg}; border: 1.5px solid {kpiTheme.folderBorder}; color: {kpiTheme.accentDark};"
+							>
+								<div class="flex items-center justify-between gap-2 mb-2">
+									<div class="flex items-center gap-1.5 flex-wrap">
+										<span
+											class="font-label-sm text-label-sm font-bold px-1.5 py-0.5 rounded shadow-xs"
+											style="background-color: {kpiTheme.badgeBg}; color: {kpiTheme.badgeText}; border: 1px solid {kpiTheme.badgeBorder};"
+										>
+											{item.code}
+										</span>
+										{#if kpi.teams.length > 0}
+											{@const ktTheme = getDossierTheme(kpi.teams[0].color || '#0058bd')}
+											<span
+												class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold border"
+												style="background-color: {ktTheme.badgeBg}; border-color: {ktTheme.badgeBorder}; color: {ktTheme.badgeText};"
+											>
+												<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {ktTheme.accent};"></span>
+												<span class="max-w-[75px] truncate">{kpi.teams[0].name}</span>
+											</span>
+										{:else}
+											<span
+												class="font-label-sm text-label-sm uppercase tracking-wider font-semibold"
+												style="color: {kpiTheme.accentDark};"
+											>
+												{kpi.cycle?.code ?? 'Operacional'}
+											</span>
+										{/if}
+									</div>
+									<div
+										class="flex items-center gap-1 font-bold text-xs bg-white/80 px-2 py-0.5 rounded-full shadow-xs"
+										style="color: {kpiTheme.accentDark}; border: 1px solid {kpiTheme.cardBorder};"
+									>
+										<span class="material-symbols-outlined text-[14px]">{trendIcon}</span>
+										<span>{pct}%</span>
+									</div>
+								</div>
+
+								<h4
+									class="font-title-md text-title-md {compactKpis ? 'mb-1' : 'mb-space-sm'} leading-tight"
+									style="color: {kpiTheme.accentShadow};"
 								>
-									{item.code}
-								</span>
-								{#if kpi.teams.length > 0}
-									{@const ktTheme = getDossierTheme(kpi.teams[0].color || '#0058bd')}
-									<span
-										class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold border"
-										style="background-color: {ktTheme.badgeBg}; border-color: {ktTheme.badgeBorder}; color: {ktTheme.badgeText};"
+									{kpi.title}
+								</h4>
+
+								{#if compactKpis}
+									<!-- Compact Metric Snapshot -->
+									<div
+										class="flex items-center justify-between pt-1 border-t text-xs"
+										style="border-color: {kpiTheme.cardBorder};"
 									>
-										<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {ktTheme.accent};"></span>
-										<span class="max-w-[75px] truncate">{kpi.teams[0].name}</span>
-									</span>
+										<span class="font-label-sm text-label-sm" style="color: {kpiTheme.accentDark};">
+											Meta: <strong style="color: {kpiTheme.accentShadow};">{formatNumber(kpi.target_value, kpi.unit)}</strong>
+										</span>
+										<span class="font-label-sm text-label-sm font-bold" style="color: {kpiTheme.accent};">
+											Atual: {formatNumber(kpi.current_value, kpi.unit)}
+										</span>
+									</div>
 								{:else}
-									<span
-										class="font-label-sm text-label-sm uppercase tracking-wider font-semibold"
-										style="color: {kpiTheme.accentDark};"
+									<!-- Detailed Metric Comparison Ledger -->
+									<div
+										class="grid grid-cols-3 gap-2 bg-white/70 p-2.5 rounded-lg mb-space-sm shadow-[inset_0_1px_2px_rgba(36,34,30,0.04)]"
+										style="border: 1px solid {kpiTheme.cardBorder};"
 									>
-										{kpi.cycle?.code ?? 'Operacional'}
-									</span>
+										<div>
+											<span class="block font-label-sm text-label-sm uppercase" style="color: {kpiTheme.accent};">
+												Base
+											</span>
+											<span class="font-label-md text-label-md font-bold" style="color: {kpiTheme.accentDark};">
+												{formatNumber(kpi.baseline, kpi.unit)}
+											</span>
+										</div>
+										<div>
+											<span class="block font-label-sm text-label-sm uppercase" style="color: {kpiTheme.accent};">
+												Meta
+											</span>
+											<span class="font-label-md text-label-md font-bold" style="color: {kpiTheme.accentDark};">
+												{formatNumber(kpi.target_value, kpi.unit)}
+											</span>
+										</div>
+										<div>
+											<span class="block font-label-sm text-label-sm uppercase" style="color: {kpiTheme.accent};">
+												Atual
+											</span>
+											<span class="font-label-md text-label-md font-bold" style="color: {kpiTheme.accentDark}; font-weight: 800;">
+												{formatNumber(kpi.current_value, kpi.unit)}
+											</span>
+										</div>
+									</div>
+
+									<!-- Sparkline Mini Chart Visualizer & Responsible Pile -->
+									<div class="flex items-center justify-between pt-2 border-t border-dashed gap-2" style="border-color: {kpiTheme.cardBorder};">
+										<div class="flex items-center gap-2 min-w-0">
+											<AttributionPile
+												teams={kpi.teams}
+												assignees={kpi.assignees}
+												leader={owner}
+												size="sm"
+											/>
+											<span class="text-[10px] font-medium truncate" style="color: {kpiTheme.accentDark};">
+												{#if lastUpdate}
+													{lastUpdate.created_at.slice(0, 10)}
+												{:else}
+													Sem check-in
+												{/if}
+											</span>
+										</div>
+										<svg class="w-16 h-4 shrink-0" fill="none" viewBox="0 0 80 20">
+											<path
+												d={spark.path}
+												stroke={kpiTheme.accent}
+												stroke-linecap="round"
+												stroke-width="2"
+											></path>
+											<circle cx="80" cy={spark.endY} fill={kpiTheme.accentDark} r="2.5"></circle>
+										</svg>
+									</div>
 								{/if}
 							</div>
-							<div
-								class="flex items-center gap-1 font-bold text-xs bg-white/80 px-2 py-0.5 rounded-full shadow-xs"
-								style="color: {kpiTheme.accentDark}; border: 1px solid {kpiTheme.cardBorder};"
-							>
-								<span class="material-symbols-outlined text-[14px]">{trendIcon}</span>
-								<span>{pct}%</span>
-							</div>
-						</div>
-
-						<h4
-							class="font-title-md text-title-md {compactKpis ? 'mb-1' : 'mb-space-sm'} leading-tight"
-							style="color: {kpiTheme.accentShadow};"
-						>
-							{kpi.title}
-						</h4>
-
-						{#if compactKpis}
-							<!-- Compact Metric Snapshot -->
-							<div
-								class="flex items-center justify-between pt-1 border-t text-xs"
-								style="border-color: {kpiTheme.cardBorder};"
-							>
-								<span class="font-label-sm text-label-sm" style="color: {kpiTheme.accentDark};">
-									Meta: <strong style="color: {kpiTheme.accentShadow};">{formatNumber(kpi.target_value, kpi.unit)}</strong>
-								</span>
-								<span class="font-label-sm text-label-sm font-bold" style="color: {kpiTheme.accent};">
-									Atual: {formatNumber(kpi.current_value, kpi.unit)}
-								</span>
-							</div>
-						{:else}
-							<!-- Detailed Metric Comparison Ledger -->
-							<div
-								class="grid grid-cols-3 gap-2 bg-white/70 p-2.5 rounded-lg mb-space-sm shadow-[inset_0_1px_2px_rgba(36,34,30,0.04)]"
-								style="border: 1px solid {kpiTheme.cardBorder};"
-							>
-								<div>
-									<span class="block font-label-sm text-label-sm uppercase" style="color: {kpiTheme.accent};">
-										Base
-									</span>
-									<span class="font-label-md text-label-md font-bold" style="color: {kpiTheme.accentDark};">
-										{formatNumber(kpi.baseline, kpi.unit)}
-									</span>
-								</div>
-								<div>
-									<span class="block font-label-sm text-label-sm uppercase" style="color: {kpiTheme.accent};">
-										Meta
-									</span>
-									<span class="font-label-md text-label-md font-bold" style="color: {kpiTheme.accentDark};">
-										{formatNumber(kpi.target_value, kpi.unit)}
-									</span>
-								</div>
-								<div>
-									<span class="block font-label-sm text-label-sm uppercase" style="color: {kpiTheme.accent};">
-										Atual
-									</span>
-									<span class="font-label-md text-label-md font-bold" style="color: {kpiTheme.accentDark}; font-weight: 800;">
-										{formatNumber(kpi.current_value, kpi.unit)}
-									</span>
-								</div>
-							</div>
-
-							<!-- Sparkline Mini Chart Visualizer -->
-							<div class="flex items-center justify-between pt-1 border-t border-dashed" style="border-color: {kpiTheme.cardBorder};">
-								<div class="flex items-center gap-1 text-[11px] truncate pr-2" style="color: {kpiTheme.accentDark};">
-									<span class="material-symbols-outlined text-[14px]">history</span>
-									<span class="truncate">
-										{#if lastUpdate}
-											Check-in: {lastUpdate.created_at.slice(0, 10)}{owner
-												? ` por ${owner.name.split(' ')[0]}`
-												: ''}
-										{:else if owner}
-											Responsável: {owner.name}
-										{:else}
-											Clique para registrar check-in
-										{/if}
-									</span>
-								</div>
-								<svg class="w-20 h-5 shrink-0" fill="none" viewBox="0 0 80 20">
-									<path
-										d={spark.path}
-										stroke={kpiTheme.accent}
-										stroke-linecap="round"
-										stroke-width="2"
-									></path>
-									<circle cx="80" cy={spark.endY} fill={kpiTheme.accentDark} r="2.5"></circle>
-								</svg>
-							</div>
-						{/if}
+						{/each}
 					</div>
 				{:else}
 					<div
 						class="rounded-xl bg-surface-container-lowest/60 border border-dashed border-outline-variant p-6 text-center"
 					>
-						<p class="font-title-md text-title-md text-on-surface-variant">
-							Nenhum indicador operacional vinculado
-						</p>
-						<p class="font-body-sm text-body-sm text-outline mt-1">
-							Clique no botão + em um Key Result para adicionar um KPI.
-						</p>
+						{#if expandedKrIds.size === 0 && displayedKRs.length > 0}
+							<span class="material-symbols-outlined text-[28px] text-outline mb-2">subdirectory_arrow_right</span>
+							<p class="font-title-md text-title-md text-on-surface-variant">
+								Nenhum indicador expandido
+							</p>
+							<p class="font-body-sm text-body-sm text-outline mt-1">
+								Clique na seta lateral (&gt;) de um Key Result para visualizar seus KPIs vinculados.
+							</p>
+						{:else}
+							<p class="font-title-md text-title-md text-on-surface-variant">
+								Nenhum indicador operacional vinculado
+							</p>
+							<p class="font-body-sm text-body-sm text-outline mt-1">
+								Clique no botão + em um Key Result para adicionar um KPI.
+							</p>
+						{/if}
 					</div>
 				{/each}
 			</div>

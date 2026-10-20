@@ -105,3 +105,40 @@ export function enhanceFormValidation(form: HTMLFormElement) {
 		}
 	};
 }
+
+/**
+ * Returns the best matching Google Material Symbol for a given team name or team object.
+ */
+export function getTeamIcon(
+	team: { name?: string; icon?: string | null } | string | null | undefined
+): string {
+	if (!team) return 'groups';
+	if (typeof team === 'object' && team.icon && team.icon.trim()) {
+		return team.icon.trim();
+	}
+	const rawName = typeof team === 'string' ? team : (team.name || '');
+	const n = rawName.toLowerCase();
+
+	if (n.includes('presid') || n.includes('governan') || n.includes('institu')) {
+		return 'account_balance';
+	}
+	if (n.includes('finan') || n.includes('adm') || n.includes('juríd') || n.includes('jurid')) {
+		return 'payments';
+	}
+	if (n.includes('comerc') || n.includes('venda')) {
+		return 'storefront';
+	}
+	if (n.includes('market') || n.includes('mkt') || n.includes('comunic')) {
+		return 'campaign';
+	}
+	if (n.includes('projet') || n.includes('dev') || n.includes('consult')) {
+		return 'rocket_launch';
+	}
+	if (n.includes('pesso') || n.includes('gp') || n.includes('gente') || n.includes('rh')) {
+		return 'groups';
+	}
+	if (n.includes('todas') || n.includes('geral')) {
+		return 'hub';
+	}
+	return 'storefront';
+}

@@ -9,6 +9,7 @@ export interface Team {
 	name: string;
 	description: string | null;
 	color: string | null;
+	icon?: string | null;
 	created_at: string;
 }
 
@@ -23,6 +24,8 @@ export interface Profile {
 	email?: string;
 	role: UserRole;
 	color: string | null;
+	avatar_url?: string | null;
+	image?: string | null;
 	teams?: Team[];
 	created_at: string;
 }

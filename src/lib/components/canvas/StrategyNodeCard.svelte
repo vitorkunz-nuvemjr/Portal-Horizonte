@@ -4,6 +4,7 @@
 	import { formatNumber, formatPct, getInitials } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
 	import { getDossierTheme } from '$lib/dossier-theme';
+	import AttributionPile from '$lib/components/ui/AttributionPile.svelte';
 	import {
 		Target,
 		Flag,
@@ -229,65 +230,15 @@
 				</div>
 			{/if}
 
-			{#if (node.type === 'objective' || node.type === 'key_result') && node.teams && node.teams.length > 0}
-				<div class="flex flex-wrap items-center gap-1">
-					{#each node.teams.slice(0, 2) as t (t.id)}
-						{@const tTheme = getDossierTheme(t.color || '#0058bd')}
-						<span
-							class="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold"
-							style="background-color: {tTheme.badgeBg}; border-color: {tTheme.badgeBorder}; color: {tTheme.badgeText};"
-							title="Equipe: {t.name}"
-						>
-							<span
-								class="h-1.5 w-1.5 rounded-full"
-								style="background-color: {tTheme.accent}"
-							></span>
-							<span class="max-w-[64px] truncate">{t.name}</span>
-						</span>
-					{/each}
-					{#if node.teams.length > 2}
-						<span class="text-[9px] font-bold text-slate-400">+{node.teams.length - 2}</span>
-					{/if}
-				</div>
-			{/if}
 		</div>
 
-		<!-- Right: Teams (for KPI only), Assignees & Quick Add -->
+		<!-- Right: Attribution Pile (Squircle team + circle member with hover animations & tooltips) & Quick Add -->
 		<div class="flex shrink-0 items-center gap-1.5 pt-0.5">
-			<!-- Assigned Teams Badges (KPI only) -->
-			{#if node.type === 'kpi' && node.teams && node.teams.length > 0}
-				<div class="flex items-center gap-1">
-					{#each node.teams.slice(0, 1) as t (t.id)}
-						{@const tTheme = getDossierTheme(t.color || '#0058bd')}
-						<span
-							class="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold"
-							style="background-color: {tTheme.badgeBg}; border-color: {tTheme.badgeBorder}; color: {tTheme.badgeText};"
-							title="Equipe: {t.name}"
-						>
-							<span
-								class="h-1.5 w-1.5 rounded-full"
-								style="background-color: {tTheme.accent}"
-							></span>
-							<span class="max-w-[64px] truncate">{t.name}</span>
-						</span>
-					{/each}
-				</div>
-			{/if}
-
-			<!-- Assignee Avatars -->
-			{#if node.assignees.length > 0}
-				<div class="flex -space-x-1.5">
-					{#each node.assignees.slice(0, 3) as person (person.id)}
-						<span
-							class="inline-flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold text-white ring-1 ring-white"
-							style="background-color: {person.color || '#475569'}"
-							title={person.name}
-						>
-							{getInitials(person.name)}
-						</span>
-					{/each}
-				</div>
-			{/if}
+			<AttributionPile
+				teams={node.teams}
+				assignees={node.assignees}
+				size="sm"
+			/>
 
 			{#if data.canEdit && (node.type === 'objective' || node.type === 'key_result')}
 				<button
