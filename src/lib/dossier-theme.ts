@@ -1,18 +1,22 @@
 /**
- * Dossier Theme Utility: Dynamic Soft-Tone Color System
+ * Dossier Theme Utility: Dynamic Soft-Tone & Muted Color System
  * Produces authentic physical file folder shades (soft pastel paper tinting,
- * borders, stitched-line accents, badges, and inputs) derived from any hex color.
+ * muted cardstock surfaces, borders, stitched-line accents, team chips, and inputs)
+ * derived from any hex color following the Paper Strategist design system.
  */
 
 export interface DossierTheme {
+	rawHex: string;
 	folderBg: string;
 	folderBorder: string;
 	footerBg: string;
 	stitchedColor: string;
+	cardBg: string;
 	cardBorder: string;
 	inputBg: string;
 	inputBorder: string;
 	accent: string;
+	accentMuted: string;
 	accentDark: string;
 	accentShadow: string;
 	badgeBg: string;
@@ -20,186 +24,270 @@ export interface DossierTheme {
 	badgeBorder: string;
 }
 
+export interface ColorPreset {
+	name: string;
+	hex: string;
+}
+
+/**
+ * Main canonical project colors displayed in the first stage of the color picker.
+ */
+export const PROJECT_MAIN_COLORS: ColorPreset[] = [
+	{ name: 'Carvão Grafite', hex: '#1d1b17' },
+	{ name: 'Laranja Terracota', hex: '#ea580c' },
+	{ name: 'Âmbar Solar', hex: '#ca8a04' },
+	{ name: 'Verde Esmeralda', hex: '#059669' },
+	{ name: 'Azul Céu', hex: '#0284c7' },
+	{ name: 'Azul Horizonte', hex: '#0058bd' },
+	{ name: 'Roxo Estratégico', hex: '#7c3aed' },
+	{ name: 'Framboesa Magenta', hex: '#b30069' }
+];
+
+/**
+ * Parse any 3, 6, or 8 digit hex string into RGB [0..255].
+ */
+export function parseHexToRgb(hex?: string | null): [number, number, number] {
+	if (!hex) return [0, 88, 189];
+	const clean = hex.trim().replace(/^#/, '');
+	if (/^[0-9a-fA-F]{3}$/.test(clean)) {
+		const r = parseInt(clean[0] + clean[0], 16);
+		const g = parseInt(clean[1] + clean[1], 16);
+		const b = parseInt(clean[2] + clean[2], 16);
+		return [r, g, b];
+	}
+	if (/^[0-9a-fA-F]{6,8}$/.test(clean)) {
+		const r = parseInt(clean.slice(0, 2), 16);
+		const g = parseInt(clean.slice(2, 4), 16);
+		const b = parseInt(clean.slice(4, 6), 16);
+		return [r, g, b];
+	}
+	return [0, 88, 189];
+}
+
+export function rgbToHex(r: number, g: number, b: number): string {
+	const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
+	return (
+		'#' +
+		[clamp(r), clamp(g), clamp(b)]
+			.map((v) => v.toString(16).padStart(2, '0'))
+			.join('')
+	);
+}
+
+export function rgbToHsl(r: number, g: number, b: number): [number, number, number] {
+	r /= 255;
+	g /= 255;
+	b /= 255;
+	const max = Math.max(r, g, b);
+	const min = Math.min(r, g, b);
+	let h = 0;
+	let s = 0;
+	const l = (max + min) / 2;
+
+	if (max !== min) {
+		const d = max - min;
+		s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+		switch (max) {
+			case r:
+				h = (g - b) / d + (g < b ? 6 : 0);
+				break;
+			case g:
+				h = (b - r) / d + 2;
+				break;
+			case b:
+				h = (r - g) / d + 4;
+				break;
+		}
+		h /= 6;
+	}
+	return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
+}
+
+export function hslToRgb(h: number, s: number, l: number): [number, number, number] {
+	h = ((h % 360) + 360) % 360;
+	s = Math.max(0, Math.min(100, s)) / 100;
+	l = Math.max(0, Math.min(100, l)) / 100;
+
+	const c = (1 - Math.abs(2 * l - 1)) * s;
+	const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+	const m = l - c / 2;
+	let r = 0,
+		g = 0,
+		b = 0;
+
+	if (h < 60) [r, g, b] = [c, x, 0];
+	else if (h < 120) [r, g, b] = [x, c, 0];
+	else if (h < 180) [r, g, b] = [0, c, x];
+	else if (h < 240) [r, g, b] = [0, x, c];
+	else if (h < 300) [r, g, b] = [x, 0, c];
+	else [r, g, b] = [c, 0, x];
+
+	return [
+		Math.round((r + m) * 255),
+		Math.round((g + m) * 255),
+		Math.round((b + m) * 255)
+	];
+}
+
+export function hsvToRgb(h: number, s: number, v: number): [number, number, number] {
+	h = ((h % 360) + 360) % 360;
+	s = Math.max(0, Math.min(100, s)) / 100;
+	v = Math.max(0, Math.min(100, v)) / 100;
+
+	const c = v * s;
+	const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+	const m = v - c;
+	let r = 0,
+		g = 0,
+		b = 0;
+
+	if (h < 60) [r, g, b] = [c, x, 0];
+	else if (h < 120) [r, g, b] = [x, c, 0];
+	else if (h < 180) [r, g, b] = [0, c, x];
+	else if (h < 240) [r, g, b] = [0, x, c];
+	else if (h < 300) [r, g, b] = [x, 0, c];
+	else [r, g, b] = [c, 0, x];
+
+	return [
+		Math.round((r + m) * 255),
+		Math.round((g + m) * 255),
+		Math.round((b + m) * 255)
+	];
+}
+
+export function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
+	r /= 255;
+	g /= 255;
+	b /= 255;
+	const max = Math.max(r, g, b);
+	const min = Math.min(r, g, b);
+	const d = max - min;
+	let h = 0;
+	const s = max === 0 ? 0 : d / max;
+	const v = max;
+
+	if (max !== min) {
+		switch (max) {
+			case r:
+				h = (g - b) / d + (g < b ? 6 : 0);
+				break;
+			case g:
+				h = (b - r) / d + 2;
+				break;
+			case b:
+				h = (r - g) / d + 4;
+				break;
+		}
+		h /= 6;
+	}
+	return [Math.round(h * 360), Math.round(s * 100), Math.round(v * 100)];
+}
+
+/**
+ * Mixes two RGB colors by weight (0 = 100% base, 1 = 100% tint)
+ */
+function mixRgb(
+	c1: [number, number, number],
+	c2: [number, number, number],
+	ratio: number
+): string {
+	const w = Math.max(0, Math.min(1, ratio));
+	return rgbToHex(
+		c1[0] * (1 - w) + c2[0] * w,
+		c1[1] * (1 - w) + c2[1] * w,
+		c1[2] * (1 - w) + c2[2] * w
+	);
+}
+
+/**
+ * Generates a vibrant, light-tinted Paper Strategist theme from any hex color.
+ * Produces a clean, vibrant light pastel card/folder surface paired with rich,
+ * high-contrast colorful text, badges, borders, and progress accents.
+ */
 export function getDossierTheme(hex?: string | null): DossierTheme {
-	const c = (hex && hex.trim()) ? hex.trim().toLowerCase() : '#0058bd';
+	const rawClean = hex && hex.trim() ? hex.trim() : '#0058bd';
+	const [r, g, b] = parseHexToRgb(rawClean);
+	const rawHex = rgbToHex(r, g, b);
+	const [h, s, l] = rgbToHsl(r, g, b);
 
-	// Specific presets for popular corporate palette colors to ensure optimal contrast
-	if (c.includes('059669') || c.includes('10b981') || c.includes('047857')) {
+	const isAchromatic = s < 10;
+	if (isAchromatic) {
 		return {
-			folderBg: '#f2f9f4',
-			folderBorder: '#c6e7d0',
-			footerBg: '#e4f3e9',
-			stitchedColor: '#96d2a7',
-			cardBorder: '#d1edd9',
-			inputBg: '#f9fdfa',
-			inputBorder: '#86efac',
-			accent: '#059669',
-			accentDark: '#065f46',
-			accentShadow: '#064e3b',
-			badgeBg: '#d1fae5',
-			badgeText: '#065f46',
-			badgeBorder: '#a7f3d0'
+			rawHex,
+			folderBg: '#f3f1ed',
+			folderBorder: '#cfc9be',
+			footerBg: '#e7e3dc',
+			stitchedColor: '#b5aea0',
+			cardBg: '#f9f8f6',
+			cardBorder: '#dbd5ca',
+			inputBg: '#ffffff',
+			inputBorder: '#c9c2b6',
+			accent: '#2d2a24',
+			accentMuted: '#3d3931',
+			accentDark: '#1d1b17',
+			accentShadow: '#12100d',
+			badgeBg: '#e5e0d7',
+			badgeText: '#1d1b17',
+			badgeBorder: '#c2bbb0'
 		};
 	}
 
-	if (c.includes('004190') || c.includes('0058bd') || c.includes('2563eb') || c.includes('3080f9')) {
-		return {
-			folderBg: '#f2f6fd',
-			folderBorder: '#c2d6f8',
-			footerBg: '#e5eeff',
-			stitchedColor: '#99bdf4',
-			cardBorder: '#d4e3fb',
-			inputBg: '#f8faff',
-			inputBorder: '#93c5fd',
-			accent: '#0058bd',
-			accentDark: '#003373',
-			accentShadow: '#00224d',
-			badgeBg: '#dbeafe',
-			badgeText: '#1e40af',
-			badgeBorder: '#bfdbfe'
-		};
-	}
+	// Yellow/amber hues (38°..65°) shift slightly warmer in dark text shades so they look rich gold/amber instead of olive
+	const isYellowHue = h >= 38 && h <= 65;
+	const textHue = isYellowHue ? Math.max(24, h - 12) : h;
 
-	if (c.includes('7c3aed') || c.includes('6b52ae') || c.includes('8b5cf6')) {
-		return {
-			folderBg: '#f6f3fc',
-			folderBorder: '#ded2f7',
-			footerBg: '#ece6f9',
-			stitchedColor: '#c4b0f0',
-			cardBorder: '#e7dff9',
-			inputBg: '#faf8fe',
-			inputBorder: '#c4b5fd',
-			accent: '#7c3aed',
-			accentDark: '#5b21b6',
-			accentShadow: '#4c1d95',
-			badgeBg: '#ede9fe',
-			badgeText: '#5b21b6',
-			badgeBorder: '#ddd6fe'
-		};
-	}
+	// High saturation for vibrant accents, borders, and colorful text
+	const vividSat = Math.min(96, Math.max(76, s));
+	const bgSat = Math.min(95, Math.max(75, s));
+	const borderSat = Math.min(92, Math.max(74, s));
 
-	if (c.includes('b30069') || c.includes('db2777') || c.includes('f52a95')) {
-		return {
-			folderBg: '#fdf2f7',
-			folderBorder: '#f8c3df',
-			footerBg: '#fbe4f0',
-			stitchedColor: '#f19ac9',
-			cardBorder: '#f9d5e7',
-			inputBg: '#fef8fb',
-			inputBorder: '#f472b6',
-			accent: '#b30069',
-			accentDark: '#83004d',
-			accentShadow: '#5c0036',
-			badgeBg: '#fce7f3',
-			badgeText: '#9d174d',
-			badgeBorder: '#fbcfe8'
-		};
-	}
+	// Vibrant primary accent (bars, icons, status dots, active buttons)
+	const accentLight = isYellowHue ? 40 : Math.min(46, Math.max(36, l));
+	const accentRgb = hslToRgb(h, vividSat, accentLight);
+	const accent = rgbToHex(accentRgb[0], accentRgb[1], accentRgb[2]);
 
-	if (c.includes('ea580c') || c.includes('f97316') || c.includes('c2410c')) {
-		return {
-			folderBg: '#fef5ee',
-			folderBorder: '#fed5b8',
-			footerBg: '#fdebe0',
-			stitchedColor: '#fba872',
-			cardBorder: '#fee1cb',
-			inputBg: '#fffaf6',
-			inputBorder: '#fdba74',
-			accent: '#ea580c',
-			accentDark: '#9a3412',
-			accentShadow: '#7c2d12',
-			badgeBg: '#ffedd5',
-			badgeText: '#9a3412',
-			badgeBorder: '#fed7aa'
-		};
-	}
+	// Slightly softer mid-vibrant accent for avatars/secondary fills
+	const mutedRgb = hslToRgb(h, Math.max(70, vividSat - 6), Math.min(48, accentLight + 4));
+	const accentMuted = rgbToHex(mutedRgb[0], mutedRgb[1], mutedRgb[2]);
 
-	if (c.includes('00665a') || c.includes('0d9488') || c.includes('0f766e')) {
-		return {
-			folderBg: '#f0f9f8',
-			folderBorder: '#bee8e3',
-			footerBg: '#dff3f0',
-			stitchedColor: '#86cfc5',
-			cardBorder: '#ceeee8',
-			inputBg: '#f7fdfc',
-			inputBorder: '#5eead4',
-			accent: '#00665a',
-			accentDark: '#00473e',
-			accentShadow: '#00332d',
-			badgeBg: '#ccfbf1',
-			badgeText: '#115e59',
-			badgeBorder: '#99f6e4'
-		};
-	}
+	// Rich, colorful dark ink for card text & labels (high contrast against light cardBg/folderBg)
+	const darkRgb = hslToRgb(textHue, Math.min(94, vividSat + 4), isYellowHue ? 28 : 27);
+	const shadowRgb = hslToRgb(textHue, Math.min(96, vividSat + 6), isYellowHue ? 21 : 20);
+	const accentDark = rgbToHex(darkRgb[0], darkRgb[1], darkRgb[2]);
+	const accentShadow = rgbToHex(shadowRgb[0], shadowRgb[1], shadowRgb[2]);
 
-	if (c.includes('be123c') || c.includes('e11d48') || c.includes('9f1239') || c.includes('fda4af')) {
-		return {
-			folderBg: '#ffe4e6',
-			folderBorder: '#fda4af',
-			footerBg: '#fedfe2',
-			stitchedColor: '#f43f5e',
-			cardBorder: '#fecdd3',
-			inputBg: '#fff1f2',
-			inputBorder: '#fda4af',
-			accent: '#e11d48',
-			accentDark: '#9f1239',
-			accentShadow: '#881337',
-			badgeBg: '#fecdd3',
-			badgeText: '#881337',
-			badgeBorder: '#fda4af'
-		};
-	}
+	// Light, vibrant pastel card & folder surfaces (high contrast with accentDark / accentShadow text)
+	const folderBgRgb = hslToRgb(h, bgSat, isYellowHue ? 90 : 92);
+	const cardBgRgb = hslToRgb(h, bgSat, isYellowHue ? 94 : 95);
+	const footerBgRgb = hslToRgb(h, bgSat, isYellowHue ? 85 : 88);
 
-	if (c.includes('b45309') || c.includes('ca8a04') || c.includes('d97706') || c.includes('fef08a')) {
-		return {
-			folderBg: '#fef9c3',
-			folderBorder: '#fde047',
-			footerBg: '#fef3a0',
-			stitchedColor: '#eab308',
-			cardBorder: '#fef08a',
-			inputBg: '#fefce8',
-			inputBorder: '#fde047',
-			accent: '#ca8a04',
-			accentDark: '#92400e',
-			accentShadow: '#78350f',
-			badgeBg: '#fde047',
-			badgeText: '#78350f',
-			badgeBorder: '#facc15'
-		};
-	}
+	const folderBorderRgb = hslToRgb(h, borderSat, isYellowHue ? 66 : 75);
+	const cardBorderRgb = hslToRgb(h, borderSat, isYellowHue ? 72 : 80);
+	const stitchedRgb = hslToRgb(h, borderSat, isYellowHue ? 58 : 66);
 
-	if (c.includes('0284c7') || c.includes('0369a1') || c.includes('0ea5e9')) {
-		return {
-			folderBg: '#f0f8fc',
-			folderBorder: '#bfe1f5',
-			footerBg: '#e0f1fa',
-			stitchedColor: '#84c5eb',
-			cardBorder: '#d0e9f7',
-			inputBg: '#f7fbfe',
-			inputBorder: '#7dd3fc',
-			accent: '#0284c7',
-			accentDark: '#075985',
-			accentShadow: '#0c4a6e',
-			badgeBg: '#e0f2fe',
-			badgeText: '#0369a1',
-			badgeBorder: '#bae6fd'
-		};
-	}
+	const inputBgRgb = hslToRgb(h, bgSat, 98);
+	const inputBorderRgb = hslToRgb(h, borderSat, isYellowHue ? 68 : 74);
 
-	// Dynamic fallback for any other hex code using standard CSS color-mix
+	// Vibrant team chip & badge surfaces with deep colorful text
+	const badgeBgRgb = hslToRgb(h, Math.min(96, bgSat + 4), isYellowHue ? 81 : 85);
+	const badgeBorderRgb = hslToRgb(h, borderSat, isYellowHue ? 58 : 68);
+
 	return {
-		folderBg: `color-mix(in srgb, ${c} 9%, #fffbf5)`,
-		folderBorder: `color-mix(in srgb, ${c} 28%, #d5cebe)`,
-		footerBg: `color-mix(in srgb, ${c} 14%, #fffbf5)`,
-		stitchedColor: `color-mix(in srgb, ${c} 35%, #b4c8b7)`,
-		cardBorder: `color-mix(in srgb, ${c} 20%, #e8e2d8)`,
-		inputBg: `color-mix(in srgb, ${c} 4%, #ffffff)`,
-		inputBorder: `color-mix(in srgb, ${c} 30%, #d5cebe)`,
-		accent: c,
-		accentDark: `color-mix(in srgb, ${c} 80%, #000000)`,
-		accentShadow: `color-mix(in srgb, ${c} 70%, #000000)`,
-		badgeBg: `color-mix(in srgb, ${c} 14%, #ffffff)`,
-		badgeText: `color-mix(in srgb, ${c} 85%, #000000)`,
-		badgeBorder: `color-mix(in srgb, ${c} 30%, #ffffff)`
+		rawHex,
+		folderBg: rgbToHex(folderBgRgb[0], folderBgRgb[1], folderBgRgb[2]),
+		folderBorder: rgbToHex(folderBorderRgb[0], folderBorderRgb[1], folderBorderRgb[2]),
+		footerBg: rgbToHex(footerBgRgb[0], footerBgRgb[1], footerBgRgb[2]),
+		stitchedColor: rgbToHex(stitchedRgb[0], stitchedRgb[1], stitchedRgb[2]),
+		cardBg: rgbToHex(cardBgRgb[0], cardBgRgb[1], cardBgRgb[2]),
+		cardBorder: rgbToHex(cardBorderRgb[0], cardBorderRgb[1], cardBorderRgb[2]),
+		inputBg: rgbToHex(inputBgRgb[0], inputBgRgb[1], inputBgRgb[2]),
+		inputBorder: rgbToHex(inputBorderRgb[0], inputBorderRgb[1], inputBorderRgb[2]),
+		accent,
+		accentMuted,
+		accentDark,
+		accentShadow,
+		badgeBg: rgbToHex(badgeBgRgb[0], badgeBgRgb[1], badgeBgRgb[2]),
+		badgeText: accentDark,
+		badgeBorder: rgbToHex(badgeBorderRgb[0], badgeBorderRgb[1], badgeBorderRgb[2])
 	};
 }

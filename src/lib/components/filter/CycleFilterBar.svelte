@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import type { Cycle, NodeWithExtras, StrategyNode, Team } from '$lib/types';
 	import { valueColor } from '$lib/value-colors';
+	import { getDossierTheme } from '$lib/dossier-theme';
 
 	interface Props {
 		cycles: Cycle[];
@@ -62,10 +63,15 @@
 		return `${selectedYears.length} anos selecionados`;
 	});
 
-	const selectedTeamLabel = $derived.by(() => {
-		if (!selectedTeamId || selectedTeamId === 'all') return 'Todas Equipes';
-		return teams.find((t) => t.id === selectedTeamId)?.name ?? 'Todas Equipes';
+	const selectedTeam = $derived.by(() => {
+		if (!selectedTeamId || selectedTeamId === 'all') return null;
+		return teams.find((t) => t.id === selectedTeamId) ?? null;
 	});
+
+	const selectedTeamLabel = $derived(selectedTeam?.name ?? 'Todas Equipes');
+	const selectedTeamTheme = $derived(
+		selectedTeam ? getDossierTheme(selectedTeam.color || '#0058bd') : null
+	);
 
 	function updateParam(updater: (params: URLSearchParams) => void) {
 		const url = new URL($page.url);
@@ -311,11 +317,26 @@
 				<button
 					type="button"
 					onclick={() => (showTeamDropdown = !showTeamDropdown)}
-					class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-lowest text-on-surface rounded-lg font-label-md text-label-md shadow-[0_1px_2px_rgba(36,34,30,0.05)] hover:bg-surface-container transition-colors"
+					class="flex items-center gap-2 px-3 py-1.5 rounded-lg font-label-md text-label-md shadow-[0_1px_2px_rgba(36,34,30,0.05)] transition-colors {selectedTeamTheme
+						? 'font-bold border'
+						: 'bg-surface-container-lowest text-on-surface hover:bg-surface-container'}"
+					style={selectedTeamTheme
+						? `background-color: ${selectedTeamTheme.badgeBg}; color: ${selectedTeamTheme.badgeText}; border-color: ${selectedTeamTheme.badgeBorder};`
+						: ''}
 				>
-					<span class="material-symbols-outlined text-[16px] text-primary">groups</span>
+					<span
+						class="material-symbols-outlined text-[16px]"
+						style={selectedTeamTheme ? `color: ${selectedTeamTheme.accent};` : ''}
+						class:text-primary={!selectedTeamTheme}
+					>
+						groups
+					</span>
 					<span>{selectedTeamLabel}</span>
-					<span class="material-symbols-outlined text-[16px] text-on-surface-variant">
+					<span
+						class="material-symbols-outlined text-[16px]"
+						style={selectedTeamTheme ? `color: ${selectedTeamTheme.badgeText};` : ''}
+						class:text-on-surface-variant={!selectedTeamTheme}
+					>
 						expand_more
 					</span>
 				</button>
@@ -344,26 +365,35 @@
 							{/if}
 						</button>
 						{#each teams as t (t.id)}
+							{@const tTheme = getDossierTheme(t.color || '#0058bd')}
 							<button
 								type="button"
 								onclick={() => {
 									onTeamChange?.(t.id);
 									showTeamDropdown = false;
 								}}
-								class="w-full text-left px-2.5 py-1.5 rounded font-body-sm text-body-sm hover:bg-surface-container flex items-center justify-between {selectedTeamId ===
+								class="w-full text-left px-2.5 py-1.5 rounded font-body-sm text-body-sm hover:bg-surface-container flex items-center justify-between transition-colors {selectedTeamId ===
 								t.id
-									? 'text-primary font-semibold bg-surface-container-low'
+									? 'font-semibold'
 									: 'text-on-surface-variant hover:text-on-surface'}"
+								style={selectedTeamId === t.id
+									? `background-color: ${tTheme.badgeBg}; color: ${tTheme.badgeText};`
+									: ''}
 							>
 								<span class="flex items-center gap-2 truncate">
 									<span
-										class="w-2 h-2 rounded-full shrink-0"
-										style="background-color: {t.color || '#0058bd'}"
+										class="w-2.5 h-2.5 rounded-full shrink-0 border"
+										style="background-color: {tTheme.accentMuted}; border-color: {tTheme.badgeBorder};"
 									></span>
 									<span class="truncate">{t.name}</span>
 								</span>
 								{#if selectedTeamId === t.id}
-									<span class="material-symbols-outlined text-primary text-[16px]">check</span>
+									<span
+										class="material-symbols-outlined text-[16px]"
+										style="color: {tTheme.accent};"
+									>
+										check
+									</span>
 								{/if}
 							</button>
 						{/each}

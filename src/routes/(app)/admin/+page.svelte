@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { enhanceFormValidation, getInitials } from '$lib/utils';
+	import { getDossierTheme } from '$lib/dossier-theme';
+	import PaperColorPicker from '$lib/components/ui/PaperColorPicker.svelte';
 	import type { Profile, Team, Cycle } from '$lib/types';
 
 	let { data, form } = $props();
@@ -111,83 +113,45 @@
 		return data.profiles.filter((p: Profile) => uids.includes(p.id));
 	}
 
-	// Visual theme mappings matching the Stitch design system
+	// Visual theme mappings matching the Paper Strategist design system with muted tones
 	function getTeamVisual(name: string, fallbackColor?: string | null) {
 		const n = (name || '').toLowerCase();
+		let icon = 'apartment';
+		let defaultHex = '#0058bd';
+
 		if (n.includes('presid') || n.includes('governan') || n.includes('institu')) {
-			return {
-				icon: 'account_balance',
-				iconColor: 'text-blue-600',
-				bgStyle: 'background-color: rgb(240, 245, 255); border-color: rgb(219, 234, 254);',
-				pillBg: 'bg-[#f0f4ff]',
-				pillBorder: 'border-[#c7d2fe]',
-				pillText: 'text-[#3730a3]',
-				dotColor: '#2563eb'
-			};
+			icon = 'account_balance';
+			defaultHex = '#0058bd';
+		} else if (n.includes('finan') || n.includes('adm') || n.includes('juríd') || n.includes('jurid')) {
+			icon = 'payments';
+			defaultHex = '#0284c7';
+		} else if (n.includes('comerc') || n.includes('venda')) {
+			icon = 'storefront';
+			defaultHex = '#059669';
+		} else if (n.includes('market') || n.includes('mkt') || n.includes('comunic')) {
+			icon = 'campaign';
+			defaultHex = '#ea580c';
+		} else if (n.includes('projet') || n.includes('dev') || n.includes('consult')) {
+			icon = 'rocket_launch';
+			defaultHex = '#7c3aed';
+		} else if (n.includes('pesso') || n.includes('gp') || n.includes('gente') || n.includes('rh')) {
+			icon = 'groups';
+			defaultHex = '#ca8a04';
+		} else if (n.includes('todas') || n.includes('geral')) {
+			icon = 'hub';
+			defaultHex = '#ca8a04';
 		}
-		if (n.includes('finan') || n.includes('adm') || n.includes('juríd') || n.includes('jurid')) {
-			return {
-				icon: 'payments',
-				iconColor: 'text-cyan-600',
-				bgStyle: 'background-color: rgb(240, 249, 255); border-color: rgb(224, 242, 254);',
-				pillBg: 'bg-[#f0f9ff]',
-				pillBorder: 'border-[#bae6fd]',
-				pillText: 'text-[#0369a1]',
-				dotColor: '#0891b2'
-			};
-		}
-		if (n.includes('comerc') || n.includes('venda')) {
-			return {
-				icon: 'storefront',
-				iconColor: 'text-emerald-600',
-				bgStyle: 'background-color: rgb(240, 253, 244); border-color: rgb(220, 252, 231);',
-				pillBg: 'bg-[#f0fdf4]',
-				pillBorder: 'border-[#bbf7d0]',
-				pillText: 'text-[#15803d]',
-				dotColor: '#059669'
-			};
-		}
-		if (n.includes('market') || n.includes('mkt') || n.includes('comunic')) {
-			return {
-				icon: 'campaign',
-				iconColor: 'text-orange-600',
-				bgStyle: 'background-color: rgb(255, 247, 237); border-color: rgb(255, 237, 213);',
-				pillBg: 'bg-[#fff7ed]',
-				pillBorder: 'border-[#fed7aa]',
-				pillText: 'text-[#c2410c]',
-				dotColor: '#ea580c'
-			};
-		}
-		if (n.includes('projet') || n.includes('dev') || n.includes('consult')) {
-			return {
-				icon: 'rocket_launch',
-				iconColor: 'text-purple-600',
-				bgStyle: 'background-color: rgb(250, 245, 255); border-color: rgb(243, 232, 255);',
-				pillBg: 'bg-[#faf5ff]',
-				pillBorder: 'border-[#e9d5ff]',
-				pillText: 'text-[#7e22ce]',
-				dotColor: '#7c3aed'
-			};
-		}
-		if (n.includes('pesso') || n.includes('gp') || n.includes('gente') || n.includes('rh')) {
-			return {
-				icon: 'groups',
-				iconColor: 'text-amber-600',
-				bgStyle: 'background-color: rgb(255, 251, 235); border-color: rgb(254, 243, 199);',
-				pillBg: 'bg-[#fffbeb]',
-				pillBorder: 'border-[#fde68a]',
-				pillText: 'text-[#b45309]',
-				dotColor: '#d97706'
-			};
-		}
+
+		const activeHex = fallbackColor && fallbackColor.trim() ? fallbackColor : defaultHex;
+		const theme = getDossierTheme(activeHex);
+
 		return {
-			icon: 'apartment',
-			iconColor: 'text-blue-600',
-			bgStyle: 'background-color: #f9f3ec; border-color: #e8e2d8;',
-			pillBg: 'bg-blue-50',
-			pillBorder: 'border-blue-200',
-			pillText: 'text-blue-800',
-			dotColor: fallbackColor || '#004190'
+			icon,
+			theme,
+			iconColor: theme.accent,
+			bgStyle: `background-color: ${theme.folderBg}; border-color: ${theme.folderBorder};`,
+			pillStyle: `background-color: ${theme.badgeBg}; border-color: ${theme.badgeBorder}; color: ${theme.badgeText};`,
+			dotColor: theme.accent
 		};
 	}
 
@@ -388,7 +352,7 @@
 
 	// Active modal theme derived from the currently chosen team color
 	const modalTheme = $derived(
-		activeTeamModal ? getModalTheme(activeTeamModal.color) : getModalTheme('#059669')
+		activeTeamModal ? getDossierTheme(activeTeamModal.color) : getDossierTheme('#059669')
 	);
 
 	function openCreateTeamModal() {
@@ -750,15 +714,21 @@
 								<div>
 									<div class="flex items-center justify-between mb-2">
 										<div class="flex items-center gap-2 min-w-0">
-											<span class="material-symbols-outlined text-[20px] {visual.iconColor} shrink-0">{visual.icon}</span>
-											<h3 class="font-bold text-[14px] text-[#1d1b17] font-display truncate">{team.name}</h3>
+											<span class="material-symbols-outlined text-[20px] shrink-0" style="color: {visual.iconColor};">{visual.icon}</span>
+											<h3
+												class="font-bold text-[14px] font-display truncate"
+												style="color: {visual.theme.accentShadow};"
+											>
+												{team.name}
+											</h3>
 										</div>
 										{#if isAdmin}
-											<div class="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity shrink-0">
+											<div class="flex items-center gap-1 opacity-75 group-hover:opacity-100 transition-opacity shrink-0">
 												<button
 													type="button"
 													onclick={() => openEditTeamModal(team)}
-													class="w-6 h-6 flex items-center justify-center rounded hover:bg-white text-[#727784] hover:text-[#1d1b17] shadow-xs transition-colors cursor-pointer"
+													class="w-6 h-6 flex items-center justify-center rounded bg-white/75 hover:bg-white shadow-xs transition-colors cursor-pointer"
+													style="color: {visual.theme.accentDark};"
 													title="Editar Equipe"
 												>
 													<span class="material-symbols-outlined text-[15px]">edit</span>
@@ -766,7 +736,8 @@
 												<button
 													type="button"
 													onclick={() => (teamToDelete = team)}
-													class="w-6 h-6 flex items-center justify-center rounded hover:bg-red-50 text-[#727784] hover:text-red-600 shadow-xs transition-colors cursor-pointer"
+													class="w-6 h-6 flex items-center justify-center rounded bg-white/75 hover:bg-red-50 hover:text-red-600 shadow-xs transition-colors cursor-pointer"
+													style="color: {visual.theme.accentDark};"
 													title="Excluir Equipe"
 												>
 													<span class="material-symbols-outlined text-[15px]">delete</span>
@@ -774,11 +745,17 @@
 											</div>
 										{/if}
 									</div>
-									<p class="text-[12px] text-[#727784] leading-relaxed mb-4 font-sans line-clamp-2">
+									<p
+										class="text-[12px] leading-relaxed mb-4 font-sans line-clamp-2 font-medium"
+										style="color: {visual.theme.accentDark};"
+									>
 										{team.description || 'Unidade tática de execução e acompanhamento de OKRs.'}
 									</p>
 								</div>
-								<div class="flex items-center justify-between pt-2 border-t border-[#e8e2db]/70">
+								<div
+									class="flex items-center justify-between pt-2 border-t border-dashed"
+									style="border-color: {visual.theme.cardBorder};"
+								>
 									<div class="flex -space-x-1.5 overflow-hidden">
 										{#each members.slice(0, 3) as mem (mem.id)}
 											<div
@@ -791,17 +768,21 @@
 										{/each}
 										{#if members.length > 3}
 											<div
-												class="w-6 h-6 rounded-full bg-[#004190] text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white shrink-0 shadow-xs"
+												class="w-6 h-6 rounded-full text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white shrink-0 shadow-xs"
+												style="background-color: {visual.theme.accentDark};"
 												title="{members.length - 3} outros membros"
 											>
 												+{members.length - 3}
 											</div>
 										{/if}
 										{#if members.length === 0}
-											<span class="text-[10px] text-[#727784] italic">Nenhum membro</span>
+											<span class="text-[10px] italic" style="color: {visual.theme.accentDark};">Nenhum membro</span>
 										{/if}
 									</div>
-									<span class="text-[11px] font-semibold text-[#727784] font-sans">
+									<span
+										class="text-[11px] font-bold font-sans px-2 py-0.5 rounded-full border"
+										style="{visual.pillStyle}"
+									>
 										{members.length} {members.length === 1 ? 'membro' : 'membros'}
 									</span>
 								</div>
@@ -810,22 +791,38 @@
 					</div>
 
 					<!-- Wide Transversal Card at bottom: Todas as Diretorias (Geral) -->
-					<div class="p-4 sm:p-5 rounded-xl border border-[#d5cebe] bg-[#fef9c3]/50 hover:bg-[#fef9c3]/80 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+					{@const transVisual = getTeamVisual(transversalTeam?.name || 'Todas as Diretorias (Geral)', transversalTeam?.color || '#ca8a04')}
+					<div
+						class="p-4 sm:p-5 rounded-xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm hover:shadow-md"
+						style="{transVisual.bgStyle}"
+					>
 						<div class="flex items-start md:items-center gap-3.5">
-							<div class="w-10 h-10 rounded-lg bg-white border border-[#e8e2db] flex items-center justify-center text-[#1d1b17] shadow-xs shrink-0">
+							<div
+								class="w-10 h-10 rounded-lg bg-white border flex items-center justify-center shadow-xs shrink-0"
+								style="border-color: {transVisual.theme.cardBorder}; color: {transVisual.iconColor};"
+							>
 								<span class="material-symbols-outlined text-[22px]">hub</span>
 							</div>
 							<div>
 								<div class="flex flex-wrap items-center gap-2 mb-0.5">
-									<span class="material-symbols-outlined text-[19px] text-[#424753] shrink-0">lan</span>
-									<h3 class="font-bold text-[14px] text-[#1d1b17] font-display">
+									<span class="material-symbols-outlined text-[19px] shrink-0" style="color: {transVisual.iconColor};">lan</span>
+									<h3
+										class="font-bold text-[14px] font-display"
+										style="color: {transVisual.theme.accentShadow};"
+									>
 										{transversalTeam?.name || 'Todas as Diretorias (Geral)'}
 									</h3>
-									<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#ffe327] text-[#211c00] font-mono">
+									<span
+										class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border font-mono"
+										style="{transVisual.pillStyle}"
+									>
 										EMPRESA INTEIRA
 									</span>
 								</div>
-								<p class="text-[12px] text-[#424753] font-sans">
+								<p
+									class="text-[12px] font-sans font-medium"
+									style="color: {transVisual.theme.accentDark};"
+								>
 									{transversalTeam?.description || 'Iniciativas transversais, metas de cultura macro, conselho e governança geral do ciclo.'}
 								</p>
 							</div>
@@ -951,10 +948,11 @@
 														<button
 															type="button"
 															onclick={() => openUserTeamsModal(prof)}
-															class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full {visual.pillBg} border {visual.pillBorder} {visual.pillText} text-[12px] font-semibold hover:opacity-85 transition-opacity cursor-pointer"
+															class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[12px] font-semibold hover:opacity-85 transition-opacity cursor-pointer"
+															style="{visual.pillStyle}"
 															title="Clique para gerenciar equipes"
 														>
-															<span class="material-symbols-outlined text-[14px]">{visual.icon}</span>
+															<span class="material-symbols-outlined text-[14px]" style="color: {visual.iconColor};">{visual.icon}</span>
 															<span>{uTeam.name}</span>
 														</button>
 													{/each}
@@ -1337,13 +1335,6 @@
 			onclick={(e) => e.stopPropagation()}
 			class="relative w-full max-w-4xl flex flex-col items-stretch animate-in fade-in zoom-in-95 duration-200"
 		>
-			<!-- METAL SUSPENSION RUNNER / TOP RAIL -->
-			<div class="relative flex items-center justify-between px-3 h-3 bg-gradient-to-r from-[#8e8a83] via-[#b6b2a9] to-[#8e8a83] rounded-t-sm shadow-[0_1px_2px_rgba(0,0,0,0.25)] border-b border-[#6f6b64]">
-				<div class="w-4 h-1.5 rounded-full bg-[#524e47] opacity-60"></div>
-				<div class="w-12 h-1 rounded bg-[#dcd7ce] opacity-70"></div>
-				<div class="w-4 h-1.5 rounded-full bg-[#524e47] opacity-60"></div>
-			</div>
-
 			<!-- 1. TOPO DA PASTA: ABA CLÁSSICA COM VISOR TRANSPARENTE E ETIQUETA ENCAIXADA -->
 			<div class="flex items-end justify-between px-2 sm:px-4 -mb-[1px] relative z-20">
 				<!-- Tab com Visor de Acetato / Etiqueta Manilha Recortada -->
@@ -1384,8 +1375,9 @@
 					></span>
 				</div>
 
-				<!-- Canto Superior Direito: Botão Fechar -->
-				<div class="flex items-center gap-2 pb-1.5 pr-1">
+				<!-- Canto Superior Direito: Seletor de Cor & Botão Fechar -->
+				<div class="flex items-center gap-2 pb-1.5 pr-1 relative z-40">
+					<PaperColorPicker bind:value={activeTeamModal.color} align="right" />
 					<button
 						type="button"
 						onclick={() => (activeTeamModal = null)}
@@ -1411,6 +1403,7 @@
 				{#if activeTeamModal.mode === 'edit'}
 					<input type="hidden" name="teamId" value={activeTeamModal.id} />
 				{/if}
+				<input type="hidden" name="color" value={activeTeamModal.color} />
 				<input type="hidden" name="hasMemberIds" value="true" />
 				{#each activeTeamModal.memberIds as mid}
 					<input type="hidden" name="memberIds" value={mid} />
@@ -1429,8 +1422,8 @@
 						<!-- COLUNA DA ESQUERDA: IDENTIFICAÇÃO & ÍCONE (7/12 ~ 58%) -->
 						<div class="lg:col-span-7 space-y-4">
 							<div
-								class="p-5 rounded-2xl bg-white border shadow-xs space-y-4 transition-colors"
-								style="border-color: {modalTheme.cardBorder};"
+								class="p-5 rounded-2xl border shadow-xs space-y-4 transition-colors"
+								style="background-color: {modalTheme.cardBg}; border-color: {modalTheme.cardBorder};"
 							>
 								<!-- Nome da Equipe -->
 								<div class="space-y-1.5">
@@ -1504,35 +1497,14 @@
 									</div>
 
 									<!-- Seletor de Cor da Equipe & Pastas -->
-									<div class="space-y-2 sm:border-l sm:border-[#edf4ee] sm:pl-4">
+									<div class="space-y-2.5 sm:border-l sm:border-[#edf4ee] sm:pl-4">
 										<div class="flex items-center justify-between">
 											<span class="font-mono text-[10.5px] uppercase tracking-wider font-bold text-[#424753]">
 												Cor da Equipe &amp; Pastas
 											</span>
-											<span
-												class="font-mono text-[11px] font-bold px-2 py-0.5 rounded border"
-												style="background-color: {modalTheme.badgeBg}; border-color: {modalTheme.badgeBorder}; color: {modalTheme.badgeText};"
-											>
-												{activeTeamModal.color}
-											</span>
 										</div>
-										<div class="grid grid-cols-3 gap-2 pt-0.5">
-											{#each modalColorPresets as swatch}
-												{@const isSelected = activeTeamModal.color.toLowerCase() === swatch.hex.toLowerCase()}
-												<button
-													type="button"
-													onclick={() => (activeTeamModal!.color = swatch.hex)}
-													class="w-8 h-8 rounded-full shadow-xs flex items-center justify-center text-white transition-all cursor-pointer hover:scale-110 {isSelected
-														? 'ring-2 ring-offset-2 shadow-md'
-														: ''}"
-													style="background-color: {swatch.hex}; ring-color: {swatch.hex};"
-													title="{swatch.name} ({swatch.hex})"
-												>
-													{#if isSelected}
-														<span class="material-symbols-outlined text-[16px]">check</span>
-													{/if}
-												</button>
-											{/each}
+										<div class="pt-0.5">
+											<PaperColorPicker bind:value={activeTeamModal.color} label="Alterar Cor" align="left" />
 										</div>
 									</div>
 								</div>
@@ -1572,8 +1544,8 @@
 						<!-- COLUNA DA DIREITA: MEMBROS DA EQUIPE (5/12 ~ 42%) -->
 						<div class="lg:col-span-5 space-y-4">
 							<div
-								class="p-4 rounded-2xl bg-white border shadow-xs space-y-3 transition-colors"
-								style="border-color: {modalTheme.cardBorder};"
+								class="p-4 rounded-2xl border shadow-xs space-y-3 transition-colors"
+								style="background-color: {modalTheme.cardBg}; border-color: {modalTheme.cardBorder};"
 							>
 								<div class="flex items-center justify-between pb-1 border-b border-[#edf4ee]">
 									<div class="flex items-center gap-2">
@@ -1712,22 +1684,25 @@
 
 						<!-- SEÇÃO INFERIOR: KRS ASSOCIADOS (12/12) -->
 						<div
-							class="lg:col-span-12 p-4 sm:p-5 rounded-2xl bg-[#fdfdf7] border shadow-xs space-y-3"
-							style="border-color: {modalTheme.folderBorder};"
+							class="lg:col-span-12 p-4 sm:p-5 rounded-2xl border shadow-xs space-y-3 transition-colors"
+							style="background-color: {modalTheme.cardBg}; border-color: {modalTheme.folderBorder};"
 						>
 							<div class="flex items-center justify-between">
 								<div class="flex items-center gap-2">
 									<div
 										class="w-7 h-7 rounded-lg text-white flex items-center justify-center shrink-0 shadow-xs"
-										style="background-color: {activeTeamModal.color};"
+										style="background-color: {modalTheme.accent};"
 									>
 										<span class="material-symbols-outlined text-[16px]">flag</span>
 									</div>
 									<div class="flex items-center gap-2">
-										<span class="font-mono text-[11px] font-bold uppercase tracking-wider text-[#713f12]">
+										<span class="font-mono text-[11px] font-bold uppercase tracking-wider" style="color: {modalTheme.accentDark};">
 											KRs Associados ({modalTeamKRs.length})
 										</span>
-										<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#fef9c3] text-[#854d0e] border border-[#fef08a]">
+										<span
+											class="text-[10px] font-mono font-bold px-2 py-0.5 rounded border"
+											style="background-color: {modalTheme.badgeBg}; border-color: {modalTheme.badgeBorder}; color: {modalTheme.badgeText};"
+										>
 											100% Vinculados
 										</span>
 									</div>
@@ -1735,7 +1710,8 @@
 								<div class="flex items-center gap-2">
 									<a
 										href="/strategy"
-										class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:bg-[#ede7dd] text-[#713f12] font-mono text-[10.5px] font-bold border border-[#ecdcb4] transition-colors shadow-xs"
+										class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white hover:brightness-95 font-mono text-[10.5px] font-bold border transition-colors shadow-xs"
+										style="border-color: {modalTheme.badgeBorder}; color: {modalTheme.accentDark};"
 									>
 										<span class="material-symbols-outlined text-[14px]">add</span>
 										<span>Vincular KR</span>
@@ -1746,31 +1722,38 @@
 							<!-- Lista de KRs Associados -->
 							<div class="space-y-1.5 pt-0.5">
 								{#if modalTeamKRs.length === 0}
-									<div class="p-3.5 rounded-xl bg-white border border-[#f5e6c4] text-center text-[12px] text-[#854d0e]">
+									<div
+										class="p-3.5 rounded-xl bg-white border text-center text-[12px]"
+										style="border-color: {modalTheme.cardBorder}; color: {modalTheme.badgeText};"
+									>
 										Nenhum KR vinculado a esta equipe ainda. Você pode associar KRs diretamente no Mapa Estratégico.
 									</div>
 								{:else}
 									{#each modalTeamKRs.slice(0, 4) as kr (kr.id)}
 										{@const pct = getKRProgress(kr)}
-										<div class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-[#f5e6c4] text-[12.5px] hover:border-[#ca8a04]/40 transition-colors">
+										{@const krTheme = getDossierTheme(kr.color || activeTeamModal.color)}
+										<div
+											class="flex items-center justify-between p-2.5 rounded-xl border text-[12.5px] transition-colors"
+											style="background-color: {krTheme.folderBg}; border-color: {krTheme.folderBorder};"
+										>
 											<div class="flex items-center gap-2.5 min-w-0">
 												<span
 													class="w-2 h-2 rounded-full shrink-0"
-													style="background-color: {activeTeamModal.color};"
+													style="background-color: {krTheme.accent};"
 												></span>
 												<span class="font-medium text-[#1d1b17] truncate">{kr.title}</span>
 											</div>
 											<div class="flex items-center gap-2 shrink-0">
 												<span
 													class="font-mono font-bold text-[11px] px-2 py-0.5 rounded border"
-													style="background-color: {modalTheme.badgeBg}; border-color: {modalTheme.badgeBorder}; color: {modalTheme.accentDark};"
+													style="background-color: {krTheme.badgeBg}; border-color: {krTheme.badgeBorder}; color: {krTheme.accentDark};"
 												>
 													{pct}%
 												</span>
 												<div class="flex items-center gap-0.5 ml-1">
 													<a
 														href="/strategy?q={encodeURIComponent(kr.title)}"
-														class="p-1 rounded text-[#727784] hover:text-[#0058bd] hover:bg-[#d8e2ff]/40 transition-colors"
+														class="p-1 rounded text-[#727784] hover:text-[#0058bd] hover:bg-white transition-colors"
 														title="Ver no Mapa Estratégico"
 													>
 														<span class="material-symbols-outlined text-[16px]">open_in_new</span>
@@ -1846,12 +1829,6 @@
 					</div>
 				</div>
 			</form>
-
-			<!-- BOTTOM SUSPENSION RAIL (Toque final do arquivo suspenso) -->
-			<div class="relative flex items-center justify-between px-4 h-2 bg-gradient-to-r from-[#949089] via-[#c2bea5] to-[#949089] rounded-b-sm shadow-sm border-t border-[#807b73] -mt-px">
-				<div class="w-3 h-1 rounded-full bg-[#524e47] opacity-40"></div>
-				<div class="w-3 h-1 rounded-full bg-[#524e47] opacity-40"></div>
-			</div>
 		</div>
 	</div>
 {/if}
@@ -1915,7 +1892,10 @@
 					{#each data.teams as team (team.id)}
 						{@const isChecked = currentTeamIds.includes(team.id)}
 						{@const visual = getTeamVisual(team.name, team.color)}
-						<label class="flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all {isChecked ? 'border-[#004190] bg-[#f0f4ff]' : 'border-[#e8e2d8] hover:bg-[#f9f3ec]'}">
+						<label
+							class="flex items-center gap-2.5 p-2.5 rounded-xl border cursor-pointer transition-all {isChecked ? 'shadow-xs' : 'border-[#e8e2d8] hover:bg-[#f9f3ec]'}"
+							style={isChecked ? visual.pillStyle : ''}
+						>
 							<input
 								type="checkbox"
 								name="teamIds"
@@ -1923,7 +1903,7 @@
 								checked={isChecked}
 								class="rounded border-[#d5cebe] text-[#004190] focus:ring-[#004190]"
 							/>
-							<span class="material-symbols-outlined text-[17px] {visual.iconColor}">{visual.icon}</span>
+							<span class="material-symbols-outlined text-[17px]" style="color: {visual.iconColor};">{visual.icon}</span>
 							<span class="text-[12.5px] font-semibold text-[#1d1b17] truncate">{team.name}</span>
 						</label>
 					{/each}

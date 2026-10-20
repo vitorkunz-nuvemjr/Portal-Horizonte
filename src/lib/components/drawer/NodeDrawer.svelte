@@ -2,6 +2,8 @@
 	import type { Cycle, NodeWithExtras, Profile, StrategyNode, Team } from '$lib/types';
 	import { enhanceFormValidation, formatNumber, formatPct, getInitials } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
+	import { getDossierTheme } from '$lib/dossier-theme';
+	import PaperColorPicker from '$lib/components/ui/PaperColorPicker.svelte';
 	import {
 		X,
 		Trash2,
@@ -43,6 +45,14 @@
 		onAddChild,
 		onToggleCollapse
 	}: Props = $props();
+
+	let drawerColor = $state('#0058bd');
+	$effect(() => {
+		if (node) {
+			drawerColor = node.color || (node.teams[0]?.color ?? '#0058bd');
+		}
+	});
+	const drawerTheme = $derived(getDossierTheme(drawerColor));
 
 	const typeLabels: Record<string, string> = {
 		objective: 'Objetivo',
@@ -148,12 +158,14 @@
 		class="fixed top-0 right-0 z-50 flex h-full w-full max-w-xl flex-col border-l border-outline-variant bg-surface-container-lowest shadow-[0_8px_32px_rgba(36,34,30,0.16)]"
 	>
 		<!-- Drawer Header -->
-		<div class="flex items-center justify-between border-b border-outline-variant bg-surface-container-low px-6 py-4">
+		<div
+			class="flex items-center justify-between border-b px-6 py-4 relative z-30 transition-colors"
+			style="background-color: {drawerTheme.folderBg}; border-color: {drawerTheme.folderBorder};"
+		>
 			<div class="flex items-center gap-2.5">
 				<span
-					class="rounded-[2px] border px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase {typeBadgeClasses[
-						node.type
-					] ?? 'bg-on-surface text-surface'}"
+					class="rounded-[4px] border px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase"
+					style="background-color: {drawerTheme.badgeBg}; border-color: {drawerTheme.badgeBorder}; color: {drawerTheme.badgeText};"
 				>
 					{typeLabels[node.type] ?? node.type}
 				</span>
@@ -163,6 +175,7 @@
 			</div>
 
 			<div class="flex items-center gap-2">
+				<PaperColorPicker bind:value={drawerColor} disabled={!canEdit} align="right" />
 				{#if node.children.length > 0 && onToggleCollapse}
 					{@const isCollapsed = collapsedIds.has(node.id)}
 					<button
@@ -208,9 +221,11 @@
 				method="POST"
 				action="/strategy?/updateNode"
 				use:enhanceFormValidation
-				class="space-y-4 rounded-[6px] border border-outline-variant bg-surface-container-low/60 p-4 shadow-[0_2px_6px_rgba(36,34,30,0.04)]"
+				class="space-y-4 rounded-[6px] border p-4 shadow-[0_2px_6px_rgba(36,34,30,0.04)] transition-colors"
+				style="background-color: {drawerTheme.folderBg}; border-color: {drawerTheme.folderBorder};"
 			>
 				<input type="hidden" name="nodeId" value={node.id} />
+				<input type="hidden" name="color" value={drawerColor} />
 
 				<div>
 					<label for="drawer-title" class="block text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">
@@ -672,10 +687,14 @@
 						<div class="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-2">
 							{#each teams as t (t.id)}
 								{@const teamAssigned = node.teams.some((nt) => nt.id === t.id)}
+								{@const tTheme = getDossierTheme(t.color || '#0058bd')}
 								<label
-									class="flex cursor-pointer items-center justify-between rounded-[4px] border p-2 text-xs transition {teamAssigned
-										? 'border-primary bg-primary-fixed/40 font-bold text-on-surface'
+									class="flex cursor-pointer items-center justify-between rounded-[6px] border p-2 text-xs transition {teamAssigned
+										? 'font-bold shadow-xs'
 										: 'border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low'}"
+									style={teamAssigned
+										? `background-color: ${tTheme.badgeBg}; border-color: ${tTheme.badgeBorder}; color: ${tTheme.badgeText};`
+										: ''}
 								>
 									<div class="flex items-center gap-2 min-w-0">
 										<input
@@ -688,7 +707,7 @@
 										/>
 										<span
 											class="h-2.5 w-2.5 shrink-0 rounded-full"
-											style="background-color: {t.color || '#005AC2'}"
+											style="background-color: {tTheme.accent}"
 										></span>
 										<span class="truncate">{t.name}</span>
 									</div>

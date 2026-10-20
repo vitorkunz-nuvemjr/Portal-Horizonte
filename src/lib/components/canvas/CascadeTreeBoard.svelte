@@ -459,12 +459,12 @@
 									onSelectNode(obj.id);
 								}
 							}}
-							class="group relative cursor-pointer bg-surface-container-lowest rounded-xl p-space-md shadow-[0_1px_1px_rgba(36,34,30,0.05),0_4px_10px_-1px_rgba(36,34,30,0.06),0_-1px_0_rgba(255,255,255,0.9)_inset] hover:shadow-[0_8px_18px_-2px_rgba(36,34,30,0.1),0_2px_4px_rgba(36,34,30,0.04)] transition-all {isSelected
+							class="group relative cursor-pointer rounded-xl p-space-md shadow-[0_1px_1px_rgba(36,34,30,0.05),0_4px_10px_-1px_rgba(36,34,30,0.06),0_-1px_0_rgba(255,255,255,0.9)_inset] hover:shadow-[0_8px_18px_-2px_rgba(36,34,30,0.1),0_2px_4px_rgba(36,34,30,0.04)] transition-all {isSelected
 								? 'ring-2'
 								: ''} {isHighlighted ? 'ring-2 ring-tertiary-container scale-[1.01]' : ''} {isDimmed
 								? 'opacity-40 hover:opacity-90'
 								: ''}"
-							style="border: 1.5px solid {objTheme.cardBorder}; {isSelected ? `ring-color: ${objTheme.accent}; --tw-ring-color: ${objTheme.accent};` : ''}"
+							style="background-color: {objTheme.folderBg}; border: 1.5px solid {objTheme.folderBorder}; {isSelected ? `ring-color: ${objTheme.accent}; --tw-ring-color: ${objTheme.accent};` : ''}"
 						>
 							<!-- Category Indicator Spine -->
 							<div class="absolute left-0 top-3 bottom-3 w-1.5 rounded-r shadow-xs" style="background-color: {objTheme.accent};"></div>
@@ -479,7 +479,8 @@
 										{code}
 									</span>
 									<span
-										class="font-label-sm text-label-sm text-on-surface-variant font-bold tracking-wider uppercase"
+										class="font-label-sm text-label-sm font-bold tracking-wider uppercase"
+										style="color: {objTheme.accent};"
 									>
 										ANNUAL {obj.year ?? activeYear}
 									</span>
@@ -487,17 +488,20 @@
 
 								<!-- Status Pill -->
 								<div
-									class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface shadow-[inset_0_1px_2px_rgba(36,34,30,0.08)]"
+									class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/85 shadow-[0_1px_2px_rgba(36,34,30,0.06)]"
+									style="border: 1px solid {objTheme.cardBorder};"
 								>
 									<span
 										class="w-2 h-2 rounded-full {obj.atRisk
 											? 'bg-secondary animate-pulse'
-											: 'bg-tertiary-fixed-dim'}"
+											: ''}"
+										style={!obj.atRisk ? `background-color: ${objTheme.accent};` : ''}
 									></span>
 									<span
 										class="font-label-sm text-label-sm font-bold uppercase tracking-wider {obj.atRisk
 											? 'text-secondary'
-											: 'text-tertiary'}"
+											: ''}"
+										style={!obj.atRisk ? `color: ${objTheme.accentDark};` : ''}
 									>
 										{obj.atRisk ? `Em Risco (${pct}%)` : `No Ritmo (${pct}%)`}
 									</span>
@@ -506,13 +510,17 @@
 
 							<!-- Card Main Title -->
 							<h2
-								class="font-headline-sm text-headline-sm text-on-surface pl-2 mb-space-sm leading-snug"
+								class="font-headline-sm text-headline-sm pl-2 mb-space-sm leading-snug"
+								style="color: {objTheme.accentShadow};"
 							>
 								{obj.title}
 							</h2>
 
 							{#if obj.description}
-								<p class="font-body-sm text-body-sm text-on-surface-variant pl-2 mb-space-md">
+								<p
+									class="font-body-sm text-body-sm pl-2 mb-space-md"
+									style="color: {objTheme.accentDark};"
+								>
 									{obj.description}
 								</p>
 							{/if}
@@ -521,14 +529,16 @@
 							<div class="pl-2 mb-space-md">
 								<div class="flex justify-between items-center mb-1">
 									<span
-										class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold"
+										class="font-label-sm text-label-sm uppercase tracking-wider font-bold"
+										style="color: {objTheme.accentDark};"
 									>
 										Progresso Consolidado
 									</span>
-									<span class="font-label-md text-label-md font-bold" style="color: {objTheme.accentDark};">{pct}%</span>
+									<span class="font-label-md text-label-md font-bold" style="color: {objTheme.accentShadow};">{pct}%</span>
 								</div>
 								<div
-									class="w-full h-3 rounded-full bg-surface-container-high p-0.5 shadow-[inset_0_2px_4px_rgba(36,34,30,0.09)]"
+									class="w-full h-3 rounded-full p-0.5 shadow-[inset_0_1px_2px_rgba(36,34,30,0.08)]"
+									style="background-color: {objTheme.badgeBg}; border: 1px solid {objTheme.badgeBorder};"
 								>
 									<div
 										class="h-full rounded-full transition-all duration-700 shadow-xs"
@@ -539,7 +549,8 @@
 
 							<!-- Card Bottom Footer / Metadata -->
 							<div
-								class="pt-space-sm pl-2 flex items-center justify-between border-t border-dashed border-outline-variant/50"
+								class="pt-space-sm pl-2 flex items-center justify-between border-t border-dashed"
+								style="border-color: {objTheme.cardBorder};"
 							>
 								<div class="flex items-center gap-space-xs min-w-0">
 									<div class="relative shrink-0">
@@ -553,11 +564,29 @@
 											class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-primary ring-1 ring-white"
 										></span>
 									</div>
-									<div class="flex flex-col min-w-0">
-										<span class="font-label-sm text-label-sm font-bold text-on-surface truncate">
-											{teamNames}
-										</span>
-										<span class="font-label-sm text-label-sm text-on-surface-variant truncate">
+									<div class="flex flex-col min-w-0 gap-1">
+										{#if obj.teams.length > 0}
+											<div class="flex flex-wrap items-center gap-1">
+												{#each obj.teams.slice(0, 2) as tm (tm.id)}
+													{@const tmTheme = getDossierTheme(tm.color || '#0058bd')}
+													<span
+														class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border shadow-2xs"
+														style="background-color: {tmTheme.badgeBg}; border-color: {tmTheme.badgeBorder}; color: {tmTheme.badgeText};"
+													>
+														<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {tmTheme.accent};"></span>
+														<span class="max-w-[96px] truncate">{tm.name}</span>
+													</span>
+												{/each}
+											</div>
+										{:else}
+											<span class="font-label-sm text-label-sm font-bold text-on-surface truncate">
+												{teamNames}
+											</span>
+										{/if}
+										<span
+											class="font-label-sm text-label-sm truncate font-medium"
+											style="color: {objTheme.accentDark};"
+										>
 											{leader ? leader.name : 'Liderança Executiva'}
 										</span>
 									</div>
@@ -565,7 +594,8 @@
 
 								<div class="flex items-center gap-1 shrink-0">
 									<span
-										class="px-2 py-0.5 rounded bg-surface-container font-label-sm text-label-sm text-on-surface-variant"
+										class="px-2 py-0.5 rounded font-label-sm text-label-sm font-bold border"
+										style="background-color: {objTheme.badgeBg}; color: {objTheme.badgeText}; border-color: {objTheme.badgeBorder};"
 									>
 										{krChildren.length} {krChildren.length === 1 ? 'KR Ativo' : 'KRs Ativos'}
 									</span>
@@ -608,17 +638,20 @@
 									focusedObjId = obj.id;
 								}
 							}}
-							class="relative cursor-pointer bg-surface-container-lowest/75 hover:bg-surface-container-lowest rounded-xl p-space-md shadow-[0_1px_2px_rgba(36,34,30,0.04)] opacity-80 hover:opacity-100 transition-all {isDimmed
+							class="relative cursor-pointer rounded-xl p-space-md shadow-[0_1px_2px_rgba(36,34,30,0.04)] opacity-85 hover:opacity-100 transition-all {isDimmed
 								? 'opacity-35'
 								: ''}"
-							style="border: 1px solid {objTheme.cardBorder};"
+							style="background-color: {objTheme.folderBg}; border: 1.5px solid {objTheme.folderBorder};"
 						>
 							<div
 								class="absolute left-0 top-3 bottom-3 w-1.5 rounded-r shadow-xs"
 								style="background-color: {objTheme.accent};"
 							></div>
 							<div class="flex items-center justify-between gap-2 mb-1 pl-2">
-								<span class="font-label-md text-label-md font-bold text-on-surface-variant">
+								<span
+									class="font-label-md text-label-md font-bold"
+									style="color: {objTheme.accent};"
+								>
 									{code} · ANNUAL {obj.year ?? activeYear}
 								</span>
 								<span
@@ -628,13 +661,31 @@
 									{pct}%
 								</span>
 							</div>
-							<h3 class="font-title-md text-title-md text-on-surface pl-2 line-clamp-1">
+							<h3
+								class="font-title-md text-title-md pl-2 line-clamp-1"
+								style="color: {objTheme.accentShadow};"
+							>
 								{obj.title}
 							</h3>
 							<div
-								class="mt-2 pl-2 flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm"
+								class="mt-2 pl-2 flex items-center justify-between font-body-sm text-body-sm"
+								style="color: {objTheme.accentDark};"
 							>
-								<span class="truncate">{teamNames} · {krChildren.length} KRs</span>
+								<div class="flex items-center gap-1.5 min-w-0">
+									{#if obj.teams.length > 0}
+										{@const tmTheme = getDossierTheme(obj.teams[0].color || '#0058bd')}
+										<span
+											class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border truncate"
+											style="background-color: {tmTheme.badgeBg}; border-color: {tmTheme.badgeBorder}; color: {tmTheme.badgeText};"
+										>
+											<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {tmTheme.accent};"></span>
+											<span class="max-w-[90px] truncate">{obj.teams[0].name}</span>
+										</span>
+									{:else}
+										<span class="truncate">{teamNames}</span>
+									{/if}
+									<span class="text-xs font-semibold shrink-0">· {krChildren.length} KRs</span>
+								</div>
 								<div class="flex items-center gap-1">
 									<button
 										type="button"
@@ -668,7 +719,7 @@
 						(c) => c.type === 'kpi' && visibleIds.has(c.id)
 					).length}
 					{@const owner = kr.assignees[0]}
-					{@const krColor = kr.color || (isAtRisk ? '#be123c' : '#ca8a04')}
+					{@const krColor = kr.color || (kr.teams[0]?.color || (isAtRisk ? '#be123c' : '#ca8a04'))}
 					{@const krTheme = getDossierTheme(krColor)}
 
 					<!-- KR Pastel Tactile Dossier Card (Color reflects chosen theme) -->
@@ -776,16 +827,29 @@
 							class="flex items-center justify-between text-xs pt-1 border-t border-dashed"
 							style="border-color: {krTheme.cardBorder};"
 						>
-							<div class="flex items-center gap-2 min-w-0">
+							<div class="flex items-center gap-1.5 min-w-0 flex-wrap">
 								<div
 									class="w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold text-white shadow-[0_1px_2px_rgba(0,0,0,0.15)] shrink-0"
 									style="background-color: {owner?.color || krTheme.accent};"
 								>
 									{getInitials(owner?.name || kr.teams[0]?.name || 'KR')}
 								</div>
-								<span class="font-label-sm text-label-sm font-bold truncate" style="color: {krTheme.accentShadow};">
-									{owner?.name ?? kr.teams[0]?.name ?? 'Equipe Responsável'}
-								</span>
+								{#if kr.teams.length > 0}
+									{#each kr.teams.slice(0, 1) as kt (kt.id)}
+										{@const ktTheme = getDossierTheme(kt.color || '#0058bd')}
+										<span
+											class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border shadow-2xs"
+											style="background-color: {ktTheme.badgeBg}; border-color: {ktTheme.badgeBorder}; color: {ktTheme.badgeText};"
+										>
+											<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {ktTheme.accent};"></span>
+											<span class="max-w-[90px] truncate">{kt.name}</span>
+										</span>
+									{/each}
+								{:else}
+									<span class="font-label-sm text-label-sm font-bold truncate" style="color: {krTheme.accentShadow};">
+										{owner?.name ?? 'Equipe Responsável'}
+									</span>
+								{/if}
 							</div>
 							<div class="flex items-center gap-1.5 shrink-0">
 								<span class="font-label-sm text-label-sm font-semibold" style="color: {krTheme.accent};">
@@ -863,19 +927,30 @@
 						style="background-color: {kpiTheme.folderBg}; border: 1.5px solid {kpiTheme.folderBorder}; color: {kpiTheme.accentDark};"
 					>
 						<div class="flex items-center justify-between gap-2 mb-2">
-							<div class="flex items-center gap-1.5">
+							<div class="flex items-center gap-1.5 flex-wrap">
 								<span
 									class="font-label-sm text-label-sm font-bold px-1.5 py-0.5 rounded shadow-xs"
 									style="background-color: {kpiTheme.badgeBg}; color: {kpiTheme.badgeText}; border: 1px solid {kpiTheme.badgeBorder};"
 								>
 									{item.code}
 								</span>
-								<span
-									class="font-label-sm text-label-sm uppercase tracking-wider font-semibold"
-									style="color: {kpiTheme.accentDark};"
-								>
-									{kpi.cycle?.code ?? 'Operacional'}
-								</span>
+								{#if kpi.teams.length > 0}
+									{@const ktTheme = getDossierTheme(kpi.teams[0].color || '#0058bd')}
+									<span
+										class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold border"
+										style="background-color: {ktTheme.badgeBg}; border-color: {ktTheme.badgeBorder}; color: {ktTheme.badgeText};"
+									>
+										<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {ktTheme.accent};"></span>
+										<span class="max-w-[75px] truncate">{kpi.teams[0].name}</span>
+									</span>
+								{:else}
+									<span
+										class="font-label-sm text-label-sm uppercase tracking-wider font-semibold"
+										style="color: {kpiTheme.accentDark};"
+									>
+										{kpi.cycle?.code ?? 'Operacional'}
+									</span>
+								{/if}
 							</div>
 							<div
 								class="flex items-center gap-1 font-bold text-xs bg-white/80 px-2 py-0.5 rounded-full shadow-xs"

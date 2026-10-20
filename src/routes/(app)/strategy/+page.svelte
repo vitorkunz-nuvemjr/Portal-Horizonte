@@ -9,6 +9,8 @@
 	import ObjectiveDossierModal from '$lib/components/modal/ObjectiveDossierModal.svelte';
 	import KeyResultDossierModal from '$lib/components/modal/KeyResultDossierModal.svelte';
 	import KpiDossierModal from '$lib/components/modal/KpiDossierModal.svelte';
+	import PaperColorPicker from '$lib/components/ui/PaperColorPicker.svelte';
+	import { getDossierTheme } from '$lib/dossier-theme';
 	import {
 		applyValueLens,
 		enrichNodes,
@@ -32,12 +34,16 @@
 		type: NodeType;
 		parent: NodeWithExtras | null;
 		selectedParentId: string;
+		color: string;
 	}>({
 		open: false,
 		type: 'objective',
 		parent: null,
-		selectedParentId: ''
+		selectedParentId: '',
+		color: '#0058bd'
 	});
+
+	const createModalTheme = $derived(getDossierTheme(createModal.color));
 
 	const canEdit = $derived(data.user?.role === 'admin' || data.user?.role === 'member');
 
@@ -215,7 +221,8 @@
 			open: true,
 			type: 'objective',
 			parent: null,
-			selectedParentId: ''
+			selectedParentId: '',
+			color: '#0058bd'
 		};
 	}
 
@@ -228,7 +235,8 @@
 			open: true,
 			type: 'key_result',
 			parent: defaultObj,
-			selectedParentId: defaultObj?.id ?? ''
+			selectedParentId: defaultObj?.id ?? '',
+			color: defaultObj?.color || '#b30069'
 		};
 	}
 
@@ -242,7 +250,8 @@
 			open: true,
 			type: 'kpi',
 			parent: defaultKR,
-			selectedParentId: defaultKR?.id ?? ''
+			selectedParentId: defaultKR?.id ?? '',
+			color: defaultKR?.color || '#00665a'
 		};
 	}
 
@@ -256,7 +265,8 @@
 			open: true,
 			type: parent.type === 'objective' ? 'key_result' : 'kpi',
 			parent,
-			selectedParentId: parent.id
+			selectedParentId: parent.id,
+			color: parent.color || (parent.type === 'objective' ? '#b30069' : '#00665a')
 		};
 	}
 </script>
@@ -421,9 +431,10 @@
 			aria-modal="true"
 			aria-labelledby="create-modal-title"
 			onclick={(e) => e.stopPropagation()}
-			class="w-full max-w-lg rounded-2xl bg-surface-container-lowest p-6 shadow-[0_20px_28px_-4px_rgba(36,34,30,0.16),0_6px_10px_rgba(36,34,30,0.06)] border border-outline-variant/40"
+			class="w-full max-w-lg rounded-2xl p-6 shadow-[0_20px_28px_-4px_rgba(36,34,30,0.16),0_6px_10px_rgba(36,34,30,0.06)] border-2 transition-colors duration-200"
+			style="background-color: {createModalTheme.folderBg}; border-color: {createModalTheme.folderBorder};"
 		>
-			<div class="flex items-center justify-between border-b border-outline-variant/40 pb-3">
+			<div class="flex items-center justify-between border-b pb-3" style="border-color: {createModalTheme.folderBorder};">
 				<div>
 					<h3 id="create-modal-title" class="font-headline-sm text-headline-sm text-on-surface">
 						Criar {createModal.type === 'objective'
@@ -438,13 +449,16 @@
 						</p>
 					{/if}
 				</div>
-				<button
-					type="button"
-					onclick={() => (createModal.open = false)}
-					class="rounded-lg p-1.5 text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
-				>
-					<X class="h-4 w-4" />
-				</button>
+				<div class="flex items-center gap-2 relative z-40">
+					<PaperColorPicker bind:value={createModal.color} align="right" />
+					<button
+						type="button"
+						onclick={() => (createModal.open = false)}
+						class="rounded-lg p-1.5 text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+					>
+						<X class="h-4 w-4" />
+					</button>
+				</div>
 			</div>
 
 			<form
@@ -456,6 +470,7 @@
 				}}
 				class="mt-4 space-y-4"
 			>
+				<input type="hidden" name="color" value={createModal.color} />
 				{#if createModal.type === 'objective'}
 					<input type="hidden" name="parentId" value="" />
 					<input type="hidden" name="type" value="objective" />
@@ -698,7 +713,8 @@
 					</button>
 					<button
 						type="submit"
-						class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 font-label-md text-label-md font-bold text-on-primary shadow-[0_2px_0_#004494] active:translate-y-px"
+						class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 font-label-md text-label-md font-bold text-white active:translate-y-px cursor-pointer"
+						style="background-color: {createModalTheme.accent}; box-shadow: 0 2px 0 {createModalTheme.accentShadow};"
 					>
 						<Plus class="h-3.5 w-3.5" />
 						Criar Item

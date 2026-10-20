@@ -3,6 +3,7 @@
 	import { enhanceFormValidation, formatNumber, formatPct, getInitials } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
 	import { getDossierTheme } from '$lib/dossier-theme';
+	import PaperColorPicker from '$lib/components/ui/PaperColorPicker.svelte';
 	import { onMount } from 'svelte';
 
 	interface Props {
@@ -267,78 +268,96 @@
 			<div
 				class="flex items-end gap-1.5 px-4 sm:px-8 -mb-[2px] z-20 shrink-0 select-none overflow-x-auto no-scrollbar"
 			>
-				<!-- Tab 1: Parâmetros & Meta (Butter Yellow Accent #FFE327) -->
+				<!-- Tab 1: Parâmetros & Meta -->
 				<button
 					type="button"
 					onclick={() => (activeTab = 'tab1')}
-					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2.5 text-xs font-bold transition-all {activeTab ===
+					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2.5 text-xs font-bold transition-all cursor-pointer {activeTab ===
 					'tab1'
-						? 'folder-tab-active bg-[#FFFDF8] border-t-2 border-l border-r border-[#FFE327] text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative after:absolute after:bottom-[-2px] after:left-0 after:right-0 after:h-[3px] after:bg-[#FFFDF8]'
-						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent hover:border-[#FFE327]/50 text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
+						? 'folder-tab-active border-t-2 border-l border-r text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative'
+						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
+					style={activeTab === 'tab1'
+						? `background-color: ${theme.folderBg}; border-color: ${theme.folderBorder};`
+						: ''}
 				>
 					<span
-						class="w-2.5 h-2.5 rounded-full bg-[#FFE327] ring-2 ring-[#FDE047]/50 shrink-0"
+						class="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs"
+						style="background-color: {theme.accent};"
 					></span>
 					<span class="tracking-tight whitespace-nowrap">1. Parâmetros &amp; Meta</span>
 					{#if activeTab === 'tab1'}
-						<span class="text-[10px] px-1.5 py-0.2 bg-[#FEF08A] text-[#78350F] rounded font-bold ml-1"
+						<span
+							class="text-[10px] px-1.5 py-0.2 rounded font-bold ml-1 border"
+							style="background-color: {theme.badgeBg}; border-color: {theme.badgeBorder}; color: {theme.badgeText};"
 							>Ativo</span
 						>
 					{/if}
 				</button>
 
-				<!-- Tab 2: KPIs & Indicadores Filhos (Cool Brand Blue Accent #3080F9) -->
+				<!-- Tab 2: KPIs & Indicadores Filhos -->
 				<button
 					type="button"
 					onclick={() => (activeTab = 'tab2')}
-					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-bold transition-all {activeTab ===
+					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-bold transition-all cursor-pointer {activeTab ===
 					'tab2'
-						? 'folder-tab-active bg-[#FFFDF8] border-t-2 border-l border-r border-[#3080F9] text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative after:absolute after:bottom-[-2px] after:left-0 after:right-0 after:h-[3px] after:bg-[#FFFDF8]'
-						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent hover:border-[#3080F9]/50 text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
+						? 'folder-tab-active border-t-2 border-l border-r text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative'
+						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
+					style={activeTab === 'tab2'
+						? `background-color: ${theme.folderBg}; border-color: ${theme.folderBorder};`
+						: ''}
 				>
-					<span class="w-2 h-2 rounded-full bg-[#3080F9] shrink-0"></span>
+					<span class="w-2 h-2 rounded-full shrink-0" style="background-color: {theme.accent};"></span>
 					<span class="tracking-tight whitespace-nowrap">2. KPIs &amp; Indicadores Filhos</span>
 					<span
-						class="text-[10px] px-1.5 py-0.2 bg-[#E0F2FE] text-[#0369A1] rounded-full font-bold ml-0.5"
+						class="text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5"
+						style="background-color: {theme.badgeBg}; color: {theme.badgeText};"
 					>
 						{childKpis.length}
 					</span>
 				</button>
 
-				<!-- Tab 3: Alinhamento de Equipe & Valores (Framboesa #F52A95 / Secondary Accent) -->
+				<!-- Tab 3: Alinhamento de Equipe & Valores -->
 				<button
 					type="button"
 					onclick={() => (activeTab = 'tab3')}
-					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-bold transition-all {activeTab ===
+					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-bold transition-all cursor-pointer {activeTab ===
 					'tab3'
-						? 'folder-tab-active bg-[#FFFDF8] border-t-2 border-l border-r border-[#F52A95] text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative after:absolute after:bottom-[-2px] after:left-0 after:right-0 after:h-[3px] after:bg-[#FFFDF8]'
-						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent hover:border-[#F52A95]/50 text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
+						? 'folder-tab-active border-t-2 border-l border-r text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative'
+						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
+					style={activeTab === 'tab3'
+						? `background-color: ${theme.folderBg}; border-color: ${theme.folderBorder};`
+						: ''}
 				>
-					<span class="w-2 h-2 rounded-full bg-[#F52A95] shrink-0"></span>
+					<span class="w-2 h-2 rounded-full shrink-0" style="background-color: {theme.accent};"></span>
 					<span class="tracking-tight whitespace-nowrap">3. Equipe &amp; Valores</span>
 					<span
-						class="text-[10px] px-1.5 py-0.2 bg-[#FFE4E6] text-[#BE123C] rounded-full font-bold ml-0.5"
+						class="text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5"
+						style="background-color: {theme.badgeBg}; color: {theme.badgeText};"
 					>
 						{node.assignees.length + node.alignedValues.length}
 					</span>
 				</button>
 
-				<!-- Tab 4: Histórico & Log de Check-in (Parchment Slate / Archival Timeline) -->
+				<!-- Tab 4: Histórico & Log de Check-in -->
 				<button
 					type="button"
 					onclick={() => (activeTab = 'tab4')}
-					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-bold transition-all {activeTab ===
+					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-bold transition-all cursor-pointer {activeTab ===
 					'tab4'
-						? 'folder-tab-active bg-[#FFFDF8] border-t-2 border-l border-r border-outline-variant text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative after:absolute after:bottom-[-2px] after:left-0 after:right-0 after:h-[3px] after:bg-[#FFFDF8]'
-						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent hover:border-outline-variant text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
+						? 'folder-tab-active border-t-2 border-l border-r text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative'
+						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
+					style={activeTab === 'tab4'
+						? `background-color: ${theme.folderBg}; border-color: ${theme.folderBorder};`
+						: ''}
 				>
-					<span class="material-symbols-outlined text-[15px] text-on-surface-variant"
+					<span class="material-symbols-outlined text-[15px]" style="color: {theme.accent};"
 						>history_edu</span
 					>
 					<span class="tracking-tight whitespace-nowrap">4. Histórico &amp; Check-ins</span>
 					{#if node.metricUpdates.length > 0}
 						<span
-							class="text-[10px] px-1.5 py-0.2 bg-surface-container text-on-surface-variant rounded-full font-bold ml-0.5"
+							class="text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5"
+							style="background-color: {theme.badgeBg}; color: {theme.badgeText};"
 						>
 							{node.metricUpdates.length}
 						</span>
@@ -348,26 +367,27 @@
 
 			<!-- MAIN DOSSIER CARRIER (Pasta aberta com textura encorpada de arquivo executivo) -->
 			<div
-				class="relative text-on-surface w-full rounded-2xl rounded-tl-sm sm:rounded-tl-sm shadow-[0_22px_60px_rgba(29,27,23,0.28),0_4px_16px_rgba(29,27,23,0.08),inset_0_1px_0_#ffffff] border-2 overflow-hidden flex-1 flex flex-col min-h-0 transition-colors duration-200"
+				class="relative text-on-surface w-full rounded-2xl rounded-tl-sm sm:rounded-tl-sm shadow-[0_22px_60px_rgba(29,27,23,0.28),0_4px_16px_rgba(29,27,23,0.08),inset_0_1px_0_#ffffff] border-2 flex-1 flex flex-col min-h-0 transition-colors duration-200"
 				style="background-color: {theme.folderBg}; border-color: {theme.folderBorder};"
 			>
 				<!-- Linha de reforço estrutural -->
 				<div
-					class="h-1.5 w-full relative z-10 border-b transition-colors duration-200"
+					class="h-1.5 w-full relative z-10 border-b rounded-t-2xl transition-colors duration-200"
 					style="background: linear-gradient(to right, color-mix(in srgb, {accentColor} 25%, transparent), color-mix(in srgb, {accentColor} 45%, transparent), color-mix(in srgb, {accentColor} 20%, transparent)); border-color: {theme.folderBorder};"
 				></div>
 
 				<!-- Archival Folder Header Strip -->
 				<div
-					class="bg-gradient-to-r from-[#FAF5EC] via-[#F6F0E7] to-[#F1ECE3] px-5 py-3 sm:px-6 sm:py-3.5 border-b flex items-center justify-between shrink-0"
-					style="border-color: {theme.folderBorder};"
+					class="px-5 py-3 sm:px-6 sm:py-3.5 border-b flex items-center justify-between shrink-0 relative z-30 transition-colors"
+					style="background-color: {theme.cardBg}; border-color: {theme.folderBorder};"
 				>
 					<div class="flex flex-wrap items-center gap-3">
 						<!-- Physical Tag Badge -->
 						<div
-							class="flex items-center gap-1.5 bg-[#FEF08A] px-2.5 py-1 rounded border border-[#FDE047] text-[#78350F] shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)]"
+							class="flex items-center gap-1.5 px-2.5 py-1 rounded border shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] transition-colors"
+							style="background-color: {theme.badgeBg}; border-color: {theme.badgeBorder}; color: {theme.badgeText};"
 						>
-							<span class="material-symbols-outlined text-[14px]">folder_special</span>
+							<span class="material-symbols-outlined text-[14px]" style="color: {theme.accent};">folder_special</span>
 							<span class="text-[11px] font-extrabold uppercase tracking-widest">
 								DOSSIÊ RESULTADO-CHAVE
 							</span>
@@ -375,7 +395,7 @@
 						<div
 							class="flex items-center gap-1.5 bg-surface-container-lowest px-2.5 py-1 rounded-md text-on-surface-variant border border-outline-variant/40 text-[11px] font-semibold"
 						>
-							<span class="w-2 h-2 rounded-full bg-primary"></span>
+							<span class="w-2 h-2 rounded-full" style="background-color: {theme.accent};"></span>
 							<span>Ciclo: {currentCycle?.code ?? '2026-S1'}</span>
 						</div>
 						<span class="text-[#c1c6d6] hidden sm:inline">|</span>
@@ -385,19 +405,8 @@
 					</div>
 
 					<div class="flex items-center gap-2">
-						<!-- Mini paleta para alternar cor suave do KR -->
-						<div class="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 border border-[#d5cebe] shadow-xs">
-							<span class="font-mono text-[9px] uppercase font-bold text-[#727784] mr-0.5 hidden sm:inline">Cor:</span>
-							{#each colorSwatches as sw}
-								<button
-									type="button"
-									onclick={() => (accentColor = sw.hex)}
-									class="w-4 h-4 rounded-full transition-transform hover:scale-125 {accentColor === sw.hex ? 'ring-2 ring-offset-1 scale-110 shadow-xs' : 'opacity-70'}"
-									style="background-color: {sw.hex}; ring-color: {sw.hex};"
-									title={sw.name}
-								></button>
-							{/each}
-						</div>
+						<!-- Seletor de Cor Paper Strategist -->
+						<PaperColorPicker bind:value={accentColor} disabled={!canEdit} align="right" />
 
 						<span
 							class="text-[11px] font-semibold text-on-surface-variant bg-surface-container-low px-2 py-1 rounded border border-outline-variant/30 hidden sm:inline-flex items-center gap-1"
@@ -746,30 +755,33 @@
 
 									<!-- Realizado Atual (Highlighted Card) -->
 									<div
-										class="bg-[#FEF9C3] p-3.5 rounded-xl border-2 border-[#FDE047] shadow-xs focus-within:border-[#CA8A04] focus-within:ring-1 focus-within:ring-[#CA8A04] transition-all"
+										class="p-3.5 rounded-xl border-2 shadow-xs transition-all"
+										style="background-color: {theme.badgeBg}; border-color: {theme.badgeBorder};"
 									>
 										<div class="flex items-center justify-between mb-1">
-											<span class="block text-[10px] uppercase font-bold text-[#78350F]">
+											<span class="block text-[10px] uppercase font-bold" style="color: {theme.badgeText};">
 												Realizado Atual
 											</span>
 											<span
-												class="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-[#FDE047] text-[#78350F]"
+												class="text-[10px] font-extrabold px-1.5 py-0.2 rounded bg-white/80 border"
+												style="border-color: {theme.badgeBorder}; color: {theme.accentDark};"
 											>
 												{calculatedProgressPct}%
 											</span>
 										</div>
 										<div class="flex items-baseline">
-											<span class="text-xs font-extrabold text-[#78350F] mr-1">{unit}</span>
+											<span class="text-xs font-extrabold mr-1" style="color: {theme.accentDark};">{unit}</span>
 											<input
 												name="current_value"
 												type="number"
 												step="any"
 												disabled={!canEdit}
 												bind:value={currentValue}
-												class="w-full text-[15px] font-extrabold text-[#78350F] bg-transparent border-0 p-0 focus:ring-0 focus:outline-none"
+												class="w-full text-[15px] font-extrabold bg-transparent border-0 p-0 focus:ring-0 focus:outline-none"
+												style="color: {theme.accentDark};"
 											/>
 										</div>
-										<span class="text-[10px] text-[#B45309] font-medium">
+										<span class="text-[10px] font-medium" style="color: {theme.badgeText};">
 											{deltaValue >= 0 ? '+' : ''}{formatNumber(deltaValue, unit)} no período
 										</span>
 									</div>
@@ -807,7 +819,8 @@
 											>Progresso Consolidado Ponderado</span
 										>
 										<span
-											class="font-bold text-[#78350F] bg-[#FEF08A] px-2.5 py-0.5 rounded text-[11px] border border-[#FDE047] transition-all"
+											class="font-bold px-2.5 py-0.5 rounded text-[11px] border transition-all"
+											style="background-color: {theme.badgeBg}; border-color: {theme.badgeBorder}; color: {theme.badgeText};"
 										>
 											{calculatedProgressPct}% Concluído
 										</span>
@@ -816,15 +829,8 @@
 										class="w-full h-3.5 rounded-full bg-surface-container-high p-0.5 shadow-[inset_0_1px_3px_rgba(36,34,30,0.12)]"
 									>
 										<div
-											class="h-full rounded-full transition-all duration-500 shadow-xs {calculatedProgressPct >=
-											100
-												? 'bg-gradient-to-r from-primary to-[#3080F9]'
-												: calculatedProgressPct >= 70
-													? 'bg-gradient-to-r from-[#CA8A04] to-[#EAB308]'
-													: calculatedProgressPct >= 40
-														? 'bg-gradient-to-r from-[#D97706] to-[#F59E0B]'
-														: 'bg-gradient-to-r from-[#DC2626] to-[#EF4444]'}"
-											style="width: {calculatedProgressPct}%;"
+											class="h-full rounded-full transition-all duration-500 shadow-xs"
+											style="width: {calculatedProgressPct}%; background-color: {theme.accent};"
 										></div>
 									</div>
 								</div>
@@ -938,36 +944,38 @@
 								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 									{#each childKpis as kpi, idx (kpi.id)}
 										{@const spark = getKpiSparkline(kpi)}
-										{@const isDone = kpi.progress >= 1}
 										{@const isHealthy = kpi.progress >= 0.7}
+										{@const kpiColor = kpi.color || (kpi.teams.length > 0 && kpi.teams[0].color ? kpi.teams[0].color : '#00665a')}
+										{@const kpiTheme = getDossierTheme(kpiColor)}
 										<div
-											class="border-2 rounded-xl p-4 shadow-[0_2px_6px_rgba(36,34,30,0.04)] flex flex-col justify-between gap-3 transition-all {idx %
-												2 ===
-											0
-												? 'bg-[#F0FDF4] border-[#BBF7D0]'
-												: 'bg-[#F0F9FF] border-[#BAE6FD]'}"
+											class="border-2 rounded-xl p-4 shadow-[0_2px_6px_rgba(36,34,30,0.04)] flex flex-col justify-between gap-3 transition-all"
+											style="background-color: {kpiTheme.folderBg}; border-color: {kpiTheme.folderBorder};"
 										>
 											<div>
 												<div class="flex items-center justify-between mb-2">
-													<div class="flex items-center gap-1.5">
+													<div class="flex items-center gap-1.5 flex-wrap">
 														<span
-															class="px-2 py-0.5 text-[10px] font-bold rounded {idx %
-																2 ===
-															0
-																? 'bg-[#BBF7D0] text-[#14532D]'
-																: 'bg-[#BAE6FD] text-[#0C4A6E]'}"
+															class="px-2 py-0.5 text-[10px] font-bold rounded border"
+															style="background-color: {kpiTheme.badgeBg}; border-color: {kpiTheme.badgeBorder}; color: {kpiTheme.badgeText};"
 														>
 															KPI {idx + 1}
 														</span>
 														<span
-															class="text-[10px] font-bold uppercase tracking-wider {idx %
-																2 ===
-															0
-																? 'text-[#15803D]'
-																: 'text-[#0369A1]'}"
+															class="text-[10px] font-bold uppercase tracking-wider"
+															style="color: {kpiTheme.accentDark};"
 														>
 															Peso: {kpi.weight}
 														</span>
+														{#each kpi.teams as kt (kt.id)}
+															{@const ktTheme = getDossierTheme(kt.color || '#0058bd')}
+															<span
+																class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9.5px] font-bold border"
+																style="background-color: {ktTheme.badgeBg}; border-color: {ktTheme.badgeBorder}; color: {ktTheme.badgeText};"
+															>
+																<span class="w-1.5 h-1.5 rounded-full" style="background-color: {ktTheme.accent};"></span>
+																{kt.name}
+															</span>
+														{/each}
 													</div>
 													<div class="flex items-center gap-1">
 														{#if onOpenNode}
@@ -981,9 +989,8 @@
 															</button>
 														{/if}
 														<span
-															class="px-2 py-0.5 rounded-full bg-white/90 text-[11px] font-bold shadow-xs flex items-center gap-1 {isHealthy
-																? 'text-[#15803D]'
-																: 'text-amber-700'}"
+															class="px-2 py-0.5 rounded-full bg-white/90 text-[11px] font-bold shadow-xs flex items-center gap-1"
+															style="color: {kpiTheme.accentDark};"
 														>
 															<span class="material-symbols-outlined text-[13px]"
 																>{isHealthy ? 'trending_up' : 'trending_flat'}</span
@@ -993,17 +1000,14 @@
 													</div>
 												</div>
 												<h4
-													class="text-sm font-bold {idx % 2 === 0
-														? 'text-[#14532D]'
-														: 'text-[#0C4A6E]'}"
+													class="text-sm font-bold text-[#1d1b17]"
 												>
 													{kpi.title}
 												</h4>
 												{#if kpi.description}
 													<p
-														class="text-xs mt-0.5 {idx % 2 === 0
-															? 'text-[#15803D]'
-															: 'text-[#0369A1]'}"
+														class="text-xs mt-0.5"
+														style="color: {kpiTheme.badgeText};"
 													>
 														{kpi.description}
 													</p>
@@ -1012,56 +1016,45 @@
 
 											<!-- Ledger Metrics Strip -->
 											<div
-												class="grid grid-cols-3 gap-2 bg-white/80 p-2.5 rounded-lg border text-center {idx %
-													2 ===
-												0
-													? 'border-[#DCFCE7]'
-													: 'border-[#E0F2FE]'}"
+												class="grid grid-cols-3 gap-2 bg-white/85 p-2.5 rounded-lg border text-center"
+												style="border-color: {kpiTheme.cardBorder};"
 											>
 												<div>
 													<span
-														class="block text-[10px] font-bold uppercase {idx % 2 === 0
-															? 'text-[#15803D]'
-															: 'text-[#0369A1]'}"
+														class="block text-[10px] font-bold uppercase"
+														style="color: {kpiTheme.badgeText};"
 													>
 														Base
 													</span>
 													<span
-														class="text-xs font-bold {idx % 2 === 0
-															? 'text-[#14532D]'
-															: 'text-[#0C4A6E]'}"
+														class="text-xs font-bold text-[#1d1b17]"
 													>
 														{formatNumber(kpi.baseline, kpi.unit)}
 													</span>
 												</div>
 												<div>
 													<span
-														class="block text-[10px] font-bold uppercase {idx % 2 === 0
-															? 'text-[#15803D]'
-															: 'text-[#0369A1]'}"
+														class="block text-[10px] font-bold uppercase"
+														style="color: {kpiTheme.badgeText};"
 													>
 														Meta
 													</span>
 													<span
-														class="text-xs font-bold {idx % 2 === 0
-															? 'text-[#14532D]'
-															: 'text-[#0C4A6E]'}"
+														class="text-xs font-bold text-[#1d1b17]"
 													>
 														{formatNumber(kpi.target_value, kpi.unit)}
 													</span>
 												</div>
 												<div>
 													<span
-														class="block text-[10px] font-bold uppercase {idx % 2 === 0
-															? 'text-[#15803D]'
-															: 'text-[#0369A1]'}"
+														class="block text-[10px] font-bold uppercase"
+														style="color: {kpiTheme.badgeText};"
 													>
 														Atual
 													</span>
 													<span
-														class="text-xs font-extrabold {idx % 2 === 0
-															? 'text-emerald-800'
-															: 'text-blue-900'}"
+														class="text-xs font-extrabold"
+														style="color: {kpiTheme.accentDark};"
 													>
 														{formatNumber(kpi.current_value, kpi.unit)}
 													</span>
@@ -1070,16 +1063,12 @@
 
 											<!-- Tactile Sparkline Visualizer -->
 											<div
-												class="pt-2 border-t border-dashed flex items-center justify-between {idx %
-													2 ===
-												0
-													? 'border-[#86EFAC]'
-													: 'border-[#7DD3FC]'}"
+												class="pt-2 border-t border-dashed flex items-center justify-between"
+												style="border-color: {kpiTheme.folderBorder};"
 											>
 												<span
-													class="text-[11px] font-medium flex items-center gap-1 {idx % 2 === 0
-														? 'text-[#15803D]'
-														: 'text-[#0369A1]'}"
+													class="text-[11px] font-medium flex items-center gap-1"
+													style="color: {kpiTheme.badgeText};"
 												>
 													<span class="material-symbols-outlined text-[14px]">history</span>
 													Último check-in: {timeAgo(kpi.metricUpdates[0]?.created_at)}
@@ -1088,14 +1077,14 @@
 													<svg class="w-20 h-5" fill="none" viewBox="0 0 80 20">
 														<path
 															d={spark.d}
-															stroke={idx % 2 === 0 ? '#16A34A' : '#0284C7'}
+															stroke={kpiTheme.accent}
 															stroke-linecap="round"
 															stroke-width="2"
 														></path>
 														<circle
 															cx={spark.lastPt.x}
 															cy={spark.lastPt.y}
-															fill={idx % 2 === 0 ? '#15803D' : '#0369A1'}
+															fill={kpiTheme.accentDark}
 															r="2.5"
 														></circle>
 													</svg>
@@ -1250,10 +1239,14 @@
 									<div class="flex flex-wrap gap-1.5">
 										{#each teams as tm (tm.id)}
 											{@const hasTeam = node.teams.some((t) => t.id === tm.id)}
+											{@const tmTheme = getDossierTheme(tm.color || '#0058bd')}
 											<label
-												class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs cursor-pointer {hasTeam
-													? 'border-primary bg-primary-fixed text-on-primary-fixed font-bold'
-													: 'border-outline-variant/50 bg-[#FFFDF8] text-on-surface-variant'}"
+												class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs cursor-pointer transition-colors {hasTeam
+													? 'font-bold shadow-xs'
+													: 'border-outline-variant/50 bg-[#FFFDF8] text-on-surface-variant hover:bg-surface-container'}"
+												style={hasTeam
+													? `background-color: ${tmTheme.badgeBg}; border-color: ${tmTheme.badgeBorder}; color: ${tmTheme.badgeText};`
+													: ''}
 											>
 												<input
 													type="checkbox"
@@ -1265,7 +1258,7 @@
 												/>
 												<span
 													class="w-2 h-2 rounded-full"
-													style="background-color: {tm.color || '#005AC2'}"
+													style="background-color: {tmTheme.accent};"
 												></span>
 												<span>{tm.name}</span>
 											</label>
@@ -1535,7 +1528,8 @@
 							<button
 								type="submit"
 								form="updateKrForm"
-								class="px-5 py-2 bg-[#3080F9] hover:bg-primary-container text-white rounded-lg text-xs font-bold shadow-[0_2px_0_#004494] hover:-translate-y-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer"
+								class="px-5 py-2 text-white rounded-lg text-xs font-bold hover:brightness-105 hover:-translate-y-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer"
+								style="background-color: {theme.accent}; box-shadow: 0 2px 0 {theme.accentShadow};"
 							>
 								<span class="material-symbols-outlined text-[18px]">check</span>
 								Salvar Alterações no Dossiê

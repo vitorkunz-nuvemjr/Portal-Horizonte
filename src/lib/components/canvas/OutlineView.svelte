@@ -2,6 +2,7 @@
 	import type { NodeWithExtras } from '$lib/types';
 	import { formatNumber, formatPct, getInitials } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
+	import { getDossierTheme } from '$lib/dossier-theme';
 	import {
 		ChevronRight,
 		ChevronDown,
@@ -60,6 +61,8 @@
 		{@const isDimmed = dimmedIds.has(node.id)}
 		{@const isSelected = selectedNodeId === node.id}
 		{@const pct = Math.round(node.progress * 100)}
+		{@const nodeColor = node.color || (node.teams[0]?.color || (node.type === 'objective' ? '#0058bd' : node.type === 'key_result' ? '#b30069' : '#00665a'))}
+		{@const nodeTheme = getDossierTheme(nodeColor)}
 
 		<div
 			class="transition-opacity {isDimmed ? 'opacity-35 hover:opacity-80' : ''}"
@@ -75,18 +78,15 @@
 						onSelectNode(node.id);
 					}
 				}}
-				class="group relative mb-2.5 flex items-center justify-between gap-4 rounded-xl bg-surface-container-lowest px-4 py-3.5 shadow-[0_1px_1px_rgba(36,34,30,0.05),0_3px_6px_-1px_rgba(36,34,30,0.04),0_-1px_0_rgba(255,255,255,0.8)_inset] transition-all hover:shadow-[0_6px_14px_rgba(36,34,30,0.08)] {isSelected
+				class="group relative mb-2.5 flex items-center justify-between gap-4 rounded-xl px-4 py-3.5 shadow-[0_1px_1px_rgba(36,34,30,0.05),0_3px_6px_-1px_rgba(36,34,30,0.04),0_-1px_0_rgba(255,255,255,0.8)_inset] transition-all hover:shadow-[0_6px_14px_rgba(36,34,30,0.08)] {isSelected
 					? 'ring-2 ring-primary'
 					: ''} {isHighlighted ? 'ring-2 ring-tertiary-container' : ''}"
+				style="background-color: {nodeTheme.folderBg}; border: 1.5px solid {nodeTheme.folderBorder};"
 			>
 				<!-- Left Spine Accent -->
 				<div
-					class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r {node.color ? '' : (node.type === 'objective'
-						? 'bg-primary'
-						: node.type === 'key_result'
-							? 'bg-secondary'
-							: 'bg-tertiary-container')}"
-					style={node.color ? `background-color: ${node.color};` : ''}
+					class="absolute left-0 top-2.5 bottom-2.5 w-1.5 rounded-r"
+					style="background-color: {nodeTheme.accent};"
 				></div>
 
 				<!-- Left: Expand button + Type icon + Title + Meta -->
@@ -117,21 +117,24 @@
 					<!-- Type Badge -->
 					{#if node.type === 'objective'}
 						<span
-							class="inline-flex shrink-0 items-center gap-1 rounded bg-primary-fixed px-2 py-0.5 font-label-sm text-label-sm font-bold text-on-primary-fixed uppercase"
+							class="inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-label-sm font-bold uppercase"
+							style="background-color: {nodeTheme.badgeBg}; border-color: {nodeTheme.badgeBorder}; color: {nodeTheme.badgeText};"
 						>
 							<Target class="h-3 w-3" />
 							OBJ · {node.year}{node.quarter ? ` Q${node.quarter}` : ''}
 						</span>
 					{:else if node.type === 'key_result'}
 						<span
-							class="inline-flex shrink-0 items-center gap-1 rounded bg-secondary-fixed px-2 py-0.5 font-label-sm text-label-sm font-bold text-on-secondary-fixed-variant uppercase"
+							class="inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-label-sm font-bold uppercase"
+							style="background-color: {nodeTheme.badgeBg}; border-color: {nodeTheme.badgeBorder}; color: {nodeTheme.badgeText};"
 						>
 							<Flag class="h-3 w-3" />
 							KR {node.cycle ? `· ${node.cycle.code}` : ''}
 						</span>
 					{:else}
 						<span
-							class="inline-flex shrink-0 items-center gap-1 rounded bg-tertiary-fixed/60 px-2 py-0.5 font-label-sm text-label-sm font-bold text-on-tertiary-container uppercase"
+							class="inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-label-sm font-bold uppercase"
+							style="background-color: {nodeTheme.badgeBg}; border-color: {nodeTheme.badgeBorder}; color: {nodeTheme.badgeText};"
 						>
 							<Activity class="h-3 w-3" />
 							KPI
@@ -140,7 +143,10 @@
 
 					<div class="min-w-0 flex-1">
 						<div class="flex items-center gap-2">
-							<span class="truncate font-body-md text-body-md font-semibold text-on-surface">
+							<span
+								class="truncate font-body-md text-body-md font-bold"
+								style="color: {nodeTheme.accentShadow};"
+							>
 								{node.title}
 							</span>
 							{#if isCollapsed && visibleChildren.length > 0}
@@ -184,13 +190,15 @@
 						{#if (node.type === 'objective' || node.type === 'key_result') && node.teams && node.teams.length > 0}
 							<div class="mt-1 flex flex-wrap items-center gap-1">
 								{#each node.teams as t (t.id)}
+									{@const tTheme = getDossierTheme(t.color || '#0058bd')}
 									<span
-										class="inline-flex items-center gap-1 rounded bg-surface-container-low px-1.5 py-0.5 font-label-sm text-label-sm font-semibold text-on-surface"
+										class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-label-sm text-label-sm font-bold"
+										style="background-color: {tTheme.badgeBg}; border-color: {tTheme.badgeBorder}; color: {tTheme.badgeText};"
 										title="Equipe: {t.name}"
 									>
 										<span
 											class="h-1.5 w-1.5 rounded-full"
-											style="background-color: {t.color || '#0058bd'}"
+											style="background-color: {tTheme.accent}"
 										></span>
 										<span class="max-w-[120px] truncate">{t.name}</span>
 									</span>
@@ -204,34 +212,29 @@
 				<div class="flex shrink-0 items-center gap-4">
 					{#if node.type === 'kpi'}
 						<div class="text-right text-xs">
-							<div class="font-semibold text-on-surface">
+							<div class="font-bold" style="color: {nodeTheme.accentShadow};">
 								{formatNumber(node.current_value, node.unit)}
-								<span class="font-normal text-outline">
+								<span class="font-medium" style="color: {nodeTheme.accentDark};">
 									/ {formatNumber(node.target_value, node.unit)}
 								</span>
 							</div>
-							<div class="text-[10px] text-outline">
+							<div class="text-[10px] font-semibold" style="color: {nodeTheme.accent};">
 								Base: {formatNumber(node.baseline, node.unit)}
 							</div>
 						</div>
 					{/if}
 
 					<div class="w-28">
-						<div class="flex justify-between font-label-sm text-label-sm font-bold text-on-surface">
+						<div class="flex justify-between font-label-sm text-label-sm font-bold" style="color: {nodeTheme.accentShadow};">
 							<span>{formatPct(node.progress)}</span>
 						</div>
 						<div
-							class="mt-1 h-2 w-full overflow-hidden rounded-full bg-surface-container-high p-0.5 shadow-[inset_0_1px_2px_rgba(36,34,30,0.08)]"
+							class="mt-1 h-2.5 w-full overflow-hidden rounded-full p-0.5 shadow-[inset_0_1px_2px_rgba(36,34,30,0.08)]"
+							style="background-color: {nodeTheme.badgeBg}; border: 1px solid {nodeTheme.badgeBorder};"
 						>
 							<div
-								class="h-full rounded-full {node.atRisk
-									? 'bg-secondary'
-									: node.type === 'objective'
-										? 'bg-primary'
-										: node.type === 'key_result'
-											? 'bg-tertiary-container'
-											: 'bg-primary-container'}"
-								style="width: {pct}%"
+								class="h-full rounded-full"
+								style="width: {pct}%; background-color: {nodeTheme.accent};"
 							></div>
 						</div>
 					</div>
@@ -241,15 +244,17 @@
 						{#if node.type === 'kpi' && node.teams && node.teams.length > 0}
 							<div class="flex items-center gap-1">
 								{#each node.teams.slice(0, 1) as t (t.id)}
+									{@const tTheme = getDossierTheme(t.color || '#0058bd')}
 									<span
-										class="inline-flex items-center gap-1 rounded bg-surface-container px-1.5 py-0.5 font-label-sm text-label-sm font-semibold text-on-surface"
+										class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-label-sm text-label-sm font-bold"
+										style="background-color: {tTheme.badgeBg}; border-color: {tTheme.badgeBorder}; color: {tTheme.badgeText};"
 										title="Equipe: {t.name}"
 									>
 										<span
 											class="h-1.5 w-1.5 rounded-full"
-											style="background-color: {t.color || '#0058bd'}"
+											style="background-color: {tTheme.accent}"
 										></span>
-										<span class="max-w-[56px] truncate">{t.name}</span>
+										<span class="max-w-[68px] truncate">{t.name}</span>
 									</span>
 								{/each}
 							</div>

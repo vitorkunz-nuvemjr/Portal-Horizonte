@@ -2,6 +2,7 @@
 	import type { Cycle, KpiDirection, NodeStatus, NodeWithExtras, Profile, StrategyNode, Team } from '$lib/types';
 	import { enhanceFormValidation, formatNumber, formatPct, getInitials } from '$lib/utils';
 	import { getDossierTheme } from '$lib/dossier-theme';
+	import PaperColorPicker from '$lib/components/ui/PaperColorPicker.svelte';
 	import { onMount } from 'svelte';
 
 	interface Props {
@@ -291,9 +292,9 @@
 			style="font-family: 'Poppins', sans-serif;"
 		>
 			<!-- 1. TOPO DA PASTA: ABAS SALIENTES DE ARQUIVO (SEM TRILHO METÁLICO SUPERIOR) -->
-			<div class="flex items-end justify-between px-3 sm:px-6 -mb-[1px] relative z-20 overflow-x-auto no-scrollbar">
+			<div class="flex items-end justify-between px-3 sm:px-6 -mb-[1px] relative z-30">
 				<!-- Grupo de Abas Recortadas -->
-				<div class="flex items-end gap-1.5 shrink-0">
+				<div class="flex items-end gap-1.5 overflow-x-auto overflow-y-hidden no-scrollbar">
 					<!-- Aba 1: Parâmetros & Metas -->
 					<button
 						type="button"
@@ -371,20 +372,8 @@
 				</div>
 
 				<!-- Canto Superior Direito: Seletor de Cor & Botão Fechar -->
-				<div class="flex items-center gap-2 pb-1.5 pr-1 shrink-0">
-					<!-- Mini paleta para alternar cor suave do KPI -->
-					<div class="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 border border-[#d5cebe] shadow-xs">
-						<span class="font-mono text-[9px] uppercase font-bold text-[#727784] mr-0.5 hidden sm:inline">Cor:</span>
-						{#each colorSwatches as sw}
-							<button
-								type="button"
-								onclick={() => (accentColor = sw.hex)}
-								class="w-4 h-4 rounded-full transition-transform hover:scale-125 {accentColor === sw.hex ? 'ring-2 ring-offset-1 scale-110 shadow-xs' : 'opacity-70'}"
-								style="background-color: {sw.hex}; ring-color: {sw.hex};"
-								title={sw.name}
-							></button>
-						{/each}
-					</div>
+				<div class="flex items-center gap-2 pb-1.5 pr-1 shrink-0 relative z-40">
+					<PaperColorPicker bind:value={accentColor} disabled={!canEdit} align="right" />
 
 					<button
 						type="button"
@@ -460,8 +449,8 @@
 
 							<!-- Bloco de Identificação -->
 							<div
-								class="p-5 rounded-2xl bg-white border shadow-xs space-y-4"
-								style="border-color: {theme.cardBorder};"
+								class="p-5 rounded-2xl border shadow-xs space-y-4 transition-colors"
+								style="background-color: {theme.cardBg}; border-color: {theme.cardBorder};"
 							>
 								<!-- Título do KPI -->
 								<div class="space-y-1.5">
@@ -530,8 +519,8 @@
 
 							<!-- Grid de Métricas Numéricas e Linha de Base -->
 							<div
-								class="p-5 rounded-2xl bg-white border shadow-xs space-y-4"
-								style="border-color: {theme.cardBorder};"
+								class="p-5 rounded-2xl border shadow-xs space-y-4 transition-colors"
+								style="background-color: {theme.cardBg}; border-color: {theme.cardBorder};"
 							>
 								<h4
 									class="font-mono text-[11px] uppercase tracking-wider font-bold flex items-center gap-1.5"
@@ -706,8 +695,8 @@
 
 							<!-- Status e Descrição -->
 							<div
-								class="p-5 rounded-2xl bg-white border shadow-xs space-y-4"
-								style="border-color: {theme.cardBorder};"
+								class="p-5 rounded-2xl border shadow-xs space-y-4 transition-colors"
+								style="background-color: {theme.cardBg}; border-color: {theme.cardBorder};"
 							>
 								<!-- Status -->
 								<div class="space-y-2">
@@ -1105,17 +1094,18 @@
 											{#each selectedTeamIds as tid (tid)}
 												{@const tm = teams.find((t) => t.id === tid)}
 												{#if tm}
+													{@const tmTheme = getDossierTheme(tm.color || '#0058bd')}
 													<div
-														class="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-[#faf8f5] border text-xs font-semibold shadow-xs"
-														style="border-color: {theme.cardBorder};"
+														class="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border text-xs font-semibold shadow-xs transition-colors"
+														style="background-color: {tmTheme.badgeBg}; border-color: {tmTheme.badgeBorder}; color: {tmTheme.badgeText};"
 													>
-														<span class="w-2 h-2 rounded-full" style="background-color: {tm.color || '#0058bd'};"></span>
-														<span class="text-[#1d1b17]">{tm.name}</span>
+														<span class="w-2 h-2 rounded-full" style="background-color: {tmTheme.accent};"></span>
+														<span>{tm.name}</span>
 														{#if canEdit}
 															<button
 																type="button"
 																onclick={() => removeTeam(tm.id)}
-																class="text-[#727784] hover:text-[#ba1a1a] transition-colors p-0.5 rounded cursor-pointer"
+																class="opacity-70 hover:opacity-100 hover:text-[#ba1a1a] transition-colors p-0.5 rounded cursor-pointer"
 															>
 																<span class="material-symbols-outlined text-[14px]">close</span>
 															</button>
@@ -1340,3 +1330,16 @@
 		</div>
 	{/if}
 {/if}
+
+<style>
+	/* Completely hide scrollbars on the tabs container across WebKit, Firefox, and IE/Edge */
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+		width: 0;
+		height: 0;
+	}
+	.no-scrollbar {
+		-ms-overflow-style: none; /* IE and Edge */
+		scrollbar-width: none; /* Firefox */
+	}
+</style>

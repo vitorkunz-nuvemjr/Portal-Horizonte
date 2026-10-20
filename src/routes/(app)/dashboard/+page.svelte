@@ -2,6 +2,7 @@
 	import { enrichNodes } from '$lib/progress';
 	import { enhanceFormValidation, formatNumber, formatPct, getInitials } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
+	import { getDossierTheme } from '$lib/dossier-theme';
 	import {
 		AlertTriangle,
 		CheckCircle2,
@@ -188,13 +189,18 @@
 
 				<div class="mt-4 space-y-3">
 					{#each attentionList as item (item.id)}
+						{@const itemTheme = getDossierTheme(
+							item.color || item.teams[0]?.color || '#B6006A'
+						)}
 						<div
-							class="flex items-center justify-between gap-4 rounded-[4px] border border-outline-variant bg-secondary-fixed/40 p-3.5"
+							class="flex items-center justify-between gap-4 rounded-[4px] border p-3.5"
+							style="background-color: {itemTheme.folderBg}; border-color: {itemTheme.folderBorder}; border-left: 3px solid {itemTheme.accent};"
 						>
 							<div class="min-w-0 flex-1">
-								<div class="flex items-center gap-2">
+								<div class="flex flex-wrap items-center gap-2">
 									<span
-										class="rounded-[2px] border border-outline-variant bg-surface-container-lowest px-1.5 py-0.5 text-[10px] font-bold text-on-secondary-fixed uppercase tracking-wider"
+										class="rounded-[2px] border px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+										style="background-color: {itemTheme.badgeBg}; color: {itemTheme.badgeText}; border-color: {itemTheme.badgeBorder};"
 									>
 										{item.type === 'objective'
 											? 'Objetivo'
@@ -203,30 +209,52 @@
 												: 'KPI'}
 									</span>
 									{#if item.cycle}
-										<span class="text-[11px] font-bold text-on-surface-variant">
+										<span class="text-[11px] font-bold" style="color: {itemTheme.accent};">
 											{item.cycle.code}
 										</span>
 									{:else if item.year}
-										<span class="text-[11px] font-bold text-on-surface-variant">
+										<span class="text-[11px] font-bold" style="color: {itemTheme.accent};">
 											{item.year}{item.quarter ? ` · T${item.quarter}` : ''}
 										</span>
 									{/if}
+									{#each item.teams.slice(0, 2) as team (team.id)}
+										{@const tTheme = getDossierTheme(team.color || '#0058bd')}
+										<span
+											class="inline-flex items-center gap-1 rounded-[2px] border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+											style="background-color: {tTheme.badgeBg}; color: {tTheme.badgeText}; border-color: {tTheme.badgeBorder};"
+										>
+											<span
+												class="h-1.5 w-1.5 rounded-full"
+												style="background-color: {tTheme.accent};"
+											></span>
+											{team.name}
+										</span>
+									{/each}
 								</div>
-								<p class="mt-1 truncate text-xs font-bold text-on-surface">{item.title}</p>
+								<p
+									class="mt-1 truncate text-xs font-bold"
+									style="color: {itemTheme.accentShadow};"
+								>
+									{item.title}
+								</p>
 							</div>
 
 							<div class="flex shrink-0 items-center gap-3">
 								<div class="text-right">
-									<div class="text-xs font-bold text-on-secondary-fixed">
+									<div
+										class="text-xs font-bold"
+										style="color: {itemTheme.accentShadow};"
+									>
 										{formatPct(item.progress)}
 									</div>
-									<div class="text-[10px] font-semibold text-secondary">Abaixo do ritmo</div>
+									<div class="text-[10px] font-semibold" style="color: {itemTheme.accentDark};">Abaixo do ritmo</div>
 								</div>
 								<div class="flex -space-x-1">
 									{#each item.assignees.slice(0, 2) as person (person.id)}
+										{@const pTheme = getDossierTheme(person.color || '#005AC2')}
 										<span
 											class="inline-flex h-6 w-6 items-center justify-center rounded-full text-[9px] font-bold text-white ring-1 ring-surface-container-lowest"
-											style="background-color: {person.color || '#005AC2'}"
+											style="background-color: {pTheme.accentMuted}"
 											title={person.name}
 										>
 											{getInitials(person.name)}
@@ -286,13 +314,34 @@
 				<div class="mt-4 space-y-3">
 					{#each kpisDue as kpi (kpi.id)}
 						{@const lastUpdate = kpi.metricUpdates[0]}
-						<div class="rounded-[4px] border border-outline-variant bg-surface-container-low/50 p-3.5">
+						{@const kpiTheme = getDossierTheme(
+							kpi.color || kpi.teams[0]?.color || '#6c5e00'
+						)}
+						<div
+							class="rounded-[4px] border p-3.5"
+							style="background-color: {kpiTheme.folderBg}; border-color: {kpiTheme.folderBorder}; border-left: 3px solid {kpiTheme.accent};"
+						>
 							<div class="flex items-start justify-between gap-2">
 								<div>
-									<span class="text-xs font-bold text-on-surface">{kpi.title}</span>
-									<div class="mt-0.5 text-[11px] text-on-surface-variant">
+									<div class="flex flex-wrap items-center gap-1.5">
+										<span class="text-xs font-bold" style="color: {kpiTheme.accentShadow};">{kpi.title}</span>
+										{#each kpi.teams.slice(0, 2) as team (team.id)}
+											{@const tTheme = getDossierTheme(team.color || '#0058bd')}
+											<span
+												class="inline-flex items-center gap-1 rounded-[2px] border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+												style="background-color: {tTheme.badgeBg}; color: {tTheme.badgeText}; border-color: {tTheme.badgeBorder};"
+											>
+												<span
+													class="h-1.5 w-1.5 rounded-full"
+													style="background-color: {tTheme.accent};"
+												></span>
+												{team.name}
+											</span>
+										{/each}
+									</div>
+									<div class="mt-0.5 text-[11px] font-medium" style="color: {kpiTheme.accentDark};">
 										Atual:
-										<strong class="font-bold text-on-surface"
+										<strong class="font-bold" style="color: {kpiTheme.accentShadow};"
 											>{formatNumber(kpi.current_value, kpi.unit)}</strong
 										>
 										/ Meta: {formatNumber(kpi.target_value, kpi.unit)} ({formatPct(
@@ -300,7 +349,10 @@
 										)})
 									</div>
 								</div>
-								<span class="rounded-[2px] border border-outline-variant bg-surface-container-lowest px-2 py-0.5 text-[10px] font-bold text-on-surface-variant">
+								<span
+									class="rounded-[2px] border px-2 py-0.5 text-[10px] font-bold"
+									style="background-color: {kpiTheme.badgeBg}; color: {kpiTheme.badgeText}; border-color: {kpiTheme.badgeBorder};"
+								>
 									{lastUpdate ? `Atualizado em ${lastUpdate.created_at.slice(0, 10)}` : 'Nunca atualizado'}
 								</span>
 							</div>
@@ -319,17 +371,20 @@
 										step="any"
 										required
 										placeholder="Novo valor ({kpi.unit || '#'})"
-										class="w-32 rounded-[4px] border border-outline-variant bg-surface-container-lowest px-2.5 py-1 text-xs font-semibold text-on-surface"
+										class="w-32 rounded-[4px] border bg-surface-container-lowest px-2.5 py-1 text-xs font-semibold text-on-surface"
+										style="border-color: {kpiTheme.inputBorder};"
 									/>
 									<input
 										name="note"
 										type="text"
 										placeholder="Nota rápida..."
-										class="min-w-0 flex-1 rounded-[4px] border border-outline-variant bg-surface-container-lowest px-2.5 py-1 text-xs text-on-surface"
+										class="min-w-0 flex-1 rounded-[4px] border bg-surface-container-lowest px-2.5 py-1 text-xs text-on-surface"
+										style="border-color: {kpiTheme.inputBorder};"
 									/>
 									<button
 										type="submit"
-										class="shrink-0 rounded-[4px] bg-primary px-2.5 py-1 text-xs font-bold text-on-primary shadow-[0_2px_0_#004494] hover:opacity-95"
+										class="shrink-0 rounded-[4px] px-2.5 py-1 text-xs font-bold text-white hover:opacity-95"
+										style="background-color: {kpiTheme.accent}; box-shadow: 0 2px 0 {kpiTheme.accentShadow};"
 									>
 										Registrar
 									</button>

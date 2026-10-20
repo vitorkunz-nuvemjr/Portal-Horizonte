@@ -36,7 +36,17 @@
 
 	const node = $derived(data.node);
 	const pct = $derived(Math.round(node.progress * 100));
-	const customTheme = $derived(node.color ? getDossierTheme(node.color) : null);
+	const customTheme = $derived(
+		getDossierTheme(
+			node.color ||
+				(node.teams[0]?.color ||
+					(node.type === 'objective'
+						? '#0058bd'
+						: node.type === 'key_result'
+							? '#ca8a04'
+							: '#059669'))
+		)
+	);
 
 	const typeMeta = $derived.by(() => {
 		switch (node.type) {
@@ -121,11 +131,17 @@
 			</span>
 
 			{#if node.type === 'objective' && node.year}
-				<span class="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+				<span
+					class="rounded px-1.5 py-0.5 text-[10px] font-bold"
+					style="background-color: rgba(255,255,255,0.75); color: {customTheme.accentDark}; border: 1px solid {customTheme.cardBorder};"
+				>
 					{node.year}{node.quarter ? ` · Q${node.quarter}` : ''}
 				</span>
 			{:else if node.cycle}
-				<span class="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
+				<span
+					class="rounded px-1.5 py-0.5 text-[10px] font-bold"
+					style="background-color: rgba(255,255,255,0.75); color: {customTheme.accentDark}; border: 1px solid {customTheme.cardBorder};"
+				>
 					{node.cycle.code}
 				</span>
 			{/if}
@@ -142,7 +158,10 @@
 	</div>
 
 	<!-- Title -->
-	<h3 class="mt-2 line-clamp-2 text-xs font-semibold leading-snug text-slate-900">
+	<h3
+		class="mt-2 line-clamp-2 text-xs font-bold leading-snug"
+		style="color: {customTheme.accentShadow};"
+	>
 		{node.title}
 	</h3>
 
@@ -150,26 +169,32 @@
 	<div class="mt-2.5">
 		{#if node.type === 'kpi'}
 			<div class="flex items-baseline justify-between text-[11px]">
-				<span class="flex items-center gap-1 font-semibold text-slate-800">
+				<span
+					class="flex items-center gap-1 font-bold"
+					style="color: {customTheme.accentShadow};"
+				>
 					{#if node.direction === 'down'}
-						<TrendingDown class="h-3 w-3 text-sky-600" />
+						<TrendingDown class="h-3 w-3" style="color: {customTheme.accent};" />
 					{:else}
-						<TrendingUp class="h-3 w-3 text-sky-600" />
+						<TrendingUp class="h-3 w-3" style="color: {customTheme.accent};" />
 					{/if}
 					{formatNumber(node.current_value, node.unit)}
-					<span class="font-normal text-slate-400">
+					<span class="font-medium" style="color: {customTheme.accentDark};">
 						/ {formatNumber(node.target_value, node.unit)}
 					</span>
 				</span>
-				<span class="font-bold text-slate-700">{formatPct(node.progress)}</span>
+				<span class="font-bold" style="color: {customTheme.accentShadow};">{formatPct(node.progress)}</span>
 			</div>
 		{:else}
 			<div class="flex items-center justify-between text-[11px]">
-				<span class="text-slate-500">Progresso</span>
-				<span class="font-bold text-slate-800">{pct}%</span>
+				<span class="font-semibold" style="color: {customTheme.accentDark};">Progresso</span>
+				<span class="font-bold" style="color: {customTheme.accentShadow};">{pct}%</span>
 			</div>
 		{/if}
-		<div class="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+		<div
+			class="mt-1 h-2 w-full overflow-hidden rounded-full p-0.5"
+			style="background-color: {customTheme.badgeBg}; border: 1px solid {customTheme.badgeBorder};"
+		>
 			<div
 				class="h-full rounded-full transition-all duration-300 {node.atRisk
 					? 'bg-amber-500'
@@ -181,7 +206,10 @@
 
 	<!-- Footer: Aligned Values + Assignees + Quick Add Child -->
 	<!-- Footer: Aligned Values + Teams below them + Assignees + Quick Add Child -->
-	<div class="mt-2.5 flex items-start justify-between border-t border-slate-100 pt-2 gap-2">
+	<div
+		class="mt-2.5 flex items-start justify-between border-t border-dashed pt-2 gap-2"
+		style="border-color: {customTheme.cardBorder};"
+	>
 		<!-- Left: Aligned Values and Responsible Teams below them -->
 		<div class="flex min-w-0 flex-1 flex-col gap-1">
 			{#if node.alignedValues.length > 0}
@@ -204,13 +232,15 @@
 			{#if (node.type === 'objective' || node.type === 'key_result') && node.teams && node.teams.length > 0}
 				<div class="flex flex-wrap items-center gap-1">
 					{#each node.teams.slice(0, 2) as t (t.id)}
+						{@const tTheme = getDossierTheme(t.color || '#0058bd')}
 						<span
-							class="inline-flex items-center gap-1 rounded-md border border-slate-200/80 bg-slate-50 px-1.5 py-0.5 text-[9px] font-semibold text-slate-700"
+							class="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold"
+							style="background-color: {tTheme.badgeBg}; border-color: {tTheme.badgeBorder}; color: {tTheme.badgeText};"
 							title="Equipe: {t.name}"
 						>
 							<span
 								class="h-1.5 w-1.5 rounded-full"
-								style="background-color: {t.color || '#2563eb'}"
+								style="background-color: {tTheme.accent}"
 							></span>
 							<span class="max-w-[64px] truncate">{t.name}</span>
 						</span>
@@ -228,13 +258,15 @@
 			{#if node.type === 'kpi' && node.teams && node.teams.length > 0}
 				<div class="flex items-center gap-1">
 					{#each node.teams.slice(0, 1) as t (t.id)}
+						{@const tTheme = getDossierTheme(t.color || '#0058bd')}
 						<span
-							class="inline-flex items-center gap-1 rounded-md border border-slate-200/80 bg-slate-50 px-1.5 py-0.5 text-[9px] font-semibold text-slate-700"
+							class="inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-bold"
+							style="background-color: {tTheme.badgeBg}; border-color: {tTheme.badgeBorder}; color: {tTheme.badgeText};"
 							title="Equipe: {t.name}"
 						>
 							<span
 								class="h-1.5 w-1.5 rounded-full"
-								style="background-color: {t.color || '#2563eb'}"
+								style="background-color: {tTheme.accent}"
 							></span>
 							<span class="max-w-[64px] truncate">{t.name}</span>
 						</span>

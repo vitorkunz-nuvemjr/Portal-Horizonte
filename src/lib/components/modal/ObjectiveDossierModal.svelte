@@ -3,6 +3,7 @@
 	import { enhanceFormValidation, formatNumber, formatPct, getInitials } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
 	import { getDossierTheme } from '$lib/dossier-theme';
+	import PaperColorPicker from '$lib/components/ui/PaperColorPicker.svelte';
 	import { onMount } from 'svelte';
 
 	interface Props {
@@ -286,20 +287,8 @@
 				</div>
 
 				<!-- Canto Superior Direito: Seletor de Tom Suave & Botão Fechar -->
-				<div class="flex items-center gap-2 pb-1.5 pr-1">
-					<!-- Mini paleta para alternar cor suave do dossiê -->
-					<div class="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/90 border border-[#d5cebe] shadow-xs">
-						<span class="font-mono text-[9px] uppercase font-bold text-[#727784] mr-0.5 hidden sm:inline">Cor:</span>
-						{#each colorSwatches as sw}
-							<button
-								type="button"
-								onclick={() => (accentColor = sw.hex)}
-								class="w-4 h-4 rounded-full transition-transform hover:scale-125 {accentColor === sw.hex ? 'ring-2 ring-offset-1 scale-110 shadow-xs' : 'opacity-70'}"
-								style="background-color: {sw.hex}; ring-color: {sw.hex};"
-								title={sw.name}
-							></button>
-						{/each}
-					</div>
+				<div class="flex items-center gap-2 pb-1.5 pr-1 relative z-40">
+					<PaperColorPicker bind:value={accentColor} disabled={!canEdit} align="right" />
 
 					<button
 						type="button"
@@ -338,8 +327,8 @@
 						<!-- ============================================================== -->
 						<div class="lg:col-span-7 space-y-4">
 							<div
-								class="p-5 rounded-2xl bg-white border shadow-xs space-y-4 transition-colors"
-								style="border-color: {theme.cardBorder};"
+								class="p-5 rounded-2xl border shadow-xs space-y-4 transition-colors"
+								style="background-color: {theme.cardBg}; border-color: {theme.cardBorder};"
 							>
 								<!-- Título do Objetivo Estratégico -->
 								<div class="space-y-1.5">
@@ -616,8 +605,8 @@
 						<div class="lg:col-span-5 space-y-4">
 							<!-- CARD 1: EQUIPES & DIRETORIAS RESPONSÁVEIS -->
 							<div
-								class="p-4 rounded-2xl bg-white border shadow-xs space-y-3 transition-colors"
-								style="border-color: {theme.cardBorder};"
+								class="p-4 rounded-2xl border shadow-xs space-y-3 transition-colors"
+								style="background-color: {theme.cardBg}; border-color: {theme.cardBorder};"
 							>
 								<div class="flex items-center justify-between pb-1 border-b border-[#edf4ee]">
 									<div class="flex items-center gap-2">
@@ -692,20 +681,21 @@
 										{#each selectedTeamIds as tid (tid)}
 											{@const tm = teams.find((t) => t.id === tid)}
 											{#if tm}
+												{@const tmTheme = getDossierTheme(tm.color || '#0058bd')}
 												<div
-													class="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl bg-[#faf8f5] border text-xs font-semibold shadow-xs"
-													style="border-color: {theme.cardBorder};"
+													class="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border text-xs font-semibold shadow-xs transition-colors"
+													style="background-color: {tmTheme.badgeBg}; border-color: {tmTheme.badgeBorder}; color: {tmTheme.badgeText};"
 												>
 													<span
 														class="w-2 h-2 rounded-full shrink-0"
-														style="background-color: {tm.color || '#0058bd'};"
+														style="background-color: {tmTheme.accent};"
 													></span>
-													<span class="text-[#1d1b17]">{tm.name}</span>
+													<span>{tm.name}</span>
 													{#if canEdit}
 														<button
 															type="button"
 															onclick={() => removeTeam(tm.id)}
-															class="text-[#727784] hover:text-[#ba1a1a] transition-colors p-0.5 rounded cursor-pointer"
+															class="opacity-70 hover:opacity-100 hover:text-[#ba1a1a] transition-colors p-0.5 rounded cursor-pointer"
 															title="Desvincular equipe"
 														>
 															<span class="material-symbols-outlined text-[14px]">close</span>
@@ -720,8 +710,8 @@
 
 							<!-- CARD 2: LÍDERES E MEMBROS RESPONSÁVEIS -->
 							<div
-								class="p-4 rounded-2xl bg-white border shadow-xs space-y-3 transition-colors"
-								style="border-color: {theme.cardBorder};"
+								class="p-4 rounded-2xl border shadow-xs space-y-3 transition-colors"
+								style="background-color: {theme.cardBg}; border-color: {theme.cardBorder};"
 							>
 								<div class="flex items-center justify-between pb-1 border-b border-[#edf4ee]">
 									<div class="flex items-center gap-2">
@@ -841,8 +831,8 @@
 
 							<!-- CARD 3: RESULTADOS-CHAVE (KRS FILHOS) VINCULADOS -->
 							<div
-								class="p-4 rounded-2xl bg-white border shadow-xs space-y-3 transition-colors"
-								style="border-color: {theme.cardBorder};"
+								class="p-4 rounded-2xl border shadow-xs space-y-3 transition-colors"
+								style="background-color: {theme.cardBg}; border-color: {theme.cardBorder};"
 							>
 								<div class="flex items-center justify-between pb-1 border-b border-[#edf4ee]">
 									<div class="flex items-center gap-2">
@@ -882,15 +872,32 @@
 									{:else}
 										{#each childKrs as kr, kIdx (kr.id)}
 											{@const krPct = Math.round(kr.progress * 100)}
+											{@const krColor = kr.color || (kr.teams.length > 0 && kr.teams[0].color ? kr.teams[0].color : accentColor)}
+											{@const krTheme = getDossierTheme(krColor)}
 											<div
-												class="p-2.5 rounded-xl bg-[#faf8f5] border hover:border-primary/50 transition-all flex flex-col gap-1.5 shadow-xs"
-												style="border-color: {theme.cardBorder};"
+												class="p-2.5 rounded-xl border transition-all flex flex-col gap-1.5 shadow-xs hover:brightness-98"
+												style="background-color: {krTheme.cardBg}; border-color: {krTheme.cardBorder};"
 											>
 												<div class="flex items-start justify-between gap-2">
 													<div class="min-w-0">
-														<span class="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded bg-white text-[#727784] border border-[#e5dfd5]">
-															KR {kIdx + 1}
-														</span>
+														<div class="flex items-center gap-1.5 flex-wrap">
+															<span
+																class="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded border"
+																style="background-color: {krTheme.badgeBg}; border-color: {krTheme.badgeBorder}; color: {krTheme.badgeText};"
+															>
+																KR {kIdx + 1}
+															</span>
+															{#each kr.teams as kt (kt.id)}
+																{@const ktTheme = getDossierTheme(kt.color || '#0058bd')}
+																<span
+																	class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9.5px] font-bold border"
+																	style="background-color: {ktTheme.badgeBg}; border-color: {ktTheme.badgeBorder}; color: {ktTheme.badgeText};"
+																>
+																	<span class="w-1.5 h-1.5 rounded-full" style="background-color: {ktTheme.accent};"></span>
+																	{kt.name}
+																</span>
+															{/each}
+														</div>
 														<p class="text-[12px] font-bold text-[#1d1b17] mt-1 line-clamp-1">
 															{kr.title}
 														</p>
@@ -912,11 +919,11 @@
 												<div class="flex items-center gap-2">
 													<div class="flex-1 h-1.5 rounded-full bg-[#e8e2d8] overflow-hidden">
 														<div
-															class="h-full rounded-full bg-primary"
-															style="width: {krPct}%;"
+															class="h-full rounded-full"
+															style="width: {krPct}%; background-color: {krTheme.accent};"
 														></div>
 													</div>
-													<span class="font-mono text-[10.5px] font-bold text-[#424753]">
+													<span class="font-mono text-[10.5px] font-bold" style="color: {krTheme.accentDark};">
 														{krPct}%
 													</span>
 												</div>

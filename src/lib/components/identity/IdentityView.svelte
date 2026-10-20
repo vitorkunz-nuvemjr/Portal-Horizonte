@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation';
 	import type { NodeValue, NodeWithExtras, StrategicEra } from '$lib/types';
 	import { enhanceFormValidation, getInitials } from '$lib/utils';
+	import { getDossierTheme } from '$lib/dossier-theme';
 	import { AlertCircle, Pencil, Trash2, X } from 'lucide-svelte';
 
 	interface Props {
@@ -126,6 +127,7 @@
 			node: NodeWithExtras;
 			subLabel: string;
 			teamName: string;
+			teamColor: string;
 			teamInitials: string;
 			pct: number;
 			atRisk: boolean;
@@ -145,6 +147,7 @@
 					? `${firstChild.type === 'key_result' ? 'KR' : 'KPI'}: ${firstChild.title}`
 					: n.description || 'Iniciativa vinculada na Árvore Estratégica';
 				const teamName = n.teams[0]?.name ?? n.assignees[0]?.name ?? 'Diretoria Executiva';
+				const teamColor = n.teams[0]?.color || n.color || '#0058bd';
 				rows.push({
 					id: `${val.id}-${n.id}`,
 					val,
@@ -152,6 +155,7 @@
 					node: n,
 					subLabel,
 					teamName,
+					teamColor,
 					teamInitials: getInitials(teamName),
 					pct: Math.round(n.progress * 100),
 					atRisk: Boolean(n.atRisk || n.status === 'at_risk' || n.status === 'off_track')
@@ -986,6 +990,7 @@
 						<tbody class="font-body-md text-body-md divide-y divide-surface-container">
 							{#each filteredMatrixRows.slice(0, 8) as row (row.id)}
 								{@const theme = valueThemes[row.themeIdx]}
+								{@const tTheme = getDossierTheme(row.teamColor)}
 								<tr class="hover:bg-surface-container/60 transition-colors">
 									<td class="py-4 px-4">
 										<span
@@ -1004,13 +1009,17 @@
 										</span>
 									</td>
 									<td class="py-4 px-4">
-										<div class="flex items-center gap-2">
+										<div
+											class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border"
+											style="background-color: {tTheme.badgeBg}; color: {tTheme.badgeText}; border-color: {tTheme.badgeBorder};"
+										>
 											<span
-												class="w-6 h-6 rounded-full bg-surface-container-high flex items-center justify-center font-label-sm text-[10px] font-bold text-on-surface shrink-0"
+												class="w-5 h-5 rounded-full flex items-center justify-center font-label-sm text-[9px] font-bold text-white shrink-0"
+												style="background-color: {tTheme.accentMuted};"
 											>
 												{row.teamInitials}
 											</span>
-											<span class="text-on-surface">{row.teamName}</span>
+											<span class="font-label-sm text-label-sm font-bold">{row.teamName}</span>
 										</div>
 									</td>
 									<td class="py-4 px-4">
