@@ -421,7 +421,7 @@
 	<div
 		role="presentation"
 		onclick={() => (createModal.open = false)}
-		class="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/35 p-4 backdrop-blur-xs"
+		class="fixed inset-0 z-[150] flex items-center justify-center bg-on-surface/35 p-4 backdrop-blur-xs"
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
