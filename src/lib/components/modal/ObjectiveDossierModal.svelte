@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Cycle, NodeStatus, NodeWithExtras, Profile, StrategyNode, Team } from '$lib/types';
-	import { enhanceFormValidation, formatNumber, formatPct, getInitials } from '$lib/utils';
+	import { enhanceFormValidation, formatNumber, formatPct, getInitials, getTeamIcon } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
 	import { getDossierTheme } from '$lib/dossier-theme';
 	import PaperColorPicker from '$lib/components/ui/PaperColorPicker.svelte';
@@ -658,7 +658,12 @@
 																class="w-full flex items-center justify-between gap-2 p-1.5 rounded-lg hover:bg-[#f3ede6] text-left transition-colors cursor-pointer"
 															>
 																<div class="flex items-center gap-2 min-w-0">
-																	<span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: {t.color || '#0058bd'};"></span>
+																	<span
+																		class="material-symbols-outlined text-[15px] shrink-0"
+																		style="color: {t.color || '#0058bd'};"
+																	>
+																		{getTeamIcon(t)}
+																	</span>
 																	<span class="text-[12px] font-semibold text-[#1d1b17] truncate">{t.name}</span>
 																</div>
 																<span class="material-symbols-outlined text-[15px] text-[#059669]">add</span>
@@ -683,13 +688,15 @@
 											{#if tm}
 												{@const tmTheme = getDossierTheme(tm.color || '#0058bd')}
 												<div
-													class="inline-flex items-center gap-2 px-2.5 py-1 rounded-xl border text-xs font-semibold shadow-xs transition-colors"
+													class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-semibold shadow-xs transition-colors"
 													style="background-color: {tmTheme.badgeBg}; border-color: {tmTheme.badgeBorder}; color: {tmTheme.badgeText};"
 												>
 													<span
-														class="w-2 h-2 rounded-full shrink-0"
-														style="background-color: {tmTheme.accent};"
-													></span>
+														class="material-symbols-outlined text-[15px] shrink-0"
+														style="color: {tmTheme.accent};"
+													>
+														{getTeamIcon(tm)}
+													</span>
 													<span>{tm.name}</span>
 													{#if canEdit}
 														<button
@@ -893,7 +900,12 @@
 																	class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9.5px] font-bold border"
 																	style="background-color: {ktTheme.badgeBg}; border-color: {ktTheme.badgeBorder}; color: {ktTheme.badgeText};"
 																>
-																	<span class="w-1.5 h-1.5 rounded-full" style="background-color: {ktTheme.accent};"></span>
+																	<span
+																		class="material-symbols-outlined text-[12px] shrink-0"
+																		style="color: {ktTheme.accent};"
+																	>
+																		{getTeamIcon(kt)}
+																	</span>
 																	{kt.name}
 																</span>
 															{/each}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enrichNodes } from '$lib/progress';
-	import { enhanceFormValidation, formatNumber, formatPct, getInitials } from '$lib/utils';
+	import { enhanceFormValidation, formatNumber, formatPct, getInitials, getTeamIcon } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
 	import { getDossierTheme } from '$lib/dossier-theme';
 	import {
@@ -224,9 +224,11 @@
 											style="background-color: {tTheme.badgeBg}; color: {tTheme.badgeText}; border-color: {tTheme.badgeBorder};"
 										>
 											<span
-												class="h-1.5 w-1.5 rounded-full"
-												style="background-color: {tTheme.accent};"
-											></span>
+												class="material-symbols-outlined text-[12px] shrink-0"
+												style="color: {tTheme.accent};"
+											>
+												{getTeamIcon(team)}
+											</span>
 											{team.name}
 										</span>
 									{/each}
@@ -332,9 +334,11 @@
 												style="background-color: {tTheme.badgeBg}; color: {tTheme.badgeText}; border-color: {tTheme.badgeBorder};"
 											>
 												<span
-													class="h-1.5 w-1.5 rounded-full"
-													style="background-color: {tTheme.accent};"
-												></span>
+													class="material-symbols-outlined text-[12px] shrink-0"
+													style="color: {tTheme.accent};"
+												>
+													{getTeamIcon(team)}
+												</span>
 												{team.name}
 											</span>
 										{/each}

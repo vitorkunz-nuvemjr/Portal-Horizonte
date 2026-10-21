@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { NodeWithExtras } from '$lib/types';
-	import { formatNumber, getInitials } from '$lib/utils';
+	import { formatNumber, getInitials, getTeamIcon } from '$lib/utils';
 	import { getDossierTheme } from '$lib/dossier-theme';
 	import { valueColor } from '$lib/value-colors';
 	import { onMount, tick } from 'svelte';
@@ -1099,7 +1099,12 @@
 												class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold border"
 												style="background-color: {ktTheme.badgeBg}; border-color: {ktTheme.badgeBorder}; color: {ktTheme.badgeText};"
 											>
-												<span class="w-1.5 h-1.5 rounded-full shrink-0" style="background-color: {ktTheme.accent};"></span>
+												<span
+													class="material-symbols-outlined text-[12px] shrink-0"
+													style="color: {ktTheme.accent};"
+												>
+													{getTeamIcon(kpi.teams[0])}
+												</span>
 												<span class="max-w-[75px] truncate">{kpi.teams[0].name}</span>
 											</span>
 										{:else}

@@ -47,10 +47,17 @@
 		}
 	}
 
+	let searchInputEl = $state<HTMLInputElement | null>(null);
+
 	function handleKeydown(e: KeyboardEvent) {
 		if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
 			e.preventDefault();
 			togglePinSidebar();
+		}
+		if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+			e.preventDefault();
+			searchInputEl?.focus();
+			searchInputEl?.select();
 		}
 	}
 
@@ -137,12 +144,19 @@
 				search
 			</span>
 			<input
+				bind:this={searchInputEl}
 				type="search"
 				value={$page.url.searchParams.get('q') ?? globalSearch}
 				oninput={handleGlobalSearch}
 				placeholder="Pesquisar OKRs, KRs ou tags..."
-				class="w-full pl-10 pr-4 py-2 bg-surface-container rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)] focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+				class="w-full pl-10 pr-16 py-2 bg-surface-container rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)] focus:outline-none focus:ring-1 focus:ring-primary transition-all"
 			/>
+			<div
+				class="absolute right-2.5 top-1/2 -translate-y-1/2 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-[10px] shadow-[0_1px_1px_rgba(36,34,30,0.06)] pointer-events-none select-none font-semibold"
+			>
+				<span>Ctrl</span>
+				<span>K</span>
+			</div>
 		</div>
 
 		<!-- Right: Cycle Badge, Notifications, and User Profile -->

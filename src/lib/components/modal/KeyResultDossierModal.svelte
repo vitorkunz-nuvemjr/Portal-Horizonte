@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Cycle, NodeStatus, NodeWithExtras, Profile, StrategyNode, Team } from '$lib/types';
-	import { enhanceFormValidation, formatNumber, formatPct, getInitials } from '$lib/utils';
+	import { enhanceFormValidation, formatNumber, formatPct, getInitials, getTeamIcon } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
 	import { getDossierTheme } from '$lib/dossier-theme';
 	import PaperColorPicker from '$lib/components/ui/PaperColorPicker.svelte';
@@ -972,7 +972,12 @@
 																class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded text-[9.5px] font-bold border"
 																style="background-color: {ktTheme.badgeBg}; border-color: {ktTheme.badgeBorder}; color: {ktTheme.badgeText};"
 															>
-																<span class="w-1.5 h-1.5 rounded-full" style="background-color: {ktTheme.accent};"></span>
+																<span
+																	class="material-symbols-outlined text-[12px] shrink-0"
+																	style="color: {ktTheme.accent};"
+																>
+																	{getTeamIcon(kt)}
+																</span>
 																{kt.name}
 															</span>
 														{/each}
@@ -1257,9 +1262,11 @@
 													class="hidden"
 												/>
 												<span
-													class="w-2 h-2 rounded-full"
-													style="background-color: {tmTheme.accent};"
-												></span>
+													class="material-symbols-outlined text-[15px] shrink-0"
+													style="color: {tmTheme.accent};"
+												>
+													{getTeamIcon(tm)}
+												</span>
 												<span>{tm.name}</span>
 											</label>
 										{/each}

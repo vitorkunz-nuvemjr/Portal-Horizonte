@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { NodeWithExtras } from '$lib/types';
-	import { formatNumber, formatPct, getInitials } from '$lib/utils';
+	import { formatNumber, formatPct, getInitials, getTeamIcon } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
 	import { getDossierTheme } from '$lib/dossier-theme';
 	import {
@@ -197,9 +197,11 @@
 										title="Equipe: {t.name}"
 									>
 										<span
-											class="h-1.5 w-1.5 rounded-full"
-											style="background-color: {tTheme.accent}"
-										></span>
+											class="material-symbols-outlined text-[13px] shrink-0"
+											style="color: {tTheme.accent};"
+										>
+											{getTeamIcon(t)}
+										</span>
 										<span class="max-w-[120px] truncate">{t.name}</span>
 									</span>
 								{/each}
@@ -251,9 +253,11 @@
 										title="Equipe: {t.name}"
 									>
 										<span
-											class="h-1.5 w-1.5 rounded-full"
-											style="background-color: {tTheme.accent}"
-										></span>
+											class="material-symbols-outlined text-[13px] shrink-0"
+											style="color: {tTheme.accent};"
+										>
+											{getTeamIcon(t)}
+										</span>
 										<span class="max-w-[68px] truncate">{t.name}</span>
 									</span>
 								{/each}

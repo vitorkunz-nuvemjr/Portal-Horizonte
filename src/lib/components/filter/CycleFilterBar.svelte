@@ -4,6 +4,7 @@
 	import type { Cycle, NodeWithExtras, StrategyNode, Team } from '$lib/types';
 	import { valueColor } from '$lib/value-colors';
 	import { getDossierTheme } from '$lib/dossier-theme';
+	import { getTeamIcon } from '$lib/utils';
 
 	interface Props {
 		cycles: Cycle[];
@@ -329,7 +330,7 @@
 						style={selectedTeamTheme ? `color: ${selectedTeamTheme.accent};` : ''}
 						class:text-primary={!selectedTeamTheme}
 					>
-						groups
+						{selectedTeam ? getTeamIcon(selectedTeam) : 'groups'}
 					</span>
 					<span>{selectedTeamLabel}</span>
 					<span
@@ -382,9 +383,11 @@
 							>
 								<span class="flex items-center gap-2 truncate">
 									<span
-										class="w-2.5 h-2.5 rounded-full shrink-0 border"
-										style="background-color: {tTheme.accentMuted}; border-color: {tTheme.badgeBorder};"
-									></span>
+										class="material-symbols-outlined text-[15px] shrink-0"
+										style="color: {tTheme.accent};"
+									>
+										{getTeamIcon(t)}
+									</span>
 									<span class="truncate">{t.name}</span>
 								</span>
 								{#if selectedTeamId === t.id}

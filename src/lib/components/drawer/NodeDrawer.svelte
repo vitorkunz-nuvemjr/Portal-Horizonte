@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Cycle, NodeWithExtras, Profile, StrategyNode, Team } from '$lib/types';
-	import { enhanceFormValidation, formatNumber, formatPct, getInitials } from '$lib/utils';
+	import { enhanceFormValidation, formatNumber, formatPct, getInitials, getTeamIcon } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
 	import { getDossierTheme } from '$lib/dossier-theme';
 	import PaperColorPicker from '$lib/components/ui/PaperColorPicker.svelte';
@@ -706,9 +706,11 @@
 											class="rounded-[2px] border-outline-variant text-primary"
 										/>
 										<span
-											class="h-2.5 w-2.5 shrink-0 rounded-full"
-											style="background-color: {tTheme.accent}"
-										></span>
+											class="material-symbols-outlined text-[16px] shrink-0"
+											style="color: {tTheme.accent};"
+										>
+											{getTeamIcon(t)}
+										</span>
 										<span class="truncate">{t.name}</span>
 									</div>
 								</label>

@@ -142,5 +142,5 @@ export function getTeamIcon(
 	if (n.includes('todas') || n.includes('geral')) {
 		return 'hub';
 	}
-	return 'storefront';
+	return 'apartment';
 }
