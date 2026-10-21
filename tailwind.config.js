@@ -82,6 +82,8 @@ export default {
 				sans: ['Poppins', 'sans-serif'],
 				serif: ['Poppins', 'sans-serif'],
 				mono: ['Poppins', 'sans-serif'],
+				poppins: ['Poppins', 'sans-serif'],
+				display: ['Poppins', 'sans-serif'],
 				'display-lg': ['Poppins', 'sans-serif'],
 				'display-lg-mobile': ['Poppins', 'sans-serif'],
 				'headline-xl': ['Poppins', 'sans-serif'],

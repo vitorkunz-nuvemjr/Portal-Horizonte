@@ -98,19 +98,29 @@
 <div class="p-4 sm:p-6 lg:p-8 relative min-h-[calc(100vh-80px)]">
 	<div class="relative z-10 max-w-7xl mx-auto flex flex-col gap-5">
 		<!-- 1. TOP HEADER SECTION -->
-		<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-			<div>
-				<h1 class="text-2xl sm:text-3xl font-extrabold text-[#1d1b17] tracking-tight font-display">
+		<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-space-md pb-space-xs">
+			<div class="flex flex-col gap-space-xs max-w-3xl">
+				<div class="flex items-center gap-space-xs">
+					<span
+						class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm uppercase tracking-wider shadow-sm"
+					>
+						Governança &amp; Acessos • Gestão de Equipes, Ciclos e Permissões
+					</span>
+				</div>
+				<h1
+					class="font-headline-xl text-headline-xl text-on-surface tracking-tight leading-tight"
+				>
 					Equipes &amp; Administração
 				</h1>
-				<p class="text-[13px] text-[#424753] leading-relaxed font-sans mt-1 max-w-3xl">
-					Central de acessos e gerenciamento de diretorias das OKRs da Nuvem Jr., permissões de membros, ciclos semestrais e backup.
+				<p class="font-body-md text-body-md text-on-surface-variant">
+					Central de acessos e gerenciamento de diretorias das OKRs da Nuvem Jr., permissões de membros,
+					ciclos semestrais e backup.
 				</p>
 			</div>
 			<button
 				type="button"
 				onclick={handleDownload}
-				class="self-start flex items-center gap-2 px-4 py-2 rounded-xl bg-[#f9f3ec] border border-[#d5cebe] text-[#1d1b17] hover:bg-[#ede7e0] active:translate-y-0.5 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] text-[12px] font-bold font-sans shrink-0 cursor-pointer"
+				class="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#f9f3ec] border border-[#d5cebe] text-[#1d1b17] hover:bg-[#ede7e0] active:translate-y-0.5 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.05)] text-[12px] font-bold font-sans shrink-0 cursor-pointer"
 				title="Exportar backup completo em JSON"
 			>
 				<span class="material-symbols-outlined text-[18px] text-[#004190]">cloud_download</span>

@@ -381,7 +381,6 @@
 				<span
 					class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm uppercase tracking-wider shadow-sm"
 				>
-					<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
 					Ciclos &amp; Métricas • Acompanhamento Semestral e Rituais de Check-in
 				</span>
 			</div>

@@ -285,25 +285,21 @@
 	></div>
 
 	<!-- Page Title & Header Actions -->
-	<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2">
-		<div class="flex flex-col gap-2 max-w-2xl">
-			<div class="flex items-center gap-3">
+	<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-md pb-space-xs">
+		<div class="flex flex-col gap-space-xs max-w-3xl">
+			<div class="flex items-center gap-space-xs">
 				<span
-					class="px-2.5 py-0.5 rounded-full bg-surface-container font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant shadow-[inset_0_1px_2px_rgba(36,34,30,0.08)]"
+					class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm uppercase tracking-wider shadow-sm"
 				>
-					Estrutura de Liderança
-				</span>
-				<span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span>
-				<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">
-					Matriz {selectedEra?.start_year ?? 2026}.1
+					Estrutura de Liderança • Matriz {selectedEra?.start_year ?? 2026}.1
 				</span>
 			</div>
 			<h1
-				class="font-display-lg text-display-lg-mobile md:text-display-lg text-on-surface tracking-tight"
+				class="font-headline-xl text-headline-xl text-on-surface tracking-tight leading-tight"
 			>
 				Identidade Organizacional
 			</h1>
-			<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+			<p class="font-body-md text-body-md text-on-surface-variant">
 				Missão Estratégica e Valores Fundamentais estruturados ao longo dos ciclos de gestão, servindo
 				como bússola de alinhamento executivo.
 			</p>
