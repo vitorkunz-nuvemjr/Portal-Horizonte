@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import type { NodeValue, NodeWithExtras, StrategicEra, StrategyNode } from '$lib/types';
-	import { enhanceFormValidation, formatNumber, getInitials } from '$lib/utils';
+	import { enhanceFormValidation, formatNumber, getInitials, getTeamIcon } from '$lib/utils';
 	import { getDossierTheme } from '$lib/dossier-theme';
 	import { AlertCircle, Pencil, Trash2, X } from 'lucide-svelte';
 
@@ -1159,18 +1159,19 @@
 										</div>
 									</td>
 									<td class="py-4 px-4 align-top">
-										<div
-											class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border"
-											style="background-color: {tTheme.badgeBg}; color: {tTheme.badgeText}; border-color: {tTheme.badgeBorder};"
+										<span
+											class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-label-sm text-label-sm font-bold"
+											title="Equipe: {row.teamName}"
+											style="background-color: {tTheme.badgeBg}; border-color: {tTheme.badgeBorder}; color: {tTheme.badgeText};"
 										>
 											<span
-												class="w-5 h-5 rounded-full flex items-center justify-center font-label-sm text-[9px] font-bold text-white shrink-0"
-												style="background-color: {tTheme.accentMuted};"
+												class="material-symbols-outlined text-[13px] shrink-0"
+												style="color: {tTheme.accent};"
 											>
-												{row.teamInitials}
+												{getTeamIcon(row.teamName)}
 											</span>
-											<span class="font-label-sm text-label-sm font-bold">{row.teamName}</span>
-										</div>
+											<span class="max-w-[120px] truncate">{row.teamName}</span>
+										</span>
 									</td>
 									<td class="py-4 px-4 align-top">
 										<div class="flex flex-col gap-1 min-w-[160px]">

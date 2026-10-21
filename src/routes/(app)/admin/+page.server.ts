@@ -15,44 +15,8 @@ import {
 } from '$lib/server/store';
 import type { UserRole } from '$lib/types';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	if (locals.mode === 'supabase' && locals.supabase) {
-		const [nodes, assigns, values, cycles, profiles, metricUpdates, teams, teamMembers, nodeTeams] =
-			await Promise.all([
-				locals.supabase.from('nodes').select('*'),
-				locals.supabase.from('node_assignees').select('*'),
-				locals.supabase.from('node_values').select('*'),
-				locals.supabase.from('cycles').select('*').order('code', { ascending: true }),
-				locals.supabase.from('profiles').select('*'),
-				locals.supabase.from('metric_updates').select('*'),
-				locals.supabase.from('teams').select('*'),
-				locals.supabase.from('team_members').select('*'),
-				locals.supabase.from('node_teams').select('*')
-			]);
-
-		const snapshot = {
-			version: 4,
-			exported_at: new Date().toISOString(),
-			profiles: profiles.data ?? [],
-			teams: teams.data ?? [],
-			team_members: teamMembers.data ?? [],
-			cycles: cycles.data ?? [],
-			nodes: nodes.data ?? [],
-			node_assignees: assigns.data ?? [],
-			node_teams: nodeTeams.data ?? [],
-			node_values: values.data ?? [],
-			metric_updates: metricUpdates.data ?? []
-		};
-
-		return {
-			snapshotJson: JSON.stringify(snapshot, null, 2)
-		};
-	}
-
-	const snapshot = readDb();
-	return {
-		snapshotJson: JSON.stringify(snapshot, null, 2)
-	};
+export const load: PageServerLoad = async () => {
+	return {};
 };
 
 export const actions: Actions = {
