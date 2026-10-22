@@ -9,19 +9,19 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	}
 
 	if (locals.supabase) {
-		const selectWithIcon =
+		const selectNodesWithIcon =
 			'id, parent_id, tree, type, title, description, color, icon, year, quarter, cycle_id, start_year, end_year, status, weight, sort_order, unit, baseline, target_value, current_value, direction, manual_progress, created_by, created_at, updated_at';
-		const selectWithoutIcon =
+		const selectNodesWithoutIcon =
 			'id, parent_id, tree, type, title, description, color, year, quarter, cycle_id, start_year, end_year, status, weight, sort_order, unit, baseline, target_value, current_value, direction, manual_progress, created_by, created_at, updated_at';
 
-		const nodesPromise = locals.supabase.from('nodes').select(selectWithIcon);
+		const nodesPromise = locals.supabase.from('nodes').select(selectNodesWithIcon);
 		const teamsPromise = locals.supabase.from('teams').select('id, name, description, color, icon, created_at');
+		const profilesPromise = locals.supabase.from('profiles').select('id, name, email, role, color, avatar_url, created_at');
 
-		const [assigns, values, cycles, profiles, metricUpdates, teamMembers, nodeTeams] = await Promise.all([
+		const [assigns, values, cycles, metricUpdates, teamMembers, nodeTeams] = await Promise.all([
 			locals.supabase.from('node_assignees').select('node_id, user_id'),
 			locals.supabase.from('node_values').select('node_id, value_id'),
 			locals.supabase.from('cycles').select('*').order('code', { ascending: true }),
-			locals.supabase.from('profiles').select('id, name, email, role, color, avatar_url, created_at'),
 			locals.supabase
 				.from('metric_updates')
 				.select('id, node_id, value, note, user_id, created_at')
@@ -33,12 +33,17 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 
 		let nodes = await nodesPromise;
 		if (nodes.error && nodes.error.message?.includes('icon')) {
-			nodes = await locals.supabase.from('nodes').select(selectWithoutIcon);
+			nodes = await locals.supabase.from('nodes').select(selectNodesWithoutIcon);
 		}
 
 		let teams = await teamsPromise;
 		if (teams.error && teams.error.message?.includes('icon')) {
 			teams = await locals.supabase.from('teams').select('id, name, description, color, created_at');
+		}
+
+		let profiles = await profilesPromise;
+		if (profiles.error && profiles.error.message?.includes('avatar_url')) {
+			profiles = await locals.supabase.from('profiles').select('id, name, email, role, color, created_at');
 		}
 
 		if (nodes.error) console.error('[Supabase Load] Error fetching nodes:', nodes.error);

@@ -49,6 +49,15 @@
 	let direction = $state<'up' | 'down'>('up');
 	let manualProgressPct = $state(0);
 
+	// Reactive selection states for teams, assignees, and values
+	let selectedTeamIds = $state<string[]>([]);
+	let selectedUserIds = $state<string[]>([]);
+	let selectedValueIds = $state<string[]>([]);
+	let isSavingAssignees = $state(false);
+	let saveAssigneesSuccess = $state(false);
+	let isSavingValues = $state(false);
+	let saveValuesSuccess = $state(false);
+
 	// Mode: 'aggregate' (calculated from child KPIs) vs 'manual' (direct %)
 	let progressMode = $state<'aggregate' | 'manual'>('aggregate');
 
@@ -79,6 +88,10 @@
 			direction = node.direction ?? 'up';
 			manualProgressPct = Math.round((node.manual_progress ?? 0) * 100);
 
+			selectedTeamIds = node.teams.map((t) => t.id);
+			selectedUserIds = node.assignees.map((a) => a.id);
+			selectedValueIds = node.alignedValues.map((v) => v.id);
+
 			if (node.color) {
 				accentColor = node.color;
 			} else if (node.teams.length > 0 && node.teams[0].color) {
@@ -96,6 +109,102 @@
 					: 'manual';
 		}
 	});
+
+	function toggleTeam(teamId: string) {
+		if (!canEdit) return;
+		if (selectedTeamIds.includes(teamId)) {
+			selectedTeamIds = selectedTeamIds.filter((id) => id !== teamId);
+		} else {
+			selectedTeamIds = [...selectedTeamIds, teamId];
+		}
+	}
+
+	function toggleUser(userId: string) {
+		if (!canEdit) return;
+		if (selectedUserIds.includes(userId)) {
+			selectedUserIds = selectedUserIds.filter((id) => id !== userId);
+		} else {
+			selectedUserIds = [...selectedUserIds, userId];
+		}
+	}
+
+	function toggleValue(valId: string) {
+		if (!canEdit) return;
+		if (selectedValueIds.includes(valId)) {
+			selectedValueIds = selectedValueIds.filter((id) => id !== valId);
+		} else {
+			selectedValueIds = [...selectedValueIds, valId];
+		}
+	}
+
+	async function saveAssigneesAndTeams() {
+		if (!node || !canEdit) return;
+		isSavingAssignees = true;
+		saveAssigneesSuccess = false;
+		try {
+			const fd = new FormData();
+			fd.append('nodeId', node.id);
+			for (const u of selectedUserIds) fd.append('userIds', u);
+			for (const t of selectedTeamIds) fd.append('teamIds', t);
+			const res = await fetch('/strategy?/setAssignees', {
+				method: 'POST',
+				body: fd
+			});
+			if (res.ok) {
+				saveAssigneesSuccess = true;
+				setTimeout(() => {
+					saveAssigneesSuccess = false;
+				}, 3500);
+			}
+		} catch (e) {
+			console.error('Error saving assignees/teams:', e);
+		} finally {
+			isSavingAssignees = false;
+		}
+	}
+
+	async function saveValuesDirectly() {
+		if (!node || !canEdit) return;
+		isSavingValues = true;
+		saveValuesSuccess = false;
+		try {
+			const fd = new FormData();
+			fd.append('nodeId', node.id);
+			for (const v of selectedValueIds) fd.append('valueIds', v);
+			const res = await fetch('/strategy?/setValues', {
+				method: 'POST',
+				body: fd
+			});
+			if (res.ok) {
+				saveValuesSuccess = true;
+				setTimeout(() => {
+					saveValuesSuccess = false;
+				}, 3500);
+			}
+		} catch (e) {
+			console.error('Error saving values:', e);
+		} finally {
+			isSavingValues = false;
+		}
+	}
+
+	async function handleSaveSubmit(e: SubmitEvent) {
+		if (!node) return;
+		try {
+			const fdAssign = new FormData();
+			fdAssign.append('nodeId', node.id);
+			for (const u of selectedUserIds) fdAssign.append('userIds', u);
+			for (const t of selectedTeamIds) fdAssign.append('teamIds', t);
+			await fetch('/strategy?/setAssignees', { method: 'POST', body: fdAssign });
+
+			const fdVal = new FormData();
+			fdVal.append('nodeId', node.id);
+			for (const v of selectedValueIds) fdVal.append('valueIds', v);
+			await fetch('/strategy?/setValues', { method: 'POST', body: fdVal });
+		} catch (err) {
+			console.error('Falha ao sincronizar relacionamentos do KR:', err);
+		}
+	}
 
 	const theme = $derived(getDossierTheme(accentColor));
 
@@ -131,8 +240,14 @@
 	const deltaValue = $derived(currentValue - baseline);
 
 	// Primary Leader (first assignee) and Co-assignees
-	const primaryAssignee = $derived(node && node.assignees.length > 0 ? node.assignees[0] : null);
-	const coAssignees = $derived(node && node.assignees.length > 1 ? node.assignees.slice(1) : []);
+	const primaryAssignee = $derived.by(() => {
+		if (selectedUserIds.length === 0) return null;
+		return profiles.find((p) => p.id === selectedUserIds[0]) ?? (node && node.assignees.length > 0 ? node.assignees[0] : null);
+	});
+	const coAssignees = $derived.by(() => {
+		if (selectedUserIds.length <= 1) return [];
+		return selectedUserIds.slice(1).map((uid) => profiles.find((p) => p.id === uid)).filter(Boolean) as Profile[];
+	});
 
 	// Last audit date / check-in
 	const latestMetricUpdate = $derived.by(() => {
@@ -334,7 +449,7 @@
 						class="text-[10px] px-1.5 py-0.2 rounded-full font-bold ml-0.5"
 						style="background-color: {theme.badgeBg}; color: {theme.badgeText};"
 					>
-						{node.assignees.length + node.alignedValues.length}
+						{selectedUserIds.length + selectedTeamIds.length}
 					</span>
 				</button>
 
@@ -429,22 +544,32 @@
 					<!-- ============================================================== -->
 					<!-- ABA 1: PARÂMETROS & META (Título, Objetivo Pai, Baseline, Meta) -->
 					<!-- ============================================================== -->
-					{#if activeTab === 'tab1'}
-						<form
-							id="updateKrForm"
-							method="POST"
-							action="/strategy?/updateNode"
-							use:enhanceFormValidation
-							class="flex flex-col gap-5"
-						>
-							<input type="hidden" name="nodeId" value={node.id} />
-							<input type="hidden" name="color" value={accentColor} />
-							<input type="hidden" name="status" value={status} />
-							<input
-								type="hidden"
-								name="manual_progress_pct"
-								value={progressMode === 'manual' ? manualProgressPct : ''}
-							/>
+					<form
+						id="updateKrForm"
+						method="POST"
+						action="/strategy?/updateNode"
+						use:enhanceFormValidation
+						onsubmit={handleSaveSubmit}
+						class={activeTab === 'tab1' ? 'flex flex-col gap-5' : 'hidden'}
+					>
+						<input type="hidden" name="nodeId" value={node.id} />
+						<input type="hidden" name="color" value={accentColor} />
+						<input type="hidden" name="status" value={status} />
+						<input
+							type="hidden"
+							name="manual_progress_pct"
+							value={progressMode === 'manual' ? manualProgressPct : ''}
+						/>
+
+						{#each selectedTeamIds as tId}
+							<input type="hidden" name="teamIds" value={tId} />
+						{/each}
+						{#each selectedUserIds as uId}
+							<input type="hidden" name="userIds" value={uId} />
+						{/each}
+						{#each selectedValueIds as vId}
+							<input type="hidden" name="valueIds" value={vId} />
+						{/each}
 
 							<!-- Objective Parent Association Anchor -->
 							<div
@@ -903,7 +1028,6 @@
 								</div>
 							</div>
 						</form>
-					{/if}
 
 					<!-- ============================================================== -->
 					<!-- ABA 2: KPIS & INDICADORES FILHOS (MRR, NRR, Sparklines)       -->
@@ -1146,12 +1270,9 @@
 					{#if activeTab === 'tab3'}
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
 							<!-- Primary Assignee and Team Co-owners -->
-							<form
-								method="POST"
-								action="/strategy?/setAssignees"
+							<div
 								class="p-4 bg-[#FFFDF8] rounded-xl border border-outline-variant/50 shadow-xs flex flex-col gap-4"
 							>
-								<input type="hidden" name="nodeId" value={node.id} />
 								<div class="flex items-center justify-between">
 									<span
 										class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant flex items-center justify-between"
@@ -1160,10 +1281,20 @@
 									</span>
 									{#if canEdit}
 										<button
-											type="submit"
-											class="px-2.5 py-1 rounded bg-primary text-white text-[11px] font-bold shadow-xs hover:opacity-90 cursor-pointer"
+											type="button"
+											onclick={saveAssigneesAndTeams}
+											disabled={isSavingAssignees}
+											class="px-2.5 py-1 rounded bg-primary text-white text-[11px] font-bold shadow-xs hover:opacity-90 cursor-pointer flex items-center gap-1.5 disabled:opacity-50 transition-all"
 										>
-											Salvar Equipe
+											{#if isSavingAssignees}
+												<span class="material-symbols-outlined text-[13px] animate-spin">sync</span>
+												<span>Salvando...</span>
+											{:else if saveAssigneesSuccess}
+												<span class="material-symbols-outlined text-[13px]">check</span>
+												<span>Salvo!</span>
+											{:else}
+												<span>Salvar Equipe</span>
+											{/if}
 										</button>
 									{/if}
 								</div>
@@ -1200,25 +1331,32 @@
 
 								<!-- Members assignment checklist -->
 								<div class="flex flex-col gap-1.5 pt-1">
-									<span class="font-bold text-on-surface-variant text-[11px] uppercase tracking-wider">
-										Atribuir Membros Responsáveis:
-									</span>
+									<div class="flex items-center justify-between">
+										<span class="font-bold text-on-surface-variant text-[11px] uppercase tracking-wider">
+											Atribuir Membros Responsáveis:
+										</span>
+										<span class="text-[10.5px] font-mono text-on-surface-variant">
+											{selectedUserIds.length} selecionado(s)
+										</span>
+									</div>
 									<div class="max-h-48 overflow-y-auto space-y-1 pr-1">
 										{#each profiles as prof (prof.id)}
-											{@const assigned = node.assignees.some((a) => a.id === prof.id)}
-											<label
-												class="flex cursor-pointer items-center justify-between rounded-lg border p-2 text-xs transition {assigned
-													? 'border-on-surface bg-surface-container font-bold text-on-surface'
+											{@const assigned = selectedUserIds.includes(prof.id)}
+											<button
+												type="button"
+												disabled={!canEdit}
+												onclick={() => toggleUser(prof.id)}
+												class="w-full flex items-center justify-between rounded-lg border p-2 text-xs transition cursor-pointer text-left {assigned
+													? 'border-primary bg-primary/5 font-bold text-primary ring-1 ring-primary/20'
 													: 'border-outline-variant/50 bg-[#FFFDF8] text-on-surface-variant hover:bg-surface-container'}"
 											>
 												<div class="flex items-center gap-2 min-w-0">
 													<input
 														type="checkbox"
-														name="userIds"
-														value={prof.id}
 														checked={assigned}
 														disabled={!canEdit}
-														class="rounded-xs border-outline-variant text-primary"
+														tabindex="-1"
+														class="rounded-xs border-outline-variant text-primary pointer-events-none"
 													/>
 													<span
 														class="w-5 h-5 rounded-full text-[9px] font-bold text-white flex items-center justify-center shrink-0"
@@ -1231,36 +1369,39 @@
 												<span class="text-[10px] text-on-surface-variant font-normal">
 													{prof.role}
 												</span>
-											</label>
+											</button>
 										{/each}
 									</div>
 								</div>
 
 								<!-- Teams co-responsible -->
 								<div class="flex flex-col gap-1.5 pt-1 border-t border-outline-variant/40">
-									<span class="font-bold text-on-surface-variant text-[11px] uppercase tracking-wider">
-										Departamentos / Equipes:
-									</span>
+									<div class="flex items-center justify-between">
+										<span class="font-bold text-on-surface-variant text-[11px] uppercase tracking-wider">
+											Departamentos / Equipes:
+										</span>
+										<span class="text-[10.5px] font-mono text-on-surface-variant">
+											{selectedTeamIds.length} selecionada(s)
+										</span>
+									</div>
 									<div class="flex flex-wrap gap-1.5">
 										{#each teams as tm (tm.id)}
-											{@const hasTeam = node.teams.some((t) => t.id === tm.id)}
+											{@const isSelected = selectedTeamIds.includes(tm.id)}
 											{@const tmTheme = getDossierTheme(tm.color || '#0058bd')}
-											<label
-												class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs cursor-pointer transition-colors {hasTeam
-													? 'font-bold shadow-xs'
+											<button
+												type="button"
+												disabled={!canEdit}
+												onclick={() => toggleTeam(tm.id)}
+												class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs cursor-pointer transition-all {isSelected
+													? 'font-bold shadow-xs ring-1 ring-black/10'
 													: 'border-outline-variant/50 bg-[#FFFDF8] text-on-surface-variant hover:bg-surface-container'}"
-												style={hasTeam
+												style={isSelected
 													? `background-color: ${tmTheme.badgeBg}; border-color: ${tmTheme.badgeBorder}; color: ${tmTheme.badgeText};`
 													: ''}
 											>
-												<input
-													type="checkbox"
-													name="teamIds"
-													value={tm.id}
-													checked={hasTeam}
-													disabled={!canEdit}
-													class="hidden"
-												/>
+												{#if isSelected}
+													<span class="material-symbols-outlined text-[14px]">check</span>
+												{/if}
 												<span
 													class="material-symbols-outlined text-[15px] shrink-0"
 													style="color: {tmTheme.accent};"
@@ -1268,81 +1409,92 @@
 													{getTeamIcon(tm)}
 												</span>
 												<span>{tm.name}</span>
-											</label>
+											</button>
 										{/each}
 									</div>
 								</div>
-							</form>
+							</div>
 
 							<!-- Alignment with Era Values & Strategic Pillars -->
-							<form
-								method="POST"
-								action="/strategy?/setValues"
+							<div
 								class="p-4 bg-[#FFFDF8] rounded-xl border border-outline-variant/50 shadow-xs flex flex-col justify-between gap-3"
 							>
-								<input type="hidden" name="nodeId" value={node.id} />
-								<div class="flex items-center justify-between">
-									<span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
-										Conexão com Valores da Era
-									</span>
-									{#if canEdit}
-										<button
-											type="submit"
-											class="px-2.5 py-1 rounded bg-secondary text-white text-[11px] font-bold shadow-xs hover:opacity-90 cursor-pointer"
-										>
-											Salvar Valores
-										</button>
-									{/if}
-								</div>
-
-								<div class="flex flex-col gap-2">
-									{#each valuesList as val (val.id)}
-										{@const checked = node.alignedValues.some((v) => v.id === val.id)}
-										<label
-											class="p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-all {checked
-												? 'bg-[#FEF9C3] border-[#FDE047]'
-												: 'bg-surface-container-lowest border-outline-variant/40 hover:bg-surface-container'}"
-										>
-											<div class="flex items-center gap-2.5 min-w-0">
-												<input
-													type="checkbox"
-													name="valueIds"
-													value={val.id}
-													checked={checked}
-													disabled={!canEdit}
-													class="rounded-xs border-outline-variant text-primary"
-												/>
-												<span
-													class="w-2.5 h-2.5 rounded-full shrink-0"
-													style="background-color: {valueColor(val.id)}"
-												></span>
-												<div class="flex flex-col min-w-0">
-													<span class="text-xs font-bold text-on-surface truncate">
-														{val.title}
-													</span>
-													{#if val.description}
-														<span class="text-[10px] text-on-surface-variant truncate">
-															{val.description}
-														</span>
-													{/if}
-												</div>
-											</div>
-											<span
-												class="text-[10px] font-bold px-2 py-0.5 rounded shadow-xs ml-2 shrink-0 {checked
-													? 'bg-white text-[#854D0E]'
-													: 'bg-surface-container text-on-surface-variant'}"
+								<div>
+									<div class="flex items-center justify-between mb-3">
+										<span class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
+											Conexão com Valores da Era
+										</span>
+										{#if canEdit}
+											<button
+												type="button"
+												onclick={saveValuesDirectly}
+												disabled={isSavingValues}
+												class="px-2.5 py-1 rounded bg-secondary text-white text-[11px] font-bold shadow-xs hover:opacity-90 cursor-pointer flex items-center gap-1.5 disabled:opacity-50 transition-all"
 											>
-												{checked ? 'Alinhado' : 'Não Alinhado'}
-											</span>
-										</label>
-									{/each}
+												{#if isSavingValues}
+													<span class="material-symbols-outlined text-[13px] animate-spin">sync</span>
+													<span>Salvando...</span>
+												{:else if saveValuesSuccess}
+													<span class="material-symbols-outlined text-[13px]">check</span>
+													<span>Salvo!</span>
+												{:else}
+													<span>Salvar Valores</span>
+												{/if}
+											</button>
+										{/if}
+									</div>
+
+									<div class="flex flex-col gap-2">
+										{#each valuesList as val (val.id)}
+											{@const checked = selectedValueIds.includes(val.id)}
+											<button
+												type="button"
+												disabled={!canEdit}
+												onclick={() => toggleValue(val.id)}
+												class="w-full p-2.5 rounded-lg border flex items-center justify-between cursor-pointer transition-all text-left {checked
+													? 'bg-[#FEF9C3] border-[#FDE047] shadow-xs'
+													: 'bg-surface-container-lowest border-outline-variant/40 hover:bg-surface-container'}"
+											>
+												<div class="flex items-center gap-2.5 min-w-0">
+													<input
+														type="checkbox"
+														checked={checked}
+														disabled={!canEdit}
+														tabindex="-1"
+														class="rounded-xs border-outline-variant text-primary pointer-events-none"
+													/>
+													<span
+														class="w-2.5 h-2.5 rounded-full shrink-0"
+														style="background-color: {valueColor(val.id)}"
+													></span>
+													<div class="flex flex-col min-w-0">
+														<span class="text-xs font-bold text-on-surface truncate">
+															{val.title}
+														</span>
+														{#if val.description}
+															<span class="text-[10px] text-on-surface-variant truncate">
+																{val.description}
+															</span>
+														{/if}
+													</div>
+												</div>
+												<span
+													class="text-[10px] font-bold px-2 py-0.5 rounded shadow-xs ml-2 shrink-0 {checked
+														? 'bg-white text-[#854D0E]'
+														: 'bg-surface-container text-on-surface-variant'}"
+												>
+													{checked ? 'Alinhado' : 'Não Alinhado'}
+												</span>
+											</button>
+										{/each}
+									</div>
 								</div>
 
 								<div class="mt-1 p-2.5 bg-[#F6F1E9] rounded-lg text-[11px] text-on-surface-variant">
 									<strong>Regra de Governança:</strong> Toda alteração no escopo deste KR deve ser validada
 									no Rito de Check-in Quinzenal com o Sponsor Executivo.
 								</div>
-							</form>
+							</div>
 						</div>
 					{/if}
 
