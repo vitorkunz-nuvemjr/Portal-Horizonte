@@ -7,8 +7,14 @@
 	// Active tab: 'teams' | 'members' | 'cycles' | 'backup'
 	let activeTab = $state<'teams' | 'members' | 'cycles' | 'backup'>('teams');
 
-	// Banner dismiss state
-	let showBanner = $state(true);
+	// Feedback dismiss state
+	let dismissedFeedback = $state(false);
+
+	$effect(() => {
+		if (form) {
+			dismissedFeedback = false;
+		}
+	});
 
 	// Modals & popovers
 	let activeTeamModal = $state<{
@@ -128,35 +134,34 @@
 			</button>
 		</div>
 
-		<!-- FEEDBACK TOAST / BANNER -->
-		{#if form?.message}
+		<!-- FEEDBACK TOAST / BANNER (Apenas exibido em caso de erro ou atualização) -->
+		{#if form?.message && !dismissedFeedback}
 			<div class="flex items-center justify-between px-4 py-3 bg-[#fee2e2] border border-[#fca5a5] text-[#991b1b] rounded-xl shadow-[0_1px_3px_rgba(153,27,27,0.05)]">
 				<div class="flex items-center gap-2.5">
 					<span class="material-symbols-outlined text-[18px] text-[#dc2626]">error</span>
 					<span class="text-[12.5px] font-medium font-sans">{form.message}</span>
 				</div>
+				<button
+					type="button"
+					class="p-1 rounded-md hover:bg-[#991b1b]/10 text-[#991b1b] transition-colors cursor-pointer"
+					onclick={() => (dismissedFeedback = true)}
+					title="Dispensar aviso"
+				>
+					<span class="material-symbols-outlined text-[16px]">close</span>
+				</button>
 			</div>
 		{/if}
 
-		{#if form?.notice}
-			<div class="flex items-center justify-between px-4 py-3 bg-[#e8f8ee] border border-[#a7f3d0] text-[#14532d] rounded-xl shadow-[0_1px_3px_rgba(20,83,45,0.04)]">
+		{#if form?.notice && !dismissedFeedback}
+			<div class="flex items-center justify-between px-4 py-3 bg-[#e8f8ee] border border-[#a7f3d0] text-[#14532d] rounded-xl shadow-[0_1px_3px_rgba(20,83,45,0.04)]" id="status-toast">
 				<div class="flex items-center gap-2.5">
 					<span class="w-5 h-5 rounded-full bg-[#14532d]/15 text-[#14532d] flex items-center justify-center font-bold text-[13px]">✓</span>
 					<span class="text-[12.5px] font-medium font-sans">{form.notice}</span>
 				</div>
-			</div>
-		{:else if showBanner}
-			<div class="flex items-center justify-between px-4 py-3 bg-[#e8f8ee] border border-[#a7f3d0] text-[#14532d] rounded-xl shadow-[0_1px_3px_rgba(20,83,45,0.04)]" id="status-toast">
-				<div class="flex items-center gap-2.5">
-					<span class="w-5 h-5 rounded-full bg-[#14532d]/15 text-[#14532d] flex items-center justify-center font-bold text-[13px]">✓</span>
-					<span class="text-[12.5px] font-medium font-sans">
-						Vínculos de equipes e parâmetros de governança atualizados e sincronizados com a nuvem.
-					</span>
-				</div>
 				<button
 					type="button"
 					class="p-1 rounded-md hover:bg-[#14532d]/10 text-[#14532d] transition-colors cursor-pointer"
-					onclick={() => (showBanner = false)}
+					onclick={() => (dismissedFeedback = true)}
 					title="Dispensar aviso"
 				>
 					<span class="material-symbols-outlined text-[16px]">close</span>

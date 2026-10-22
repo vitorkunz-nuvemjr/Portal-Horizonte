@@ -5,6 +5,7 @@
 	import type { Profile } from '$lib/types';
 	import { getInitials } from '$lib/utils';
 	import type { Snippet } from 'svelte';
+	import Footer from '$lib/components/layout/Footer.svelte';
 
 	interface Props {
 		user: Profile;
@@ -471,8 +472,9 @@
 </aside>
 
 <!-- Main Content Container (Pushes content by 64px if pinned, or 16px if unpinned rail) -->
-<div class="transition-all duration-300 ease-in-out {sidebarPinned ? 'md:pl-64' : 'md:pl-16'} relative">
-	<main class="relative pt-20 min-h-screen bg-transparent">
+<div class="transition-all duration-300 ease-in-out {sidebarPinned ? 'md:pl-64' : 'md:pl-16'} relative flex flex-col min-h-screen">
+	<main class="relative pt-20 flex-1 bg-transparent flex flex-col">
 		{@render children()}
 	</main>
+	<Footer />
 </div>
