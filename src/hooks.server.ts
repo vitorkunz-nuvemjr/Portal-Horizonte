@@ -18,6 +18,14 @@ export const resolvedSupabaseAnonKey =
 	'sb_publishable_7dvgutK2lSMz7tzbAc0-jg_T9TQimpb';
 
 export const handle: Handle = async ({ event, resolve }) => {
+	// Fast-path redirect for root URL to avoid unnecessary serverless compute and database round-trips
+	if (event.url.pathname === '/') {
+		return new Response(null, {
+			status: 307,
+			headers: { location: '/strategy' }
+		});
+	}
+
 	const hasSupabase = Boolean(resolvedSupabaseUrl && resolvedSupabaseAnonKey);
 
 	if (hasSupabase) {
@@ -39,46 +47,103 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 		);
 
-		event.locals.safeGetSession = async () => {
-			try {
-				const {
-					data: { user },
-					error
-				} = await event.locals.supabase!.auth.getUser();
-				if (error || !user) return { user: null };
+		let cachedSessionPromise: Promise<{ user: any | null }> | null = null;
 
-				const { data: profile } = await event.locals.supabase!
-					.from('profiles')
-					.select('*')
-					.eq('id', user.id)
-					.single();
+		event.locals.safeGetSession = () => {
+			if (cachedSessionPromise) return cachedSessionPromise;
 
-				return {
-					user: profile ?? {
-						id: user.id,
-						name: user.email?.split('@')[0] ?? 'User',
-						email: user.email,
-						role: 'member',
-						color: '#2563eb',
-						created_at: new Date().toISOString()
+			cachedSessionPromise = (async () => {
+				try {
+					// Check if any auth cookie exists before attempting network calls
+					const cookies = event.cookies.getAll();
+					const hasAuthCookie = cookies.some(
+						(c) => c.name.includes('-auth-token') && Boolean(c.value)
+					);
+					if (!hasAuthCookie) {
+						return { user: null };
 					}
-				};
-			} catch {
-				return { user: null };
-			}
+
+					// Fast check via getSession to obtain candidate user ID from cookie payload
+					const {
+						data: { session }
+					} = await event.locals.supabase!.auth.getSession();
+					const candidateUserId = session?.user?.id;
+
+					if (candidateUserId) {
+						// Parallelize verified getUser() check with profile fetch
+						const [userRes, profileRes] = await Promise.all([
+							event.locals.supabase!.auth.getUser(),
+							event.locals.supabase!
+								.from('profiles')
+								.select('*')
+								.eq('id', candidateUserId)
+								.single()
+						]);
+
+						if (userRes.error || !userRes.data.user) {
+							return { user: null };
+						}
+						const user = userRes.data.user;
+
+						return {
+							user: profileRes.data ?? {
+								id: user.id,
+								name: user.email?.split('@')[0] ?? 'User',
+								email: user.email,
+								role: 'member',
+								color: '#2563eb',
+								created_at: new Date().toISOString()
+							}
+						};
+					}
+
+					// Fallback: standard sequential getUser -> profile
+					const {
+						data: { user },
+						error
+					} = await event.locals.supabase!.auth.getUser();
+					if (error || !user) return { user: null };
+
+					const { data: profile } = await event.locals.supabase!
+						.from('profiles')
+						.select('*')
+						.eq('id', user.id)
+						.single();
+
+					return {
+						user: profile ?? {
+							id: user.id,
+							name: user.email?.split('@')[0] ?? 'User',
+							email: user.email,
+							role: 'member',
+							color: '#2563eb',
+							created_at: new Date().toISOString()
+						}
+					};
+				} catch {
+					return { user: null };
+				}
+			})();
+
+			return cachedSessionPromise;
 		};
 	} else {
 		event.locals.mode = 'local';
 		event.locals.supabase = null;
-		event.locals.safeGetSession = async () => {
-			const db = readDb();
-			const cookieUserId = event.cookies.get(SESSION_COOKIE);
-			if (cookieUserId === 'logged_out') {
-				return { user: null };
-			}
-			const profile =
-				db.profiles.find((p) => p.id === cookieUserId) ?? db.profiles[0] ?? null;
-			return { user: profile };
+		let cachedLocalSession: Promise<{ user: any | null }> | null = null;
+		event.locals.safeGetSession = () => {
+			if (cachedLocalSession) return cachedLocalSession;
+			cachedLocalSession = (async () => {
+				const db = readDb();
+				const cookieUserId = event.cookies.get(SESSION_COOKIE);
+				if (cookieUserId === 'logged_out') {
+					return { user: null };
+				}
+				const profile =
+					db.profiles.find((p) => p.id === cookieUserId) ?? db.profiles[0] ?? null;
+				return { user: profile };
+			})();
+			return cachedLocalSession;
 		};
 	}
 

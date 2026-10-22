@@ -10,18 +10,23 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 
 	if (locals.mode === 'supabase' && locals.supabase) {
 		const [nodes, assigns, values, cycles, profiles, metricUpdates, teams, teamMembers, nodeTeams] = await Promise.all([
-			locals.supabase.from('nodes').select('*'),
-			locals.supabase.from('node_assignees').select('*'),
-			locals.supabase.from('node_values').select('*'),
+			locals.supabase
+				.from('nodes')
+				.select(
+					'id, parent_id, tree, type, title, description, color, year, quarter, cycle_id, start_year, end_year, status, weight, sort_order, unit, baseline, target_value, current_value, direction, manual_progress, created_by, created_at, updated_at'
+				),
+			locals.supabase.from('node_assignees').select('node_id, user_id'),
+			locals.supabase.from('node_values').select('node_id, value_id'),
 			locals.supabase.from('cycles').select('*').order('code', { ascending: true }),
-			locals.supabase.from('profiles').select('*'),
+			locals.supabase.from('profiles').select('id, name, email, role, color, avatar_url, created_at'),
 			locals.supabase
 				.from('metric_updates')
-				.select('*')
-				.order('created_at', { ascending: false }),
-			locals.supabase.from('teams').select('*'),
-			locals.supabase.from('team_members').select('*'),
-			locals.supabase.from('node_teams').select('*')
+				.select('id, node_id, value, note, user_id, created_at')
+				.order('created_at', { ascending: false })
+				.limit(200),
+			locals.supabase.from('teams').select('id, name, description, color, icon, created_at'),
+			locals.supabase.from('team_members').select('team_id, user_id'),
+			locals.supabase.from('node_teams').select('node_id, team_id')
 		]);
 
 		return {
