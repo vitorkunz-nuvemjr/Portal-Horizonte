@@ -246,6 +246,8 @@ export function generateSeedSnapshot(): DatabaseSnapshot {
 			type: 'value',
 			title: 'Excelência em Cada Entrega',
 			description: 'Buscamos o padrão mais alto de qualidade em nossos serviços e projetos, gerando impacto tangível.',
+			color: '#0058bd',
+			icon: 'verified',
 			year: null,
 			quarter: null,
 			cycle_id: null,
@@ -271,6 +273,8 @@ export function generateSeedSnapshot(): DatabaseSnapshot {
 			type: 'value',
 			title: 'Jornada Potencializadora',
 			description: 'Acreditamos no protagonismo e no desenvolvimento contínuo de cada membro ao longo de sua trajetória.',
+			color: '#c2ac00',
+			icon: 'cloud_done',
 			year: null,
 			quarter: null,
 			cycle_id: null,
@@ -296,6 +300,8 @@ export function generateSeedSnapshot(): DatabaseSnapshot {
 			type: 'value',
 			title: 'Desenvolvimento Coletivo',
 			description: 'Crescemos juntos: compartilhamos conhecimento, colaboramos ativamente e fortalecemos a equipe.',
+			color: '#b30069',
+			icon: 'groups_3',
 			year: null,
 			quarter: null,
 			cycle_id: null,
@@ -321,6 +327,8 @@ export function generateSeedSnapshot(): DatabaseSnapshot {
 			type: 'value',
 			title: 'Sentimento de Dono & Inovação',
 			description: 'Atitude proativa, responsabilidade pelos resultados e busca constante por soluções inovadoras.',
+			color: '#7c3aed',
+			icon: 'lightbulb',
 			year: null,
 			quarter: null,
 			cycle_id: null,
@@ -671,6 +679,27 @@ function ensureDbFile(): DatabaseSnapshot {
 						n.end_year = null;
 						modified = true;
 					}
+					if (n.type === 'value') {
+						if (!n.color || !n.icon) {
+							if (n.id === 'val-excelencia') {
+								n.color = n.color || '#0058bd';
+								n.icon = n.icon || 'verified';
+								modified = true;
+							} else if (n.id === 'val-jornada-membro') {
+								n.color = n.color || '#c2ac00';
+								n.icon = n.icon || 'cloud_done';
+								modified = true;
+							} else if (n.id === 'val-desenvolvimento-coletivo') {
+								n.color = n.color || '#b30069';
+								n.icon = n.icon || 'groups_3';
+								modified = true;
+							} else if (n.id === 'val-sentimento-dono') {
+								n.color = n.color || '#7c3aed';
+								n.icon = n.icon || 'lightbulb';
+								modified = true;
+							}
+						}
+					}
 				} else {
 					if (n.start_year === undefined) n.start_year = null;
 					if (n.end_year === undefined) n.end_year = null;
@@ -902,6 +931,7 @@ export function createNodeRecord(
 		title: string;
 		description?: string | null;
 		color?: string | null;
+		icon?: string | null;
 		year?: number | null;
 		quarter?: number | null;
 		cycle_id?: string | null;
@@ -945,6 +975,7 @@ export function createNodeRecord(
 		title,
 		description: input.description?.trim() || null,
 		color: input.color?.trim() || null,
+		icon: input.icon?.trim() || null,
 		year: validated.year,
 		quarter: validated.quarter,
 		cycle_id: validated.cycle_id,

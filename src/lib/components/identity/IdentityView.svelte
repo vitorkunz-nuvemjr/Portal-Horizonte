@@ -4,6 +4,7 @@
 	import { enhanceFormValidation, formatNumber, getInitials, getTeamIcon } from '$lib/utils';
 	import { getDossierTheme } from '$lib/dossier-theme';
 	import { AlertCircle, Pencil, Trash2, X } from 'lucide-svelte';
+	import ValueDossierModal from './ValueDossierModal.svelte';
 
 	interface Props {
 		eras: StrategicEra[];
@@ -20,6 +21,10 @@
 	const activeEraKey = $derived(selectedTab ?? eras[0]?.key ?? '');
 
 	let editingMission = $state(false);
+	let activeValueModal = $state<{
+		mode: 'create' | 'edit';
+		value: NodeWithExtras | null;
+	} | null>(null);
 	let showAddValue = $state(false);
 	let editingValueId = $state<string | null>(null);
 	let showNewEraModal = $state(false);
@@ -39,6 +44,7 @@
 	// Tonal themes for Value cards & badges
 	const valueThemes = [
 		{
+			hex: '#0058bd',
 			cardBg: 'bg-primary-fixed/20',
 			cardShadow:
 				'shadow-[0_1px_2px_rgba(36,34,30,0.05),0_6px_16px_rgba(0,88,189,0.08),0_-1px_0_rgba(255,255,255,0.9)_inset]',
@@ -58,6 +64,7 @@
 			tagPrefix: 'EXC'
 		},
 		{
+			hex: '#c2ac00',
 			cardBg: 'bg-tertiary-fixed/30',
 			cardShadow:
 				'shadow-[0_1px_2px_rgba(36,34,30,0.05),0_6px_16px_rgba(108,94,0,0.08),0_-1px_0_rgba(255,255,255,0.9)_inset]',
@@ -77,6 +84,7 @@
 			tagPrefix: 'NUV'
 		},
 		{
+			hex: '#b30069',
 			cardBg: 'bg-secondary-fixed/30',
 			cardShadow:
 				'shadow-[0_1px_2px_rgba(36,34,30,0.05),0_6px_16px_rgba(179,0,105,0.08),0_-1px_0_rgba(255,255,255,0.9)_inset]',
@@ -96,6 +104,7 @@
 			tagPrefix: 'CLI'
 		},
 		{
+			hex: '#7c3aed',
 			cardBg: 'bg-[#ede7f6]',
 			cardShadow:
 				'shadow-[0_1px_2px_rgba(36,34,30,0.05),0_6px_16px_rgba(124,58,237,0.08),0_-1px_0_rgba(255,255,255,0.9)_inset]',
@@ -116,15 +125,30 @@
 		}
 	];
 
-	function getValueTheme(valOrId: { id: string } | string, fallbackIndex = 0) {
+	function getValueTheme(
+		valOrId: { id: string; color?: string | null; icon?: string | null } | string,
+		fallbackIndex = 0
+	) {
 		const id = typeof valOrId === 'string' ? valOrId : valOrId?.id;
-		if (id === 'val-excelencia') return valueThemes[0];
-		if (id === 'val-jornada-membro') return valueThemes[1];
-		if (id === 'val-desenvolvimento-coletivo') return valueThemes[2];
-		if (id === 'val-sentimento-dono') return valueThemes[3];
-		const idx = valuesList.findIndex((v) => v.id === id);
-		if (idx >= 0) return valueThemes[idx % valueThemes.length];
-		return valueThemes[fallbackIndex % valueThemes.length];
+		let base = valueThemes[fallbackIndex % valueThemes.length];
+		if (id === 'val-excelencia') base = valueThemes[0];
+		else if (id === 'val-jornada-membro') base = valueThemes[1];
+		else if (id === 'val-desenvolvimento-coletivo') base = valueThemes[2];
+		else if (id === 'val-sentimento-dono') base = valueThemes[3];
+		else {
+			const idx = valuesList.findIndex((v) => v.id === id);
+			if (idx >= 0) base = valueThemes[idx % valueThemes.length];
+		}
+
+		const valColor = typeof valOrId === 'object' && valOrId?.color ? valOrId.color : base.hex;
+		const valIcon = typeof valOrId === 'object' && valOrId?.icon ? valOrId.icon : base.iconName;
+
+		return {
+			...base,
+			defaultHex: base.hex,
+			hex: valColor,
+			iconName: valIcon
+		};
 	}
 
 	function getValueStats(valueId: string) {
@@ -162,7 +186,7 @@
 		const rows: {
 			id: string;
 			val: NodeWithExtras;
-			theme: (typeof valueThemes)[0];
+			theme: ReturnType<typeof getValueTheme>;
 			node: NodeWithExtras;
 			isObjective: boolean;
 			subLabel: string;
@@ -312,8 +336,8 @@
 				{#if selectedEra && activeEraKey !== 'timeline'}
 					<button
 						type="button"
-						onclick={() => (showAddValue = !showAddValue)}
-						class="group relative px-4 py-2.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md font-bold flex items-center gap-2 shadow-[0_2px_0_#c2ac00,0_4px_10px_rgba(194,172,0,0.2)] active:translate-y-0.5 active:shadow-[0_1px_0_#c2ac00] transition-all"
+						onclick={() => (activeValueModal = { mode: 'create', value: null })}
+						class="group relative px-4 py-2.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md font-bold flex items-center gap-2 shadow-[0_2px_0_#c2ac00,0_4px_10px_rgba(194,172,0,0.2)] active:translate-y-0.5 active:shadow-[0_1px_0_#c2ac00] transition-all cursor-pointer"
 					>
 						<span
 							class="material-symbols-outlined text-[18px] group-hover:rotate-90 transition-transform duration-300"
@@ -349,8 +373,7 @@
 						onclick={() => {
 							selectedTab = era.key;
 							editingMission = false;
-							editingValueId = null;
-							showAddValue = false;
+							activeValueModal = null;
 						}}
 						class="relative group z-20 flex items-center gap-2.5 px-6 py-3 bg-surface-container-lowest text-primary font-label-md text-label-md rounded-t-xl shadow-[0_-3px_8px_rgba(36,34,30,0.05),-2px_0_4px_rgba(36,34,30,0.03),2px_0_4px_rgba(36,34,30,0.03)] cursor-default"
 					>
@@ -384,8 +407,7 @@
 						onclick={() => {
 							selectedTab = era.key;
 							editingMission = false;
-							editingValueId = null;
-							showAddValue = false;
+							activeValueModal = null;
 						}}
 						class="relative group z-10 flex items-center gap-2 px-5 py-2.5 bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-md text-label-md rounded-t-lg shadow-[inset_0_-2px_4px_rgba(36,34,30,0.04)] transition-colors"
 					>
@@ -404,8 +426,7 @@
 				onclick={() => {
 					selectedTab = 'timeline';
 					editingMission = false;
-					editingValueId = null;
-					showAddValue = false;
+					activeValueModal = null;
 				}}
 				class="relative group z-0 flex items-center gap-2 px-5 py-2.5 font-label-md text-label-md rounded-t-lg transition-colors {activeEraKey ===
 				'timeline'
@@ -470,10 +491,26 @@
 					<div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 						{#each era.values as val, vIdx (val.id)}
 							{@const theme = getValueTheme(val, vIdx)}
-							<div class="rounded-xl {theme.cardBg} p-4 {theme.cardShadow}">
+							{@const dTheme = getDossierTheme(theme.hex)}
+							{@const isCustom = Boolean(val.color && val.color !== theme.defaultHex)}
+							{@const cardIcon = val.icon || theme.iconName}
+							<div
+								class="rounded-xl p-4 transition-colors {isCustom ? 'border' : `${theme.cardBg} ${theme.cardShadow}`}"
+								style={isCustom
+									? `background-color: ${dTheme.cardBg}; border-color: ${dTheme.cardBorder};`
+									: undefined}
+							>
 								<div class="flex items-center gap-2">
-									<span class="w-2 h-2 rounded-full {theme.dotBg}"></span>
-									<span class="font-title-md text-title-md font-bold text-on-surface">
+									<span
+										class="material-symbols-outlined text-[18px]"
+										style={isCustom ? `color: ${dTheme.accent};` : undefined}
+									>
+										{cardIcon}
+									</span>
+									<span
+										class="font-title-md text-title-md font-bold"
+										style={isCustom ? `color: ${dTheme.accentDark};` : undefined}
+									>
 										{val.title}
 									</span>
 								</div>
@@ -694,89 +731,7 @@
 				</div>
 			</div>
 
-			<!-- Collapsible Create New Value Form -->
-			{#if showAddValue && canEdit}
-				<form
-					method="POST"
-					action="?/createValue"
-					use:enhanceFormValidation
-					onsubmit={() => {
-						setTimeout(() => (showAddValue = false), 50);
-					}}
-					class="w-full rounded-2xl bg-surface-container-lowest p-6 shadow-[0_4px_16px_rgba(36,34,30,0.08)] border border-outline-variant/50"
-				>
-					<input type="hidden" name="parentId" value={mission.id} />
-					<input type="hidden" name="start_year" value={era.start_year} />
-					{#if era.end_year}
-						<input type="hidden" name="end_year" value={era.end_year} />
-					{/if}
-					<div class="flex items-center justify-between pb-3 border-b border-outline-variant/30">
-						<h4 class="font-title-md text-title-md text-on-surface uppercase">
-							Criar Novo Valor Fundamental ({era.label})
-						</h4>
-						<button
-							type="button"
-							onclick={() => (showAddValue = false)}
-							class="p-1 rounded-lg text-outline hover:bg-surface-container"
-						>
-							<X class="h-4 w-4" />
-						</button>
-					</div>
-					<div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-						<div>
-							<label
-								for="new-val-title"
-								class="block font-label-md text-label-md font-bold text-on-surface"
-							>
-								Nome do Valor <span class="text-error">*</span>
-							</label>
-							<input
-								id="new-val-title"
-								name="title"
-								type="text"
-								required
-								placeholder="Ex.: Excelência em Entrega"
-								aria-errormessage="new-val-err"
-								class="mt-1 w-full rounded-lg bg-surface-container px-3.5 py-2 font-body-md text-body-md text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
-							/>
-							<div id="new-val-err" class="error-msg">
-								<AlertCircle class="h-3.5 w-3.5" />
-								<span>O nome do valor é obrigatório.</span>
-							</div>
-						</div>
-						<div>
-							<label
-								for="new-val-desc"
-								class="block font-label-md text-label-md font-bold text-on-surface"
-							>
-								Definição Comportamental
-							</label>
-							<input
-								id="new-val-desc"
-								name="description"
-								type="text"
-								placeholder="Como este valor orienta decisões executivas e entregas..."
-								class="mt-1 w-full rounded-lg bg-surface-container px-3.5 py-2 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
-							/>
-						</div>
-					</div>
-					<div class="mt-4 flex justify-end gap-2">
-						<button
-							type="button"
-							onclick={() => (showAddValue = false)}
-							class="px-4 py-2 rounded-lg bg-surface-container font-label-md text-label-md text-on-surface-variant"
-						>
-							Cancelar
-						</button>
-						<button
-							type="submit"
-							class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-bold shadow-[0_2px_0_#004494]"
-						>
-							Salvar Valor
-						</button>
-					</div>
-				</form>
-			{/if}
+
 
 			<!-- Section: Valores Fundamentais -->
 			<div class="flex flex-col gap-5 pt-2">
@@ -809,15 +764,29 @@
 						{@const theme = getValueTheme(val, idx)}
 						{@const stats = getValueStats(val.id)}
 						{@const tagCode = `TAG #${theme.tagPrefix}-${String(era.start_year).slice(-2)}`}
+						{@const dTheme = getDossierTheme(theme.hex)}
+						{@const isCustom = Boolean(val.color && val.color !== theme.defaultHex)}
+						{@const cardIcon = val.icon || theme.iconName}
 
 						<div
-							class="relative group rounded-2xl {theme.cardBg} p-6 flex flex-col justify-between {theme.cardShadow} hover:-translate-y-1 transition-all duration-300"
+							class="relative group rounded-2xl p-6 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 {isCustom ? 'border' : theme.cardBg}"
+							style={isCustom
+								? `background-color: ${dTheme.cardBg}; border-color: ${dTheme.cardBorder}; box-shadow: 0 1px 2px rgba(36,34,30,0.05), 0 6px 16px color-mix(in srgb, ${dTheme.accent} 12%, transparent), inset 0 1px 0 rgba(255,255,255,0.9);`
+								: undefined}
+							class:shadow-[0_1px_2px_rgba(36,34,30,0.05),0_6px_16px_rgba(0,88,189,0.08),0_-1px_0_rgba(255,255,255,0.9)_inset]={!isCustom && theme.tagPrefix === 'EXC'}
+							class:shadow-[0_1px_2px_rgba(36,34,30,0.05),0_6px_16px_rgba(108,94,0,0.08),0_-1px_0_rgba(255,255,255,0.9)_inset]={!isCustom && theme.tagPrefix === 'NUV'}
+							class:shadow-[0_1px_2px_rgba(36,34,30,0.05),0_6px_16px_rgba(179,0,105,0.08),0_-1px_0_rgba(255,255,255,0.9)_inset]={!isCustom && theme.tagPrefix === 'CLI'}
+							class:shadow-[0_1px_2px_rgba(36,34,30,0.05),0_6px_16px_rgba(124,58,237,0.08),0_-1px_0_rgba(255,255,255,0.9)_inset]={!isCustom && theme.tagPrefix === 'DON'}
 						>
 							<!-- Folder corner tab accent -->
 							<div
-								class="absolute top-0 right-0 w-8 h-8 {theme.cornerBg} rounded-bl-xl flex items-center justify-center"
+								class="absolute top-0 right-0 w-8 h-8 rounded-bl-xl flex items-center justify-center transition-colors {isCustom ? '' : theme.cornerBg}"
+								style={isCustom ? `background-color: ${dTheme.badgeBg};` : undefined}
 							>
-								<div class="w-2 h-2 rounded-full {theme.dotBg}"></div>
+								<div
+									class="w-2 h-2 rounded-full transition-colors {isCustom ? '' : theme.dotBg}"
+									style={isCustom ? `background-color: ${dTheme.accent};` : undefined}
+								></div>
 							</div>
 
 							<div class="flex flex-col gap-4">
@@ -825,18 +794,23 @@
 								<div class="flex items-start justify-between gap-2 pr-4">
 									<div class="flex items-start gap-3">
 										<div
-											class="w-12 h-12 rounded-xl {theme.iconBox} flex items-center justify-center shrink-0"
+											class="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors {isCustom ? 'border shadow-xs' : theme.iconBox}"
+											style={isCustom
+												? `background-color: ${dTheme.badgeBg}; border-color: ${dTheme.badgeBorder}; color: ${dTheme.accentDark};`
+												: undefined}
 										>
-											<span class="material-symbols-outlined text-[26px]">{theme.iconName}</span>
+											<span class="material-symbols-outlined text-[26px]">{cardIcon}</span>
 										</div>
 										<div class="flex flex-col">
 											<span
-												class="font-label-sm text-label-sm uppercase tracking-widest {theme.pillarText} font-bold"
+												class="font-label-sm text-label-sm uppercase tracking-widest font-bold {isCustom ? '' : theme.pillarText}"
+												style={isCustom ? `color: ${dTheme.accent};` : undefined}
 											>
 												{theme.pillarLabel}
 											</span>
 											<h3
-												class="font-title-md text-title-md {theme.titleText} font-bold leading-tight"
+												class="font-title-md text-title-md font-bold leading-tight {isCustom ? '' : theme.titleText}"
+												style={isCustom ? `color: ${dTheme.accentDark};` : undefined}
 											>
 												{val.title}
 											</h3>
@@ -849,9 +823,8 @@
 										>
 											<button
 												type="button"
-												onclick={() =>
-													(editingValueId = editingValueId === val.id ? null : val.id)}
-												class="p-1 rounded hover:bg-white/60 text-on-surface-variant hover:text-on-surface"
+												onclick={() => (activeValueModal = { mode: 'edit', value: val })}
+												class="p-1 rounded hover:bg-white/60 text-on-surface-variant hover:text-on-surface cursor-pointer"
 												title="Editar Valor"
 											>
 												<Pencil class="h-3.5 w-3.5" />
@@ -860,7 +833,7 @@
 												<input type="hidden" name="nodeId" value={val.id} />
 												<button
 													type="submit"
-													class="p-1 rounded hover:bg-error-container text-on-surface-variant hover:text-error"
+													class="p-1 rounded hover:bg-error-container text-on-surface-variant hover:text-error cursor-pointer"
 													title="Excluir Valor"
 												>
 													<Trash2 class="h-3.5 w-3.5" />
@@ -870,77 +843,11 @@
 									{/if}
 								</div>
 
-								{#if editingValueId === val.id}
-									<form
-										method="POST"
-										action="?/updateIdentityNode"
-										use:enhanceFormValidation
-										onsubmit={() => {
-											setTimeout(() => (editingValueId = null), 50);
-										}}
-										class="space-y-3 rounded-xl bg-surface-container-lowest/95 p-3.5 shadow-sm"
-									>
-										<input type="hidden" name="nodeId" value={val.id} />
-										<input
-											type="hidden"
-											name="start_year"
-											value={val.start_year ?? era.start_year}
-										/>
-										<input type="hidden" name="end_year" value={val.end_year ?? ''} />
-										<div>
-											<label
-												for="val-title-{val.id}"
-												class="block font-label-sm text-label-sm uppercase text-on-surface"
-											>
-												Título do Valor *
-											</label>
-											<input
-												id="val-title-{val.id}"
-												name="title"
-												type="text"
-												required
-												value={val.title}
-												class="mt-1 w-full rounded-lg bg-surface-container px-2.5 py-1.5 font-body-sm text-body-sm text-on-surface"
-											/>
-										</div>
-										<div>
-											<label
-												for="val-desc-{val.id}"
-												class="block font-label-sm text-label-sm uppercase text-on-surface"
-											>
-												Descrição
-											</label>
-											<textarea
-												id="val-desc-{val.id}"
-												name="description"
-												rows="2"
-												class="mt-1 w-full rounded-lg bg-surface-container px-2.5 py-1.5 font-body-sm text-body-sm text-on-surface"
-												>{val.description ?? ''}</textarea
-											>
-										</div>
-										<div class="flex justify-end gap-1.5">
-											<button
-												type="button"
-												onclick={() => (editingValueId = null)}
-												class="px-2.5 py-1 rounded bg-surface-container font-label-sm text-label-sm"
-											>
-												Cancelar
-											</button>
-											<button
-												type="submit"
-												class="px-3 py-1 rounded bg-primary text-on-primary font-label-sm text-label-sm font-bold"
-											>
-												Salvar
-											</button>
-										</div>
-									</form>
-								{:else}
-									<!-- Description -->
-									<p class="font-body-md text-body-md text-on-surface leading-relaxed">
-										{val.description ||
-											'Compromisso intransigente com padrões de excelência e impacto estratégico.'}
-									</p>
-								{/if}
+								<!-- Description -->
+								<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+									{val.description ||
+										'Compromisso intransigente com padrões de excelência e impacto estratégico.'}
+								</p>
 
 								<!-- Metric Box (Debossed Well) -->
 								<div
@@ -969,16 +876,19 @@
 												stroke-width="3.5"
 											></path>
 											<path
-												class={theme.gaugeStroke}
+												class={isCustom ? '' : theme.gaugeStroke}
 												d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
 												fill="none"
-												stroke="currentColor"
+												stroke={isCustom ? dTheme.accent : 'currentColor'}
 												stroke-dasharray="{stats.avgPct}, 100"
 												stroke-linecap="round"
 												stroke-width="3.5"
 											></path>
 										</svg>
-										<span class="absolute font-label-sm text-[10px] font-bold {theme.pillarText}">
+										<span
+											class="absolute font-label-sm text-[10px] font-bold {isCustom ? '' : theme.pillarText}"
+											style={isCustom ? `color: ${dTheme.accentDark};` : undefined}
+										>
 											{stats.avgPct}%
 										</span>
 									</div>
@@ -991,7 +901,8 @@
 								<button
 									type="button"
 									onclick={() => goto(`/strategy?lens=${val.id}`)}
-									class="group/btn px-3 py-1.5 rounded-lg {theme.btnClass} font-label-md text-label-md shadow-[0_1px_3px_rgba(36,34,30,0.06)] flex items-center gap-1 transition-all"
+									class="group/btn px-3 py-1.5 rounded-lg font-label-md text-label-md shadow-[0_1px_3px_rgba(36,34,30,0.06)] flex items-center gap-1 transition-all cursor-pointer {isCustom ? 'bg-surface-container-lowest' : theme.btnClass}"
+									style={isCustom ? `color: ${dTheme.accentDark};` : undefined}
 								>
 									<span>Ver no Canvas</span>
 									<span
@@ -1047,6 +958,7 @@
 							{#each (selectedEra?.values ?? valuesList) as val, vIdx}
 								{@const count = allMatrixRows.filter((r) => r.val.id === val.id).length}
 								{@const vTheme = getValueTheme(val, vIdx)}
+								{@const isCustomV = Boolean(val.color && val.color !== vTheme.defaultHex)}
 								<button
 									type="button"
 									onclick={() => (matrixFilter = val.id)}
@@ -1055,7 +967,10 @@
 										? 'bg-surface-container-lowest text-primary font-bold shadow-sm'
 										: 'text-on-surface-variant hover:text-on-surface'}"
 								>
-									<span class="w-1.5 h-1.5 rounded-full {vTheme.dotBg}"></span>
+									<span
+										class="w-1.5 h-1.5 rounded-full {isCustomV ? '' : vTheme.dotBg}"
+										style={isCustomV ? `background-color: ${vTheme.hex};` : undefined}
+									></span>
 									<span>{val.title} ({count})</span>
 								</button>
 							{/each}
@@ -1102,24 +1017,44 @@
 							{#each displayedMatrixRows as row (row.id)}
 								{@const theme = row.theme}
 								{@const tTheme = getDossierTheme(row.teamColor)}
+								{@const isCustomRow = Boolean(row.val.color && row.val.color !== theme.defaultHex)}
+								{@const rowDossier = getDossierTheme(theme.hex)}
 								<tr class="hover:bg-surface-container/60 transition-colors">
 									<td class="py-4 px-4 align-top">
 										<div class="flex flex-col items-start gap-1">
 											<span
-												class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full {theme.pillClass} font-label-sm text-label-sm font-bold shadow-xs"
+												class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-label-sm text-label-sm font-bold shadow-xs {isCustomRow
+													? 'border'
+													: theme.pillClass}"
+												style={isCustomRow
+													? `background-color: ${rowDossier.badgeBg}; border-color: ${rowDossier.badgeBorder}; color: ${rowDossier.accentDark};`
+													: undefined}
 											>
-												<span class="w-1.5 h-1.5 rounded-full {theme.dotBg}"></span>
+												<span
+													class="w-1.5 h-1.5 rounded-full {isCustomRow ? '' : theme.dotBg}"
+													style={isCustomRow ? `background-color: ${rowDossier.accent};` : undefined}
+												></span>
 												{row.val.title}
 											</span>
 											{#if row.otherValues.length > 0}
 												<div class="flex flex-wrap items-center gap-1 mt-0.5">
 													{#each row.otherValues as ov}
 														{@const ovTheme = getValueTheme(ov)}
+														{@const isCustomOv = Boolean(ov.color && ov.color !== ovTheme.defaultHex)}
+														{@const ovDossier = getDossierTheme(ovTheme.hex)}
 														<span
-															class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold {ovTheme.pillClass}"
+															class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold {isCustomOv
+																? 'border'
+																: ovTheme.pillClass}"
+															style={isCustomOv
+																? `background-color: ${ovDossier.badgeBg}; border-color: ${ovDossier.badgeBorder}; color: ${ovDossier.accentDark};`
+																: undefined}
 															title={`Também alinhado a ${ov.title}`}
 														>
-															<span class="w-1 h-1 rounded-full {ovTheme.dotBg}"></span>
+															<span
+																class="w-1 h-1 rounded-full {isCustomOv ? '' : ovTheme.dotBg}"
+																style={isCustomOv ? `background-color: ${ovDossier.accent};` : undefined}
+															></span>
 															{ov.title}
 														</span>
 													{/each}
@@ -1457,4 +1392,27 @@
 			</form>
 		</div>
 	</div>
+{/if}
+
+<!-- Modal Dossiê de Edição e Criação de Valores Fundamentais -->
+{#if activeValueModal && selectedEra}
+	{@const modalVal = activeValueModal.value}
+	{@const modalStats = modalVal ? getValueStats(modalVal.id) : { total: 0, okrs: 0, krs: 0, kpis: 0, avgPct: 0 }}
+	{@const linkedNodes = modalVal
+		? strategyNodes.filter((n) => {
+				const linkedIds = new Set(
+					nodeValues.filter((nv) => nv.value_id === modalVal.id).map((nv) => nv.node_id)
+				);
+				return linkedIds.has(n.id);
+		  })
+		: []}
+	<ValueDossierModal
+		mode={activeValueModal.mode}
+		valueNode={modalVal}
+		era={selectedEra}
+		stats={modalStats}
+		alignedNodes={linkedNodes}
+		{canEdit}
+		onClose={() => (activeValueModal = null)}
+	/>
 {/if}

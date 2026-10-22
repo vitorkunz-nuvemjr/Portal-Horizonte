@@ -1,20 +1,22 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import type { Cycle, NodeWithExtras, StrategyNode, Team } from '$lib/types';
+	import type { Cycle, NodeWithExtras, Profile, StrategyNode, Team } from '$lib/types';
 	import { valueColor } from '$lib/value-colors';
 	import { getDossierTheme } from '$lib/dossier-theme';
-	import { getTeamIcon } from '$lib/utils';
+	import { getInitials, getTeamIcon } from '$lib/utils';
 
 	interface Props {
 		cycles: Cycle[];
 		valuesList: StrategyNode[];
 		teams?: Team[];
+		profiles?: Profile[];
 		activeMission?: NodeWithExtras | null;
 		availableYears: number[];
 		selectedYears: number[];
 		selectedSemesters: number[];
 		selectedTeamId?: string;
+		selectedUserId?: string;
 		strictMode: boolean;
 		activeLensId: string | null;
 		viewMode: 'tree' | 'outline' | 'canvas';
@@ -22,6 +24,7 @@
 		canEdit: boolean;
 		onSearchChange: (q: string) => void;
 		onTeamChange?: (teamId: string) => void;
+		onUserChange?: (userId: string) => void;
 		onSelectNode?: (id: string) => void;
 		onCreateObjective: () => void;
 		onCreateKR?: () => void;
@@ -33,14 +36,17 @@
 		selectedYears,
 		selectedSemesters,
 		selectedTeamId = 'all',
+		selectedUserId = 'all',
 		strictMode,
 		activeLensId,
 		viewMode,
 		valuesList,
 		teams = [],
+		profiles = [],
 		activeMission = null,
 		canEdit,
 		onTeamChange,
+		onUserChange,
 		onSelectNode,
 		onCreateObjective,
 		onCreateKR,
@@ -48,6 +54,7 @@
 	}: Props = $props();
 
 	let showTeamDropdown = $state(false);
+	let showUserDropdown = $state(false);
 	let showYearDropdown = $state(false);
 
 	const activeYear = $derived(selectedYears[0] ?? 2026);
@@ -74,10 +81,39 @@
 		selectedTeam ? getDossierTheme(selectedTeam.color || '#0058bd') : null
 	);
 
+	const selectedUser = $derived.by(() => {
+		if (!selectedUserId || selectedUserId === 'all') return null;
+		return profiles.find((p) => p.id === selectedUserId) ?? null;
+	});
+
+	const selectedUserLabel = $derived(selectedUser?.name ?? 'Todos Responsáveis');
+
 	function updateParam(updater: (params: URLSearchParams) => void) {
 		const url = new URL($page.url);
 		updater(url.searchParams);
 		goto(url.toString(), { replaceState: true, keepFocus: true, noScroll: true });
+	}
+
+	function selectTeam(teamId: string) {
+		updateParam((params) => {
+			if (!teamId || teamId === 'all') {
+				params.delete('team');
+			} else {
+				params.set('team', teamId);
+			}
+		});
+		onTeamChange?.(teamId);
+	}
+
+	function selectUser(userId: string) {
+		updateParam((params) => {
+			if (!userId || userId === 'all') {
+				params.delete('user');
+			} else {
+				params.set('user', userId);
+			}
+		});
+		onUserChange?.(userId);
 	}
 
 	function selectYear(year: number, multi = false) {
@@ -317,7 +353,10 @@
 			<div class="relative">
 				<button
 					type="button"
-					onclick={() => (showTeamDropdown = !showTeamDropdown)}
+					onclick={() => {
+						showTeamDropdown = !showTeamDropdown;
+						if (showTeamDropdown) showUserDropdown = false;
+					}}
 					class="flex items-center gap-2 px-3 py-1.5 rounded-lg font-label-md text-label-md shadow-[0_1px_2px_rgba(36,34,30,0.05)] transition-colors {selectedTeamTheme
 						? 'font-bold border'
 						: 'bg-surface-container-lowest text-on-surface hover:bg-surface-container'}"
@@ -347,12 +386,12 @@
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="fixed inset-0 z-20" onclick={() => (showTeamDropdown = false)}></div>
 					<div
-						class="absolute top-full left-0 mt-1 w-56 bg-surface-container-lowest rounded-xl shadow-[0_12px_24px_rgba(36,34,30,0.12)] p-1.5 z-30 border border-outline-variant/30"
+						class="absolute top-full left-0 mt-1 w-56 bg-surface-container-lowest rounded-xl shadow-[0_12px_24px_rgba(36,34,30,0.12)] p-1.5 z-30 border border-outline-variant/30 max-h-72 overflow-y-auto custom-scroll flex flex-col gap-0.5"
 					>
 						<button
 							type="button"
 							onclick={() => {
-								onTeamChange?.('all');
+								selectTeam('all');
 								showTeamDropdown = false;
 							}}
 							class="w-full text-left px-2.5 py-1.5 rounded font-body-sm text-body-sm hover:bg-surface-container flex items-center justify-between {selectedTeamId ===
@@ -360,17 +399,21 @@
 								? 'text-primary font-semibold bg-surface-container-low'
 								: 'text-on-surface'}"
 						>
-							<span>Todas Equipes</span>
+							<span class="flex items-center gap-2">
+								<span class="material-symbols-outlined text-[16px] text-on-surface-variant">groups</span>
+								<span>Todas Equipes</span>
+							</span>
 							{#if selectedTeamId === 'all'}
 								<span class="material-symbols-outlined text-primary text-[16px]">check</span>
 							{/if}
 						</button>
+						<div class="h-px bg-outline-variant/40 my-0.5"></div>
 						{#each teams as t (t.id)}
 							{@const tTheme = getDossierTheme(t.color || '#0058bd')}
 							<button
 								type="button"
 								onclick={() => {
-									onTeamChange?.(t.id);
+									selectTeam(t.id);
 									showTeamDropdown = false;
 								}}
 								class="w-full text-left px-2.5 py-1.5 rounded font-body-sm text-body-sm hover:bg-surface-container flex items-center justify-between transition-colors {selectedTeamId ===
@@ -397,6 +440,100 @@
 									>
 										check
 									</span>
+								{/if}
+							</button>
+						{/each}
+					</div>
+				{/if}
+			</div>
+
+			<!-- Users / Responsibles Dropdown Filter -->
+			<div class="relative">
+				<button
+					type="button"
+					onclick={() => {
+						showUserDropdown = !showUserDropdown;
+						if (showUserDropdown) showTeamDropdown = false;
+					}}
+					class="flex items-center gap-2 px-3 py-1.5 rounded-lg font-label-md text-label-md shadow-[0_1px_2px_rgba(36,34,30,0.05)] transition-colors {selectedUser
+						? 'font-bold border bg-surface-container-low border-primary/40 text-primary shadow-xs'
+						: 'bg-surface-container-lowest text-on-surface hover:bg-surface-container'}"
+				>
+					{#if selectedUser}
+						<div
+							class="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold text-white shrink-0"
+							style="background-color: {selectedUser.color || '#0058bd'}"
+						>
+							{getInitials(selectedUser.name)}
+						</div>
+					{:else}
+						<span class="material-symbols-outlined text-[16px] text-primary">person</span>
+					{/if}
+					<span class="truncate max-w-[130px] sm:max-w-[160px]">{selectedUserLabel}</span>
+					<span
+						class="material-symbols-outlined text-[16px]"
+						class:text-primary={Boolean(selectedUser)}
+						class:text-on-surface-variant={!selectedUser}
+					>
+						expand_more
+					</span>
+				</button>
+
+				{#if showUserDropdown}
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<!-- svelte-ignore a11y_no_static_element_interactions -->
+					<div class="fixed inset-0 z-20" onclick={() => (showUserDropdown = false)}></div>
+					<div
+						class="absolute top-full left-0 mt-1 w-64 bg-surface-container-lowest rounded-xl shadow-[0_12px_24px_rgba(36,34,30,0.12)] p-1.5 z-30 border border-outline-variant/30 max-h-72 overflow-y-auto custom-scroll flex flex-col gap-0.5"
+					>
+						<button
+							type="button"
+							onclick={() => {
+								selectUser('all');
+								showUserDropdown = false;
+							}}
+							class="w-full text-left px-2.5 py-1.5 rounded font-body-sm text-body-sm hover:bg-surface-container flex items-center justify-between {selectedUserId ===
+							'all'
+								? 'text-primary font-semibold bg-surface-container-low'
+								: 'text-on-surface'}"
+						>
+							<span class="flex items-center gap-2">
+								<span class="material-symbols-outlined text-[16px] text-on-surface-variant">group</span>
+								<span>Todos Responsáveis</span>
+							</span>
+							{#if selectedUserId === 'all'}
+								<span class="material-symbols-outlined text-primary text-[16px]">check</span>
+							{/if}
+						</button>
+						<div class="h-px bg-outline-variant/40 my-0.5"></div>
+						{#each profiles as p (p.id)}
+							<button
+								type="button"
+								onclick={() => {
+									selectUser(p.id);
+									showUserDropdown = false;
+								}}
+								class="w-full text-left px-2.5 py-1.5 rounded font-body-sm text-body-sm hover:bg-surface-container flex items-center justify-between transition-colors {selectedUserId ===
+								p.id
+									? 'font-semibold bg-surface-container-low text-primary'
+									: 'text-on-surface'}"
+							>
+								<span class="flex items-center gap-2 min-w-0">
+									<span
+										class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+										style="background-color: {p.color || '#0058bd'}"
+									>
+										{getInitials(p.name)}
+									</span>
+									<span class="flex flex-col min-w-0">
+										<span class="truncate">{p.name}</span>
+										{#if p.role}
+											<span class="text-[10px] text-on-surface-variant capitalize">{p.role}</span>
+										{/if}
+									</span>
+								</span>
+								{#if selectedUserId === p.id}
+									<span class="material-symbols-outlined text-primary text-[16px] shrink-0">check</span>
 								{/if}
 							</button>
 						{/each}

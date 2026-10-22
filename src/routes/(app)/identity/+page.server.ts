@@ -57,23 +57,34 @@ export const actions: Actions = {
 		const parentId = formData.get('parentId') as string;
 		const title = ((formData.get('title') as string) ?? '').trim();
 		const description = ((formData.get('description') as string) || '').trim() || null;
+		const color = (formData.get('color') as string) || null;
+		const icon = (formData.get('icon') as string) || null;
 		const startYearStr = formData.get('start_year') as string | null;
 		const endYearStr = formData.get('end_year') as string | null;
 
 		if (locals.mode === 'supabase' && locals.supabase) {
 			try {
-				const { error } = await locals.supabase.from('nodes').insert({
+				const insertPayload: any = {
 					parent_id: parentId,
 					tree: 'identity',
 					type: 'value',
 					title,
 					description,
+					color,
 					start_year: startYearStr ? Number(startYearStr) : null,
 					end_year: endYearStr ? Number(endYearStr) : null,
 					status: 'on_track',
 					created_by: user?.id ?? null
-				});
-				if (error) return fail(400, { message: error.message });
+				};
+				if (icon) insertPayload.icon = icon;
+				let { error } = await locals.supabase.from('nodes').insert(insertPayload);
+				if (error && error.message?.includes('icon') && 'icon' in insertPayload) {
+					delete insertPayload.icon;
+					const retry = await locals.supabase.from('nodes').insert(insertPayload);
+					if (retry.error) return fail(400, { message: retry.error.message });
+				} else if (error) {
+					return fail(400, { message: error.message });
+				}
 				return { success: true };
 			} catch (e: any) {
 				return fail(400, { message: e?.message ?? 'Falha ao criar valor.' });
@@ -86,6 +97,8 @@ export const actions: Actions = {
 				type: 'value',
 				title,
 				description,
+				color,
+				icon,
 				start_year: startYearStr ? Number(startYearStr) : null,
 				end_year: endYearStr ? Number(endYearStr) : null
 			});
@@ -101,21 +114,35 @@ export const actions: Actions = {
 		const nodeId = formData.get('nodeId') as string;
 		const title = ((formData.get('title') as string) ?? '').trim();
 		const description = (formData.get('description') as string) || null;
+		const color = (formData.get('color') as string) || null;
+		const icon = (formData.get('icon') as string) || null;
 		const startYearStr = formData.get('start_year') as string | null;
 		const endYearStr = formData.get('end_year') as string | null;
 
 		if (locals.mode === 'supabase' && locals.supabase) {
 			try {
-				const { error } = await locals.supabase
+				const updatePayload: any = {
+					title,
+					description,
+					color,
+					start_year: startYearStr ? Number(startYearStr) : null,
+					end_year: endYearStr ? Number(endYearStr) : null
+				};
+				if (icon) updatePayload.icon = icon;
+				let { error } = await locals.supabase
 					.from('nodes')
-					.update({
-						title,
-						description,
-						start_year: startYearStr ? Number(startYearStr) : null,
-						end_year: endYearStr ? Number(endYearStr) : null
-					})
+					.update(updatePayload)
 					.eq('id', nodeId);
-				if (error) return fail(400, { message: error.message });
+				if (error && error.message?.includes('icon') && 'icon' in updatePayload) {
+					delete updatePayload.icon;
+					const retry = await locals.supabase
+						.from('nodes')
+						.update(updatePayload)
+						.eq('id', nodeId);
+					if (retry.error) return fail(400, { message: retry.error.message });
+				} else if (error) {
+					return fail(400, { message: error.message });
+				}
 				return { success: true };
 			} catch (e: any) {
 				return fail(400, { message: e?.message ?? 'Falha ao atualizar item de identidade.' });
@@ -126,6 +153,8 @@ export const actions: Actions = {
 			updateNodeRecord(user, nodeId, {
 				title,
 				description,
+				color,
+				icon,
 				start_year: startYearStr ? Number(startYearStr) : null,
 				end_year: endYearStr ? Number(endYearStr) : null
 			});

@@ -14,6 +14,7 @@
 	import {
 		applyValueLens,
 		enrichNodes,
+		filterStrategyNodes,
 		filterVisible,
 		getActiveMissionForYear,
 		getActiveValuesForYears
@@ -25,7 +26,6 @@
 	let { data, form } = $props();
 
 	let searchQuery = $state('');
-	let selectedTeamId = $state('all');
 	let selectedNodeId = $state<string | null>(null);
 
 	// Modal state for creating a new node (Objective, KR, or KPI)
@@ -97,6 +97,10 @@
 		rawViewParam === 'outline' ? 'outline' : rawViewParam === 'canvas' ? 'canvas' : 'tree'
 	);
 
+	// Team and User filters from URL searchParams
+	const selectedTeamId = $derived($page.url.searchParams.get('team') || 'all');
+	const selectedUserId = $derived($page.url.searchParams.get('user') || 'all');
+
 	// Sync global header search param (?q=...) and sidebar quick create (?create=...)
 	$effect(() => {
 		const urlQ = $page.url.searchParams.get('q') ?? '';
@@ -122,7 +126,7 @@
 	const activeMission = $derived(getActiveMissionForYear(enriched.identityRoots, activeYear));
 	const activeEraValues = $derived(getActiveValuesForYears(enriched.valuesList, selectedYears));
 
-	// Visible node IDs from cycle filter + team filter + search query
+	// Visible node IDs from cycle filter + team filter + user filter + search query
 	const visibleIds = $derived.by(() => {
 		const baseVisible = filterVisible(data.nodes, data.cycles, {
 			years: selectedYears,
@@ -131,44 +135,11 @@
 			includePermanent: false
 		});
 
-		const q = searchQuery.trim().toLowerCase();
-		const hasTeamFilter = selectedTeamId !== 'all';
-
-		if (!q && !hasTeamFilter) return baseVisible;
-
-		const matched = new Set<string>();
-		for (const id of baseVisible) {
-			const n = enriched.byId.get(id);
-			if (!n) continue;
-
-			const matchesQuery =
-				!q ||
-				n.title.toLowerCase().includes(q) ||
-				Boolean(n.description && n.description.toLowerCase().includes(q));
-
-			const matchesTeam = !hasTeamFilter || n.teams.some((t) => t.id === selectedTeamId);
-
-			if (matchesQuery && matchesTeam) {
-				matched.add(n.id);
-				// Keep ancestors visible
-				let cur = n.parent_id;
-				while (cur) {
-					matched.add(cur);
-					cur = enriched.byId.get(cur)?.parent_id ?? null;
-				}
-				// Keep descendants visible if parent matched team/search
-				const addDescendants = (node: NodeWithExtras) => {
-					for (const child of node.children) {
-						if (baseVisible.has(child.id)) {
-							matched.add(child.id);
-							addDescendants(child);
-						}
-					}
-				};
-				addDescendants(n);
-			}
-		}
-		return matched;
+		return filterStrategyNodes(enriched, baseVisible, {
+			searchQuery,
+			teamId: selectedTeamId,
+			userId: selectedUserId
+		});
 	});
 
 	const visibleStrategyNodes = $derived(
@@ -276,18 +247,19 @@
 		cycles={data.cycles}
 		valuesList={activeEraValues.length > 0 ? activeEraValues : enriched.valuesList}
 		teams={data.teams}
+		profiles={data.profiles}
 		{activeMission}
 		{availableYears}
 		{selectedYears}
 		{selectedSemesters}
 		{selectedTeamId}
+		{selectedUserId}
 		{strictMode}
 		{activeLensId}
 		{viewMode}
 		{searchQuery}
 		{canEdit}
 		onSearchChange={(q) => (searchQuery = q)}
-		onTeamChange={(tId) => (selectedTeamId = tId)}
 		onSelectNode={(id) => (selectedNodeId = id)}
 		onCreateObjective={openCreateObjective}
 		onCreateKR={openCreateQuickKR}

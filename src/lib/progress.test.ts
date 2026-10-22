@@ -9,7 +9,10 @@ import {
 	groupEras,
 	isAtRisk,
 	isObjectiveAtRisk,
-	kpiProgress
+	kpiProgress,
+	nodeMatchesTeam,
+	nodeMatchesUser,
+	filterStrategyNodes
 } from './progress';
 import type { Cycle, Node, NodeWithExtras } from './types';
 
@@ -310,5 +313,91 @@ describe('progress business logic (§13)', () => {
 		expect(richKr.teams.length).toBe(1);
 		expect(richKr.teams[0].id).toBe('t-proj');
 		expect(richKr.assignees.length).toBe(0);
+	});
+
+	it('strictly isolates KRs by team and user and prevents descendant leakage', () => {
+		// Multi-team corporate objective (e.g. Sales + Projects)
+		const corpObj = makeNode({ id: 'obj-corp', type: 'objective', year: 2026 });
+		const krSales = makeNode({ id: 'kr-sales', type: 'key_result', parent_id: 'obj-corp' });
+		const kpiSales = makeNode({ id: 'kpi-sales', type: 'kpi', parent_id: 'kr-sales', baseline: 0, target_value: 100, current_value: 50 });
+		const krProj = makeNode({ id: 'kr-proj', type: 'key_result', parent_id: 'obj-corp' });
+		const kpiProj = makeNode({ id: 'kpi-proj', type: 'kpi', parent_id: 'kr-proj', baseline: 0, target_value: 10, current_value: 2 });
+		const krTrans = makeNode({ id: 'kr-trans', type: 'key_result', parent_id: 'obj-corp' });
+
+		const teamSales = { id: 't-sales', name: 'Comercial', color: '#059669', created_at: '2026-01-01T00:00:00Z', description: null };
+		const teamProj = { id: 't-proj', name: 'Projetos', color: '#7c3aed', created_at: '2026-01-01T00:00:00Z', description: null };
+		const teamTodas = { id: 't-todas', name: 'Todas as Diretorias', color: '#64748b', created_at: '2026-01-01T00:00:00Z', description: null };
+
+		const userAlice = { id: 'u-alice', name: 'Alice', role: 'member' as const, color: '#2563eb', created_at: '2026-01-01T00:00:00Z' };
+		const userBob = { id: 'u-bob', name: 'Bob', role: 'member' as const, color: '#dc2626', created_at: '2026-01-01T00:00:00Z' };
+
+		const nodeTeams = [
+			{ node_id: 'obj-corp', team_id: 't-sales' },
+			{ node_id: 'obj-corp', team_id: 't-proj' },
+			{ node_id: 'kr-sales', team_id: 't-sales' },
+			{ node_id: 'kr-proj', team_id: 't-proj' },
+			{ node_id: 'kr-trans', team_id: 't-todas' }
+		];
+
+		const assigns = [
+			{ node_id: 'kr-sales', user_id: 'u-alice' },
+			{ node_id: 'kr-proj', user_id: 'u-bob' }
+		];
+
+		const enriched = enrichNodes(
+			[corpObj, krSales, kpiSales, krProj, kpiProj, krTrans],
+			assigns,
+			[],
+			[userAlice, userBob],
+			[],
+			[],
+			[teamSales, teamProj, teamTodas],
+			[{ team_id: 't-sales', user_id: 'u-alice' }, { team_id: 't-proj', user_id: 'u-bob' }],
+			nodeTeams
+		);
+
+		const baseVisible = new Set(['obj-corp', 'kr-sales', 'kpi-sales', 'kr-proj', 'kpi-proj', 'kr-trans']);
+
+		// 1. Filter by Projects team:
+		// Expect: obj-corp (ancestor), kr-proj, kpi-proj, kr-trans (transversal).
+		// Must NOT contain kr-sales or kpi-sales!
+		const projResult = filterStrategyNodes(enriched, baseVisible, { teamId: 't-proj' });
+		expect(projResult.has('obj-corp')).toBe(true);
+		expect(projResult.has('kr-proj')).toBe(true);
+		expect(projResult.has('kpi-proj')).toBe(true);
+		expect(projResult.has('kr-trans')).toBe(true);
+		expect(projResult.has('kr-sales')).toBe(false);
+		expect(projResult.has('kpi-sales')).toBe(false);
+
+		// 2. Filter by Sales team:
+		// Expect: obj-corp (ancestor), kr-sales, kpi-sales, kr-trans.
+		// Must NOT contain kr-proj or kpi-proj!
+		const salesResult = filterStrategyNodes(enriched, baseVisible, { teamId: 't-sales' });
+		expect(salesResult.has('obj-corp')).toBe(true);
+		expect(salesResult.has('kr-sales')).toBe(true);
+		expect(salesResult.has('kpi-sales')).toBe(true);
+		expect(salesResult.has('kr-trans')).toBe(true);
+		expect(salesResult.has('kr-proj')).toBe(false);
+		expect(salesResult.has('kpi-proj')).toBe(false);
+
+		// 3. Filter by User Alice (Sales member):
+		// Expect: obj-corp (ancestor), kr-sales, kpi-sales.
+		const aliceResult = filterStrategyNodes(enriched, baseVisible, { userId: 'u-alice' });
+		expect(aliceResult.has('obj-corp')).toBe(true);
+		expect(aliceResult.has('kr-sales')).toBe(true);
+		expect(aliceResult.has('kpi-sales')).toBe(true);
+		expect(aliceResult.has('kr-proj')).toBe(false);
+		expect(aliceResult.has('kr-trans')).toBe(false);
+
+		// 4. Combined Filter: Sales team + Bob (Bob is in Projects, not Sales):
+		// Expect empty
+		const mismatchResult = filterStrategyNodes(enriched, baseVisible, { teamId: 't-sales', userId: 'u-bob' });
+		expect(mismatchResult.size).toBe(0);
+
+		// 5. Pure search query "Projetos"
+		const searchResult = filterStrategyNodes(enriched, baseVisible, { searchQuery: 'sales' });
+		expect(searchResult.has('kr-sales')).toBe(true);
+		expect(searchResult.has('kpi-sales')).toBe(true);
+		expect(searchResult.has('kr-proj')).toBe(false);
 	});
 });

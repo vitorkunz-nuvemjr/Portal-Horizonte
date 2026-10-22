@@ -392,3 +392,173 @@ export function groupEras(
 		return b.start_year - a.start_year;
 	});
 }
+
+/**
+ * Checks if a team represents cross-cutting / transversal team ("Todas as Diretorias")
+ */
+export function isTransversalTeam(team: { id: string; name?: string | null }): boolean {
+	if (team.id === 't-todas') return true;
+	if (team.name && (team.name.toLowerCase().includes('todas') || team.name.toLowerCase().includes('geral'))) {
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Determines if a node is associated with a given teamId.
+ * Supports:
+ * - Direct node_teams
+ * - Transversal team (t-todas)
+ * - Teams of node assignees (team_members)
+ * - Hierarchy inheritance (KPI -> parent KR; unassigned KR -> parent Objective)
+ */
+export function nodeMatchesTeam(
+	node: NodeWithExtras,
+	teamId: string,
+	byId?: Map<string, NodeWithExtras>
+): boolean {
+	if (!teamId || teamId === 'all') return true;
+
+	// 1. Direct team assignment
+	if (node.teams.some((t) => t.id === teamId || isTransversalTeam(t))) {
+		return true;
+	}
+
+	// 2. Assignee's team membership
+	if (node.assignees.some((a) => a.teams?.some((t) => t.id === teamId || isTransversalTeam(t)))) {
+		return true;
+	}
+
+	// 3. KPI inherits from parent KR
+	if (node.type === 'kpi' && node.parent_id && byId) {
+		const parent = byId.get(node.parent_id);
+		if (parent && nodeMatchesTeam(parent, teamId, byId)) return true;
+	}
+
+	// 4. KR with no explicit teams or assignees inherits from parent Objective if objective has this team
+	if (
+		node.type === 'key_result' &&
+		node.teams.length === 0 &&
+		node.assignees.length === 0 &&
+		node.parent_id &&
+		byId
+	) {
+		const parent = byId.get(node.parent_id);
+		if (parent && parent.teams.some((t) => t.id === teamId || isTransversalTeam(t))) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Determines if a node is associated with a given userId.
+ * Supports:
+ * - Direct node assignees (node_assignees)
+ * - Direct creator (created_by fallback)
+ * - KPI inheritance from parent KR
+ */
+export function nodeMatchesUser(
+	node: NodeWithExtras,
+	userId: string,
+	byId?: Map<string, NodeWithExtras>
+): boolean {
+	if (!userId || userId === 'all') return true;
+
+	// 1. Direct assignee
+	if (node.assignees.some((a) => a.id === userId)) {
+		return true;
+	}
+
+	// 2. Creator fallback
+	if (node.created_by === userId) {
+		return true;
+	}
+
+	// 3. KPI inherits from parent KR
+	if (node.type === 'kpi' && node.parent_id && byId) {
+		const parent = byId.get(node.parent_id);
+		if (parent && nodeMatchesUser(parent, userId, byId)) return true;
+	}
+
+	return false;
+}
+
+/**
+ * Filters strategy nodes by search query, team, and user,
+ * keeping ancestor objectives intact for UI hierarchy while preventing
+ * foreign KRs/KPIs of other departments/users from leaking into the view.
+ */
+export function filterStrategyNodes(
+	enriched: { byId: Map<string, NodeWithExtras> },
+	baseVisible: Set<string>,
+	options: {
+		searchQuery?: string;
+		teamId?: string;
+		userId?: string;
+	}
+): Set<string> {
+	const q = options.searchQuery?.trim().toLowerCase() ?? '';
+	const teamId = options.teamId ?? 'all';
+	const userId = options.userId ?? 'all';
+
+	const hasTeamFilter = teamId !== 'all';
+	const hasUserFilter = userId !== 'all';
+	const hasQuery = q.length > 0;
+
+	if (!hasTeamFilter && !hasUserFilter && !hasQuery) {
+		return baseVisible;
+	}
+
+	const matched = new Set<string>();
+
+	for (const id of baseVisible) {
+		const n = enriched.byId.get(id);
+		if (!n) continue;
+
+		const mSearch =
+			!hasQuery ||
+			n.title.toLowerCase().includes(q) ||
+			Boolean(n.description && n.description.toLowerCase().includes(q));
+
+		const mTeam = nodeMatchesTeam(n, teamId, enriched.byId);
+		const mUser = nodeMatchesUser(n, userId, enriched.byId);
+
+		if (mSearch && mTeam && mUser) {
+			matched.add(n.id);
+
+			// Preserve ancestors for visual hierarchy
+			let cur = n.parent_id;
+			while (cur) {
+				matched.add(cur);
+				cur = enriched.byId.get(cur)?.parent_id ?? null;
+			}
+
+			// If Key Result matched, include child KPIs that match user filter
+			if (n.type === 'key_result') {
+				for (const child of n.children) {
+					if (baseVisible.has(child.id) && nodeMatchesUser(child, userId, enriched.byId)) {
+						matched.add(child.id);
+					}
+				}
+			}
+
+			// If Objective matched via pure search query (no team or user filter active),
+			// keep child KRs and KPIs for search navigation
+			if (n.type === 'objective' && !hasTeamFilter && !hasUserFilter) {
+				for (const child of n.children) {
+					if (baseVisible.has(child.id)) {
+						matched.add(child.id);
+						for (const kpi of child.children) {
+							if (baseVisible.has(kpi.id)) matched.add(kpi.id);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return matched;
+}
+

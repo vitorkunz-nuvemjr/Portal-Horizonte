@@ -1,7 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import type { Handle } from '@sveltejs/kit';
 import { env as pubEnv } from '$env/dynamic/public';
-import { readDb } from '$lib/server/store';
 
 export const SESSION_COOKIE = 'je_session_user_id';
 
@@ -18,7 +17,7 @@ export const resolvedSupabaseAnonKey =
 	'sb_publishable_7dvgutK2lSMz7tzbAc0-jg_T9TQimpb';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// Fast-path redirect for root URL to avoid unnecessary serverless compute and database round-trips
+	// Fast-path redirect for root URL to avoid unnecessary compute
 	if (event.url.pathname === '/') {
 		return new Response(null, {
 			status: 307,
@@ -88,7 +87,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 						return {
 							user: profileRes.data ?? {
 								id: user.id,
-								name: user.email?.split('@')[0] ?? 'User',
+								name: (user.user_metadata?.name as string) || user.email?.split('@')[0] || 'Usuário',
 								email: user.email,
 								role: 'member',
 								color: '#2563eb',
@@ -113,7 +112,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 					return {
 						user: profile ?? {
 							id: user.id,
-							name: user.email?.split('@')[0] ?? 'User',
+							name: (user.user_metadata?.name as string) || user.email?.split('@')[0] || 'Usuário',
 							email: user.email,
 							role: 'member',
 							color: '#2563eb',
@@ -128,23 +127,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 			return cachedSessionPromise;
 		};
 	} else {
-		event.locals.mode = 'local';
+		event.locals.mode = 'supabase';
 		event.locals.supabase = null;
-		let cachedLocalSession: Promise<{ user: any | null }> | null = null;
-		event.locals.safeGetSession = () => {
-			if (cachedLocalSession) return cachedLocalSession;
-			cachedLocalSession = (async () => {
-				const db = readDb();
-				const cookieUserId = event.cookies.get(SESSION_COOKIE);
-				if (cookieUserId === 'logged_out') {
-					return { user: null };
-				}
-				const profile =
-					db.profiles.find((p) => p.id === cookieUserId) ?? db.profiles[0] ?? null;
-				return { user: profile };
-			})();
-			return cachedLocalSession;
-		};
+		event.locals.safeGetSession = async () => ({ user: null });
 	}
 
 	return resolve(event, {

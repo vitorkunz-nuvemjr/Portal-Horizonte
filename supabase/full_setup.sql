@@ -89,6 +89,7 @@ create table if not exists teams (
   name        text not null,
   description text,
   color       text default '#2563eb',
+  icon        text,
   created_at  timestamptz not null default now()
 );
 
@@ -319,103 +320,196 @@ alter table node_values     enable row level security;
 alter table metric_updates  enable row level security;
 
 create or replace function current_role_() returns text
-language sql stable as $$
+language sql stable security definer
+set search_path = public as $$
   select role from profiles where id = auth.uid()
 $$;
 
 create or replace function is_editor() returns boolean
-language sql stable as $$
+language sql stable security definer
+set search_path = public as $$
   select coalesce(current_role_() in ('admin','member'), false)
 $$;
 
 create or replace function is_admin() returns boolean
-language sql stable as $$
+language sql stable security definer
+set search_path = public as $$
   select coalesce(current_role_() = 'admin', false)
 $$;
 
 -- profiles
 drop policy if exists "profiles: read all authenticated" on profiles;
-create policy "profiles: read all authenticated"
-  on profiles for select using (auth.role() = 'authenticated');
-
+drop policy if exists "profiles: read all" on profiles;
 drop policy if exists "profiles: self update name/color" on profiles;
+drop policy if exists "profiles: admin full" on profiles;
+drop policy if exists "profiles: admin insert" on profiles;
+drop policy if exists "profiles: admin update" on profiles;
+drop policy if exists "profiles: admin delete" on profiles;
+
+create policy "profiles: read all"
+  on profiles for select using (true);
+
 create policy "profiles: self update name/color"
   on profiles for update using (id = auth.uid())
   with check (id = auth.uid());
 
-drop policy if exists "profiles: admin full" on profiles;
-create policy "profiles: admin full"
-  on profiles for all using (is_admin()) with check (is_admin());
+create policy "profiles: admin insert"
+  on profiles for insert with check (is_admin());
+
+create policy "profiles: admin update"
+  on profiles for update using (is_admin()) with check (is_admin());
+
+create policy "profiles: admin delete"
+  on profiles for delete using (is_admin());
 
 -- cycles
 drop policy if exists "cycles: read all authenticated" on cycles;
-create policy "cycles: read all authenticated"
-  on cycles for select using (auth.role() = 'authenticated');
-
+drop policy if exists "cycles: read all" on cycles;
 drop policy if exists "cycles: admin write" on cycles;
-create policy "cycles: admin write"
-  on cycles for all using (is_admin()) with check (is_admin());
+drop policy if exists "cycles: admin insert" on cycles;
+drop policy if exists "cycles: admin update" on cycles;
+drop policy if exists "cycles: admin delete" on cycles;
+
+create policy "cycles: read all"
+  on cycles for select using (true);
+
+create policy "cycles: admin insert"
+  on cycles for insert with check (is_admin());
+
+create policy "cycles: admin update"
+  on cycles for update using (is_admin()) with check (is_admin());
+
+create policy "cycles: admin delete"
+  on cycles for delete using (is_admin());
 
 -- teams
 drop policy if exists "teams: read all authenticated" on teams;
-create policy "teams: read all authenticated"
-  on teams for select using (auth.role() = 'authenticated');
-
+drop policy if exists "teams: read all" on teams;
 drop policy if exists "teams: admin write" on teams;
-create policy "teams: admin write"
-  on teams for all using (is_admin()) with check (is_admin());
+drop policy if exists "teams: admin insert" on teams;
+drop policy if exists "teams: admin update" on teams;
+drop policy if exists "teams: admin delete" on teams;
+
+create policy "teams: read all"
+  on teams for select using (true);
+
+create policy "teams: admin insert"
+  on teams for insert with check (is_admin());
+
+create policy "teams: admin update"
+  on teams for update using (is_admin()) with check (is_admin());
+
+create policy "teams: admin delete"
+  on teams for delete using (is_admin());
 
 -- team_members
 drop policy if exists "team_members: read all authenticated" on team_members;
-create policy "team_members: read all authenticated"
-  on team_members for select using (auth.role() = 'authenticated');
-
+drop policy if exists "team_members: read all" on team_members;
 drop policy if exists "team_members: admin write" on team_members;
-create policy "team_members: admin write"
-  on team_members for all using (is_admin()) with check (is_admin());
+drop policy if exists "team_members: admin insert" on team_members;
+drop policy if exists "team_members: admin update" on team_members;
+drop policy if exists "team_members: admin delete" on team_members;
+
+create policy "team_members: read all"
+  on team_members for select using (true);
+
+create policy "team_members: admin insert"
+  on team_members for insert with check (is_admin());
+
+create policy "team_members: admin update"
+  on team_members for update using (is_admin()) with check (is_admin());
+
+create policy "team_members: admin delete"
+  on team_members for delete using (is_admin());
 
 -- nodes
 drop policy if exists "nodes: read authenticated" on nodes;
-create policy "nodes: read authenticated"
-  on nodes for select using (auth.role() = 'authenticated');
-
+drop policy if exists "nodes: read all" on nodes;
 drop policy if exists "nodes: editors write" on nodes;
-create policy "nodes: editors write"
-  on nodes for all using (is_editor()) with check (is_editor());
+drop policy if exists "nodes: editors insert" on nodes;
+drop policy if exists "nodes: editors update" on nodes;
+drop policy if exists "nodes: editors delete" on nodes;
+
+create policy "nodes: read all"
+  on nodes for select using (true);
+
+create policy "nodes: editors insert"
+  on nodes for insert with check (is_editor());
+
+create policy "nodes: editors update"
+  on nodes for update using (is_editor()) with check (is_editor());
+
+create policy "nodes: editors delete"
+  on nodes for delete using (is_editor());
 
 -- node_assignees
 drop policy if exists "assignees: read authenticated" on node_assignees;
-create policy "assignees: read authenticated"
-  on node_assignees for select using (auth.role() = 'authenticated');
-
+drop policy if exists "assignees: read all" on node_assignees;
 drop policy if exists "assignees: editors write" on node_assignees;
-create policy "assignees: editors write"
-  on node_assignees for all using (is_editor()) with check (is_editor());
+drop policy if exists "assignees: editors insert" on node_assignees;
+drop policy if exists "assignees: editors update" on node_assignees;
+drop policy if exists "assignees: editors delete" on node_assignees;
+
+create policy "assignees: read all"
+  on node_assignees for select using (true);
+
+create policy "assignees: editors insert"
+  on node_assignees for insert with check (is_editor());
+
+create policy "assignees: editors update"
+  on node_assignees for update using (is_editor()) with check (is_editor());
+
+create policy "assignees: editors delete"
+  on node_assignees for delete using (is_editor());
 
 -- node_teams
 drop policy if exists "node_teams: read authenticated" on node_teams;
-create policy "node_teams: read authenticated"
-  on node_teams for select using (auth.role() = 'authenticated');
-
+drop policy if exists "node_teams: read all" on node_teams;
 drop policy if exists "node_teams: editors write" on node_teams;
-create policy "node_teams: editors write"
-  on node_teams for all using (is_editor()) with check (is_editor());
+drop policy if exists "node_teams: editors insert" on node_teams;
+drop policy if exists "node_teams: editors update" on node_teams;
+drop policy if exists "node_teams: editors delete" on node_teams;
+
+create policy "node_teams: read all"
+  on node_teams for select using (true);
+
+create policy "node_teams: editors insert"
+  on node_teams for insert with check (is_editor());
+
+create policy "node_teams: editors update"
+  on node_teams for update using (is_editor()) with check (is_editor());
+
+create policy "node_teams: editors delete"
+  on node_teams for delete using (is_editor());
 
 -- node_values
 drop policy if exists "node_values: read authenticated" on node_values;
-create policy "node_values: read authenticated"
-  on node_values for select using (auth.role() = 'authenticated');
-
+drop policy if exists "node_values: read all" on node_values;
 drop policy if exists "node_values: editors write" on node_values;
-create policy "node_values: editors write"
-  on node_values for all using (is_editor()) with check (is_editor());
+drop policy if exists "node_values: editors insert" on node_values;
+drop policy if exists "node_values: editors update" on node_values;
+drop policy if exists "node_values: editors delete" on node_values;
+
+create policy "node_values: read all"
+  on node_values for select using (true);
+
+create policy "node_values: editors insert"
+  on node_values for insert with check (is_editor());
+
+create policy "node_values: editors update"
+  on node_values for update using (is_editor()) with check (is_editor());
+
+create policy "node_values: editors delete"
+  on node_values for delete using (is_editor());
 
 -- metric_updates
 drop policy if exists "metrics: read authenticated" on metric_updates;
-create policy "metrics: read authenticated"
-  on metric_updates for select using (auth.role() = 'authenticated');
-
+drop policy if exists "metrics: read all" on metric_updates;
 drop policy if exists "metrics: editors insert own" on metric_updates;
+
+create policy "metrics: read all"
+  on metric_updates for select using (true);
+
 create policy "metrics: editors insert own"
   on metric_updates for insert with check (is_editor());
 

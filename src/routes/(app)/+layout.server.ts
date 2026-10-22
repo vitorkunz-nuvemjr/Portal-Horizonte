@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
-import { readDb } from '$lib/server/store';
+import type { StrategyNode } from '$lib/types';
 
 export const load: LayoutServerLoad = async ({ locals }) => {
 	const { user } = await locals.safeGetSession();
@@ -8,13 +8,16 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		throw redirect(303, '/login');
 	}
 
-	if (locals.mode === 'supabase' && locals.supabase) {
-		const [nodes, assigns, values, cycles, profiles, metricUpdates, teams, teamMembers, nodeTeams] = await Promise.all([
-			locals.supabase
-				.from('nodes')
-				.select(
-					'id, parent_id, tree, type, title, description, color, year, quarter, cycle_id, start_year, end_year, status, weight, sort_order, unit, baseline, target_value, current_value, direction, manual_progress, created_by, created_at, updated_at'
-				),
+	if (locals.supabase) {
+		const selectWithIcon =
+			'id, parent_id, tree, type, title, description, color, icon, year, quarter, cycle_id, start_year, end_year, status, weight, sort_order, unit, baseline, target_value, current_value, direction, manual_progress, created_by, created_at, updated_at';
+		const selectWithoutIcon =
+			'id, parent_id, tree, type, title, description, color, year, quarter, cycle_id, start_year, end_year, status, weight, sort_order, unit, baseline, target_value, current_value, direction, manual_progress, created_by, created_at, updated_at';
+
+		const nodesPromise = locals.supabase.from('nodes').select(selectWithIcon);
+		const teamsPromise = locals.supabase.from('teams').select('id, name, description, color, icon, created_at');
+
+		const [assigns, values, cycles, profiles, metricUpdates, teamMembers, nodeTeams] = await Promise.all([
 			locals.supabase.from('node_assignees').select('node_id, user_id'),
 			locals.supabase.from('node_values').select('node_id, value_id'),
 			locals.supabase.from('cycles').select('*').order('code', { ascending: true }),
@@ -24,15 +27,33 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 				.select('id, node_id, value, note, user_id, created_at')
 				.order('created_at', { ascending: false })
 				.limit(200),
-			locals.supabase.from('teams').select('id, name, description, color, icon, created_at'),
 			locals.supabase.from('team_members').select('team_id, user_id'),
 			locals.supabase.from('node_teams').select('node_id, team_id')
 		]);
 
+		let nodes = await nodesPromise;
+		if (nodes.error && nodes.error.message?.includes('icon')) {
+			nodes = await locals.supabase.from('nodes').select(selectWithoutIcon);
+		}
+
+		let teams = await teamsPromise;
+		if (teams.error && teams.error.message?.includes('icon')) {
+			teams = await locals.supabase.from('teams').select('id, name, description, color, created_at');
+		}
+
+		if (nodes.error) console.error('[Supabase Load] Error fetching nodes:', nodes.error);
+		if (teams.error) console.error('[Supabase Load] Error fetching teams:', teams.error);
+		if (profiles.error) console.error('[Supabase Load] Error fetching profiles:', profiles.error);
+		if (cycles.error) console.error('[Supabase Load] Error fetching cycles:', cycles.error);
+		if (teamMembers.error) console.error('[Supabase Load] Error fetching team_members:', teamMembers.error);
+		if (nodeTeams.error) console.error('[Supabase Load] Error fetching node_teams:', nodeTeams.error);
+		if (assigns.error) console.error('[Supabase Load] Error fetching node_assignees:', assigns.error);
+		if (values.error) console.error('[Supabase Load] Error fetching node_values:', values.error);
+
 		return {
 			user,
-			mode: locals.mode,
-			nodes: nodes.data ?? [],
+			mode: 'supabase' as const,
+			nodes: (nodes.data ?? []) as StrategyNode[],
 			assigns: assigns.data ?? [],
 			values: values.data ?? [],
 			cycles: cycles.data ?? [],
@@ -44,18 +65,17 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		};
 	}
 
-	const db = readDb();
 	return {
 		user,
-		mode: locals.mode,
-		nodes: db.nodes,
-		assigns: db.node_assignees,
-		values: db.node_values,
-		cycles: db.cycles,
-		profiles: db.profiles,
-		metricUpdates: db.metric_updates,
-		teams: db.teams ?? [],
-		teamMembers: db.team_members ?? [],
-		nodeTeams: db.node_teams ?? []
+		mode: 'supabase' as const,
+		nodes: [] as StrategyNode[],
+		assigns: [],
+		values: [],
+		cycles: [],
+		profiles: [],
+		metricUpdates: [],
+		teams: [],
+		teamMembers: [],
+		nodeTeams: []
 	};
 };
