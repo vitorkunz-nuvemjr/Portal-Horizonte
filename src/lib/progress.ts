@@ -406,11 +406,10 @@ export function isTransversalTeam(team: { id: string; name?: string | null }): b
 
 /**
  * Determines if a node is associated with a given teamId.
- * Supports:
- * - Direct node_teams
- * - Transversal team (t-todas)
- * - Teams of node assignees (team_members)
- * - Hierarchy inheritance (KPI -> parent KR; unassigned KR -> parent Objective)
+ * - For specific teams (e.g. t-comercial): requires strict and direct team assignment
+ *   on the node (node.teams.some(t => t.id === teamId)).
+ * - For transversal team ('t-todas'): matches nodes directly assigned to 't-todas' or transversal.
+ * - For child KPIs without explicit teams: inherits from parent KR.
  */
 export function nodeMatchesTeam(
 	node: NodeWithExtras,
@@ -419,32 +418,20 @@ export function nodeMatchesTeam(
 ): boolean {
 	if (!teamId || teamId === 'all') return true;
 
-	// 1. Direct team assignment
-	if (node.teams.some((t) => t.id === teamId || isTransversalTeam(t))) {
+	// 1. Filter specifically for transversal team ("Todas as Diretorias")
+	if (teamId === 't-todas') {
+		return node.teams.some((t) => t.id === 't-todas' || isTransversalTeam(t));
+	}
+
+	// 2. Strict direct team assignment on this node
+	if (node.teams.some((t) => t.id === teamId)) {
 		return true;
 	}
 
-	// 2. Assignee's team membership
-	if (node.assignees.some((a) => a.teams?.some((t) => t.id === teamId || isTransversalTeam(t)))) {
-		return true;
-	}
-
-	// 3. KPI inherits from parent KR
+	// 3. Child KPI without explicit teams inherits from parent KR
 	if (node.type === 'kpi' && node.parent_id && byId) {
 		const parent = byId.get(node.parent_id);
-		if (parent && nodeMatchesTeam(parent, teamId, byId)) return true;
-	}
-
-	// 4. KR with no explicit teams or assignees inherits from parent Objective if objective has this team
-	if (
-		node.type === 'key_result' &&
-		node.teams.length === 0 &&
-		node.assignees.length === 0 &&
-		node.parent_id &&
-		byId
-	) {
-		const parent = byId.get(node.parent_id);
-		if (parent && parent.teams.some((t) => t.id === teamId || isTransversalTeam(t))) {
+		if (parent && node.teams.length === 0 && nodeMatchesTeam(parent, teamId, byId)) {
 			return true;
 		}
 	}
@@ -456,8 +443,8 @@ export function nodeMatchesTeam(
  * Determines if a node is associated with a given userId.
  * Supports:
  * - Direct node assignees (node_assignees)
- * - Direct creator (created_by fallback)
- * - KPI inheritance from parent KR
+ * - Creator fallback only when node has no assignees
+ * - Child KPI inheritance from parent KR
  */
 export function nodeMatchesUser(
 	node: NodeWithExtras,
@@ -471,8 +458,8 @@ export function nodeMatchesUser(
 		return true;
 	}
 
-	// 2. Creator fallback
-	if (node.created_by === userId) {
+	// 2. Creator fallback only if node has no assignees
+	if (node.assignees.length === 0 && node.created_by === userId) {
 		return true;
 	}
 

@@ -358,29 +358,37 @@ describe('progress business logic (§13)', () => {
 
 		const baseVisible = new Set(['obj-corp', 'kr-sales', 'kpi-sales', 'kr-proj', 'kpi-proj', 'kr-trans']);
 
-		// 1. Filter by Projects team:
-		// Expect: obj-corp (ancestor), kr-proj, kpi-proj, kr-trans (transversal).
-		// Must NOT contain kr-sales or kpi-sales!
+		// 1. Strict filter by Projects team:
+		// Expect: obj-corp (ancestor), kr-proj, kpi-proj.
+		// Must NOT contain kr-sales, kpi-sales, or kr-trans (t-todas)!
 		const projResult = filterStrategyNodes(enriched, baseVisible, { teamId: 't-proj' });
 		expect(projResult.has('obj-corp')).toBe(true);
 		expect(projResult.has('kr-proj')).toBe(true);
 		expect(projResult.has('kpi-proj')).toBe(true);
-		expect(projResult.has('kr-trans')).toBe(true);
+		expect(projResult.has('kr-trans')).toBe(false);
 		expect(projResult.has('kr-sales')).toBe(false);
 		expect(projResult.has('kpi-sales')).toBe(false);
 
-		// 2. Filter by Sales team:
-		// Expect: obj-corp (ancestor), kr-sales, kpi-sales, kr-trans.
-		// Must NOT contain kr-proj or kpi-proj!
+		// 2. Strict filter by Sales team:
+		// Expect: obj-corp (ancestor), kr-sales, kpi-sales.
+		// Must NOT contain kr-proj, kpi-proj, or kr-trans!
 		const salesResult = filterStrategyNodes(enriched, baseVisible, { teamId: 't-sales' });
 		expect(salesResult.has('obj-corp')).toBe(true);
 		expect(salesResult.has('kr-sales')).toBe(true);
 		expect(salesResult.has('kpi-sales')).toBe(true);
-		expect(salesResult.has('kr-trans')).toBe(true);
+		expect(salesResult.has('kr-trans')).toBe(false);
 		expect(salesResult.has('kr-proj')).toBe(false);
 		expect(salesResult.has('kpi-proj')).toBe(false);
 
-		// 3. Filter by User Alice (Sales member):
+		// 3. Filter by Transversal team (Todas as Diretorias - t-todas):
+		// Expect: obj-corp (ancestor) and kr-trans.
+		const todasResult = filterStrategyNodes(enriched, baseVisible, { teamId: 't-todas' });
+		expect(todasResult.has('obj-corp')).toBe(true);
+		expect(todasResult.has('kr-trans')).toBe(true);
+		expect(todasResult.has('kr-sales')).toBe(false);
+		expect(todasResult.has('kr-proj')).toBe(false);
+
+		// 4. Filter by User Alice (Sales member):
 		// Expect: obj-corp (ancestor), kr-sales, kpi-sales.
 		const aliceResult = filterStrategyNodes(enriched, baseVisible, { userId: 'u-alice' });
 		expect(aliceResult.has('obj-corp')).toBe(true);
@@ -389,12 +397,12 @@ describe('progress business logic (§13)', () => {
 		expect(aliceResult.has('kr-proj')).toBe(false);
 		expect(aliceResult.has('kr-trans')).toBe(false);
 
-		// 4. Combined Filter: Sales team + Bob (Bob is in Projects, not Sales):
+		// 5. Combined Filter: Sales team + Bob (Bob is in Projects, not Sales):
 		// Expect empty
 		const mismatchResult = filterStrategyNodes(enriched, baseVisible, { teamId: 't-sales', userId: 'u-bob' });
 		expect(mismatchResult.size).toBe(0);
 
-		// 5. Pure search query "Projetos"
+		// 6. Pure search query "sales"
 		const searchResult = filterStrategyNodes(enriched, baseVisible, { searchQuery: 'sales' });
 		expect(searchResult.has('kr-sales')).toBe(true);
 		expect(searchResult.has('kpi-sales')).toBe(true);
