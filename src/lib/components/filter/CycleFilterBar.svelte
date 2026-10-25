@@ -88,9 +88,24 @@
 
 	const selectedUserLabel = $derived(selectedUser?.name ?? 'Todos Responsáveis');
 
+	function savePreferences(params: URLSearchParams) {
+		if (typeof window === 'undefined') return;
+		try {
+			const prefs: Record<string, string> = {};
+			for (const key of ['view', 'years', 'semesters', 'strict', 'team', 'user']) {
+				const val = params.get(key);
+				if (val) prefs[key] = val;
+			}
+			localStorage.setItem('plano_strategy_filters', JSON.stringify(prefs));
+		} catch (e) {
+			// ignore storage errors
+		}
+	}
+
 	function updateParam(updater: (params: URLSearchParams) => void) {
 		const url = new URL($page.url);
 		updater(url.searchParams);
+		savePreferences(url.searchParams);
 		goto(url.toString(), { replaceState: true, keepFocus: true, noScroll: true });
 	}
 

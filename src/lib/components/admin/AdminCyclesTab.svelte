@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { Cycle } from '$lib/types';
 	import { enhanceFormValidation } from '$lib/utils';
 	import { formatDate } from './admin-utils';
@@ -91,7 +92,17 @@
 			<span class="material-symbols-outlined text-[#78350f] text-[20px]">calendar_add_on</span>
 			<span class="font-extrabold text-[12px] tracking-wider text-[#1d1b17] uppercase font-mono">+ ADICIONAR NOVO CICLO SEMESTRAL</span>
 		</div>
-		<form action="?/createCycle" method="POST" use:enhanceFormValidation class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+		<form
+			action="?/createCycle"
+			method="POST"
+			use:enhance={() => {
+				return async ({ update }) => {
+					await update({ reset: false });
+				};
+			}}
+			use:enhanceFormValidation
+			class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end"
+		>
 			<div class="md:col-span-2">
 				<label for="cyc-year" class="block text-[10px] font-bold uppercase tracking-wider text-[#727784] mb-1 font-mono">ANO *</label>
 				<input

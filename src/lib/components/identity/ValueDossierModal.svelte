@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { NodeWithExtras, StrategicEra, StrategyNode } from '$lib/types';
 	import { enhanceFormValidation, formatNumber } from '$lib/utils';
 	import { getDossierTheme } from '$lib/dossier-theme';
@@ -171,10 +172,15 @@
 		<form
 			method="POST"
 			action={mode === 'create' ? '?/createValue' : '?/updateIdentityNode'}
-			use:enhanceFormValidation
-			onsubmit={() => {
-				setTimeout(() => onClose(), 80);
+			use:enhance={() => {
+				return async ({ result, update }) => {
+					if (result.type === 'success') {
+						onClose();
+					}
+					await update({ reset: false });
+				};
 			}}
+			use:enhanceFormValidation
 			class="w-full border-2 rounded-2xl hanging-folder-shadow flex flex-col relative overflow-hidden transition-colors duration-200"
 			style="background-color: {theme.folderBg}; border-color: {theme.folderBorder};"
 		>
@@ -631,7 +637,21 @@
 				{/if}
 			</p>
 
-			<form method="POST" action="?/deleteIdentityNode" use:enhanceFormValidation class="space-y-4 pt-2">
+			<form
+				method="POST"
+				action="?/deleteIdentityNode"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							showDeleteConfirm = false;
+							onClose();
+						}
+						await update({ reset: false });
+					};
+				}}
+				use:enhanceFormValidation
+				class="space-y-4 pt-2"
+			>
 				<input type="hidden" name="nodeId" value={valueNode.id} />
 
 				<div class="flex items-center justify-end gap-2 pt-2">

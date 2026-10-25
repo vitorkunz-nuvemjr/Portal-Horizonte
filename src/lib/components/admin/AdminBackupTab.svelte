@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import { enhanceFormValidation } from '$lib/utils';
 	import { downloadSnapshot } from './admin-utils';
 
@@ -93,7 +94,17 @@
 		<p class="text-[12.5px] text-[#727784] mb-3">
 			Cole o conteúdo do backup exportado para restaurar ou transferir a base do planejamento estratégico.
 		</p>
-		<form action="?/importJson" method="POST" use:enhanceFormValidation class="space-y-3">
+		<form
+			action="?/importJson"
+			method="POST"
+			use:enhance={() => {
+				return async ({ update }) => {
+					await update({ reset: false });
+				};
+			}}
+			use:enhanceFormValidation
+			class="space-y-3"
+		>
 			<textarea
 				name="jsonText"
 				rows="5"

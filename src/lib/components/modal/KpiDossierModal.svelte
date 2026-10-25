@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { Cycle, KpiDirection, NodeStatus, NodeWithExtras, Profile, StrategyNode, Team } from '$lib/types';
 	import { enhanceFormValidation, formatNumber, formatPct, getInitials, getTeamIcon } from '$lib/utils';
 	import { getDossierTheme } from '$lib/dossier-theme';
@@ -252,25 +253,6 @@
 	function removeMember(userId: string) {
 		selectedMemberIds = selectedMemberIds.filter((id) => id !== userId);
 	}
-
-	// Full save handler synchronizing node and assignees
-	async function handleSaveSubmit(e: SubmitEvent) {
-		if (!node) return;
-		isSaving = true;
-
-		try {
-			// Sincroniza responsáveis e equipes
-			const fdAssign = new FormData();
-			fdAssign.append('nodeId', node.id);
-			for (const u of selectedMemberIds) fdAssign.append('userIds', u);
-			for (const t of selectedTeamIds) fdAssign.append('teamIds', t);
-			await fetch('/strategy?/setAssignees', { method: 'POST', body: fdAssign });
-		} catch (err) {
-			console.error('Falha ao sincronizar responsáveis do KPI:', err);
-		} finally {
-			isSaving = false;
-		}
-	}
 </script>
 
 {#if node}
@@ -439,13 +421,29 @@
 						<form
 							id="updateKpiForm"
 							method="POST"
-							action="/strategy?/updateNode"
+							action="?/updateNode"
+							use:enhance={() => {
+								isSaving = true;
+								return async ({ result, update }) => {
+									isSaving = false;
+									if (result.type === 'success') {
+										onClose();
+									}
+									await update({ reset: false });
+								};
+							}}
 							use:enhanceFormValidation
-							onsubmit={handleSaveSubmit}
 							class="space-y-5"
 						>
 							<input type="hidden" name="nodeId" value={node.id} />
 							<input type="hidden" name="color" value={accentColor} />
+							<input type="hidden" name="hasAssignees" value="1" />
+							{#each selectedMemberIds as u}
+								<input type="hidden" name="userIds" value={u} />
+							{/each}
+							{#each selectedTeamIds as t}
+								<input type="hidden" name="teamIds" value={t} />
+							{/each}
 
 							<!-- Bloco de Identificação -->
 							<div
@@ -848,7 +846,16 @@
 							{#if canEdit}
 								<form
 									method="POST"
-									action="/strategy?/logMetric"
+									action="?/logMetric"
+									use:enhance={() => {
+										return async ({ result, update }) => {
+											if (result.type === 'success') {
+												newCheckinValue = null;
+												newCheckinNote = '';
+											}
+											await update({ reset: false });
+										};
+									}}
 									use:enhanceFormValidation
 									class="p-5 rounded-2xl bg-white border shadow-xs space-y-3"
 									style="border-color: {theme.cardBorder};"
@@ -1317,7 +1324,21 @@
 					Esta ação removerá todos os registros históricos de check-in vinculados.
 				</p>
 
-				<form method="POST" action="/strategy?/deleteNode" use:enhanceFormValidation class="space-y-4 pt-2">
+				<form
+					method="POST"
+					action="?/deleteNode"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							if (result.type === 'success') {
+								showDeleteConfirm = false;
+								onClose();
+							}
+							await update({ reset: false });
+						};
+					}}
+					use:enhanceFormValidation
+					class="space-y-4 pt-2"
+				>
 					<input type="hidden" name="nodeId" value={node.id} />
 
 					<div class="flex items-center justify-end gap-2 pt-2">

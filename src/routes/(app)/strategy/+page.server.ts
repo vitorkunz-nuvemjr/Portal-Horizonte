@@ -150,6 +150,40 @@ export const actions: Actions = {
 				}
 
 				if (error) return fail(400, { message: error.message });
+
+				if (formData.has('hasAssignees')) {
+					const userIds = formData.getAll('userIds').map(String);
+					const teamIds = formData.getAll('teamIds').map(String);
+					await locals.supabase.from('node_assignees').delete().eq('node_id', nodeId);
+					if (userIds.length > 0) {
+						await locals.supabase
+							.from('node_assignees')
+							.insert(userIds.map((u) => ({ node_id: nodeId, user_id: u })));
+					}
+					await locals.supabase.from('node_teams').delete().eq('node_id', nodeId);
+					if (teamIds.length > 0) {
+						await locals.supabase
+							.from('node_teams')
+							.insert(teamIds.map((t) => ({ node_id: nodeId, team_id: t })));
+					}
+				}
+
+				if (formData.has('hasValues')) {
+					const valueIds = formData.getAll('valueIds').map(String);
+					const { error: rpcErr } = await locals.supabase.rpc('set_node_values', {
+						p_node: nodeId,
+						p_values: valueIds
+					});
+					if (rpcErr) {
+						await locals.supabase.from('node_values').delete().eq('node_id', nodeId);
+						if (valueIds.length > 0) {
+							await locals.supabase
+								.from('node_values')
+								.insert(valueIds.map((v) => ({ node_id: nodeId, value_id: v })));
+						}
+					}
+				}
+
 				return { success: true };
 			} catch (e: any) {
 				return fail(400, { message: e?.message ?? 'Falha ao atualizar item.' });
@@ -175,6 +209,19 @@ export const actions: Actions = {
 				...(direction ? { direction } : {}),
 				...(color !== null ? { color: color.trim() || null } : {})
 			});
+
+			if (formData.has('hasAssignees')) {
+				const userIds = formData.getAll('userIds').map(String);
+				const teamIds = formData.getAll('teamIds').map(String);
+				setNodeAssigneesRecord(user, nodeId, userIds);
+				setNodeTeamsRecord(user, nodeId, teamIds);
+			}
+
+			if (formData.has('hasValues')) {
+				const valueIds = formData.getAll('valueIds').map(String);
+				setNodeValuesRecord(user, nodeId, valueIds);
+			}
+
 			return { success: true };
 		} catch (e: any) {
 			return fail(400, { message: e?.message ?? 'Falha ao atualizar item.' });

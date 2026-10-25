@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { Profile } from '$lib/types';
 	import { enhanceFormValidation, getInitials } from '$lib/utils';
 	import { getUserTeams, getTeamVisual } from './admin-utils';
@@ -117,7 +118,16 @@
 
 					<!-- Column 3: Role & Access Level -->
 					<td class="py-4 px-5">
-						<form method="POST" action="?/updateUserRole" class="inline-flex items-center gap-2">
+						<form
+							method="POST"
+							action="?/updateUserRole"
+							use:enhance={() => {
+								return async ({ update }) => {
+									await update({ reset: false });
+								};
+							}}
+							class="inline-flex items-center gap-2"
+						>
 							<input type="hidden" name="id" value={prof.id} />
 							<input type="hidden" name="name" value={prof.name} />
 							<select
@@ -165,7 +175,17 @@
 		<span class="material-symbols-outlined text-[#004190] text-[20px]">person_add</span>
 		<span class="font-extrabold text-[12px] tracking-wider text-[#1d1b17] uppercase font-mono">+ CONVIDAR NOVO MEMBRO DA EJ</span>
 	</div>
-	<form action="?/createUser" method="POST" use:enhanceFormValidation class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+	<form
+		action="?/createUser"
+		method="POST"
+		use:enhance={() => {
+			return async ({ update }) => {
+				await update({ reset: false });
+			};
+		}}
+		use:enhanceFormValidation
+		class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end"
+	>
 		<!-- Field 1: Name -->
 		<div class="md:col-span-4">
 			<label for="inv-name" class="block text-[10px] font-bold uppercase tracking-wider text-[#727784] mb-1 font-mono">

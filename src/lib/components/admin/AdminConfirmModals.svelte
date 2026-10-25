@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { Team, Cycle } from '$lib/types';
 
 	interface Props {
@@ -39,8 +40,13 @@
 			<form
 				method="POST"
 				action="?/deleteTeam"
-				onsubmit={() => {
-					setTimeout(() => (teamToDelete = null), 50);
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							teamToDelete = null;
+						}
+						await update({ reset: false });
+					};
 				}}
 				class="flex items-center justify-end gap-2 pt-2 border-t border-[#f3ede6]"
 			>
@@ -88,8 +94,13 @@
 			<form
 				method="POST"
 				action="?/deleteCycle"
-				onsubmit={() => {
-					setTimeout(() => (cycleToDelete = null), 50);
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							cycleToDelete = null;
+						}
+						await update({ reset: false });
+					};
 				}}
 				class="flex items-center justify-end gap-2 pt-2 border-t border-[#f3ede6]"
 			>
@@ -137,8 +148,13 @@
 			<form
 				method="POST"
 				action="?/resetTemplate"
-				onsubmit={() => {
-					setTimeout(() => (showResetModal = false), 50);
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							showResetModal = false;
+						}
+						await update({ reset: false });
+					};
 				}}
 				class="flex items-center justify-end gap-2 pt-2 border-t border-[#f3ede6]"
 			>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { Cycle, NodeStatus, NodeWithExtras, Profile, StrategyNode, Team } from '$lib/types';
 	import { enhanceFormValidation, formatNumber, formatPct, getInitials, getTeamIcon } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
@@ -197,32 +198,6 @@
 			selectedValueIds = [...selectedValueIds, valId];
 		}
 	}
-
-	// Full save handler synchronizing node, assignees, and values
-	async function handleSaveSubmit(e: SubmitEvent) {
-		if (!node) return;
-		isSaving = true;
-
-		try {
-			// Sincroniza responsáveis e equipes
-			const fdAssign = new FormData();
-			fdAssign.append('nodeId', node.id);
-			for (const u of selectedMemberIds) fdAssign.append('userIds', u);
-			for (const t of selectedTeamIds) fdAssign.append('teamIds', t);
-			await fetch('/strategy?/setAssignees', { method: 'POST', body: fdAssign });
-
-			// Sincroniza alinhamento a valores / pilares
-			const fdVal = new FormData();
-			fdVal.append('nodeId', node.id);
-			for (const v of selectedValueIds) fdVal.append('valueIds', v);
-			await fetch('/strategy?/setValues', { method: 'POST', body: fdVal });
-		} catch (err) {
-			console.error('Falha ao sincronizar relacionamentos do objetivo:', err);
-		} finally {
-			// Continua o submit nativo do form updateNode
-			isSaving = false;
-		}
-	}
 </script>
 
 {#if node}
@@ -304,14 +279,34 @@
 			<!-- 2. CORPO DA PASTA FÍSICA: Manilha Elegante com tom suave da cor do nó -->
 			<form
 				method="POST"
-				action="/strategy?/updateNode"
+				action="?/updateNode"
+				use:enhance={() => {
+					isSaving = true;
+					return async ({ result, update }) => {
+						isSaving = false;
+						if (result.type === 'success') {
+							onClose();
+						}
+						await update({ reset: false });
+					};
+				}}
 				use:enhanceFormValidation
-				onsubmit={handleSaveSubmit}
 				class="w-full border-2 rounded-2xl hanging-folder-shadow flex flex-col relative overflow-hidden transition-colors duration-200"
 				style="background-color: {theme.folderBg}; border-color: {theme.folderBorder};"
 			>
 				<input type="hidden" name="nodeId" value={node.id} />
 				<input type="hidden" name="color" value={accentColor} />
+				<input type="hidden" name="hasAssignees" value="1" />
+				{#each selectedMemberIds as u}
+					<input type="hidden" name="userIds" value={u} />
+				{/each}
+				{#each selectedTeamIds as t}
+					<input type="hidden" name="teamIds" value={t} />
+				{/each}
+				<input type="hidden" name="hasValues" value="1" />
+				{#each selectedValueIds as v}
+					<input type="hidden" name="valueIds" value={v} />
+				{/each}
 
 				<!-- Linha de reforço estrutural com gradiente sutil na cor da identidade -->
 				<div
@@ -1036,7 +1031,21 @@
 					{/if}
 				</p>
 
-				<form method="POST" action="/strategy?/deleteNode" use:enhanceFormValidation class="space-y-4 pt-2">
+				<form
+					method="POST"
+					action="?/deleteNode"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							if (result.type === 'success') {
+								showDeleteConfirm = false;
+								onClose();
+							}
+							await update({ reset: false });
+						};
+					}}
+					use:enhanceFormValidation
+					class="space-y-4 pt-2"
+				>
 					<input type="hidden" name="nodeId" value={node.id} />
 					{#if childKrs.length > 0}
 						<div class="p-3 bg-[#fff5f5] rounded-xl border border-[#fecdd3] text-xs text-[#991b1b]">

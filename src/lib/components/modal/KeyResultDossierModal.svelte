@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { Cycle, NodeStatus, NodeWithExtras, Profile, StrategyNode, Team } from '$lib/types';
 	import { enhanceFormValidation, formatNumber, formatPct, getInitials, getTeamIcon } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
@@ -57,6 +58,8 @@
 	let saveAssigneesSuccess = $state(false);
 	let isSavingValues = $state(false);
 	let saveValuesSuccess = $state(false);
+	let isSavingKr = $state(false);
+	let isSubmittingCheckin = $state(false);
 
 	// Mode: 'aggregate' (calculated from child KPIs) vs 'manual' (direct %)
 	let progressMode = $state<'aggregate' | 'manual'>('aggregate');
@@ -185,24 +188,6 @@
 			console.error('Error saving values:', e);
 		} finally {
 			isSavingValues = false;
-		}
-	}
-
-	async function handleSaveSubmit(e: SubmitEvent) {
-		if (!node) return;
-		try {
-			const fdAssign = new FormData();
-			fdAssign.append('nodeId', node.id);
-			for (const u of selectedUserIds) fdAssign.append('userIds', u);
-			for (const t of selectedTeamIds) fdAssign.append('teamIds', t);
-			await fetch('/strategy?/setAssignees', { method: 'POST', body: fdAssign });
-
-			const fdVal = new FormData();
-			fdVal.append('nodeId', node.id);
-			for (const v of selectedValueIds) fdVal.append('valueIds', v);
-			await fetch('/strategy?/setValues', { method: 'POST', body: fdVal });
-		} catch (err) {
-			console.error('Falha ao sincronizar relacionamentos do KR:', err);
 		}
 	}
 
@@ -547,9 +532,18 @@
 					<form
 						id="updateKrForm"
 						method="POST"
-						action="/strategy?/updateNode"
+						action="?/updateNode"
+						use:enhance={() => {
+							isSavingKr = true;
+							return async ({ result, update }) => {
+								isSavingKr = false;
+								if (result.type === 'success') {
+									onClose();
+								}
+								await update({ reset: false });
+							};
+						}}
 						use:enhanceFormValidation
-						onsubmit={handleSaveSubmit}
 						class={activeTab === 'tab1' ? 'flex flex-col gap-5' : 'hidden'}
 					>
 						<input type="hidden" name="nodeId" value={node.id} />
@@ -560,13 +554,14 @@
 							name="manual_progress_pct"
 							value={progressMode === 'manual' ? manualProgressPct : ''}
 						/>
-
+						<input type="hidden" name="hasAssignees" value="1" />
 						{#each selectedTeamIds as tId}
 							<input type="hidden" name="teamIds" value={tId} />
 						{/each}
 						{#each selectedUserIds as uId}
 							<input type="hidden" name="userIds" value={uId} />
 						{/each}
+						<input type="hidden" name="hasValues" value="1" />
 						{#each selectedValueIds as vId}
 							<input type="hidden" name="valueIds" value={vId} />
 						{/each}
@@ -1529,7 +1524,19 @@
 							{#if showNewCheckinForm && canEdit}
 								<form
 									method="POST"
-									action="/strategy?/logMetric"
+									action="?/logMetric"
+									use:enhance={() => {
+										isSubmittingCheckin = true;
+										return async ({ result, update }) => {
+											isSubmittingCheckin = false;
+											if (result.type === 'success') {
+												showNewCheckinForm = false;
+												newCheckinValue = null;
+												newCheckinNote = '';
+											}
+											await update({ reset: false });
+										};
+									}}
 									use:enhanceFormValidation
 									class="p-4 bg-[#FFFDF8] rounded-xl border-2 border-primary/40 shadow-xs flex flex-col gap-3"
 								>
@@ -1746,23 +1753,47 @@
 					>
 						Cancelar
 					</button>
-					<form method="POST" action="/strategy?/deleteNode">
+					<form
+						method="POST"
+						action="?/deleteNode"
+						use:enhance={() => {
+							return async ({ result, update }) => {
+								if (result.type === 'success') {
+									showDeleteConfirm = false;
+									onClose();
+								}
+								await update({ reset: false });
+							};
+						}}
+					>
 						<input type="hidden" name="nodeId" value={node.id} />
 						<input type="hidden" name="promote" value="0" />
 						<button
 							type="submit"
-							class="px-3.5 py-1.5 rounded-lg bg-error text-white text-xs font-bold shadow-xs hover:opacity-90"
+							class="px-3.5 py-1.5 rounded-lg bg-error text-white text-xs font-bold shadow-xs hover:opacity-90 cursor-pointer"
 						>
 							Excluir KR
 						</button>
 					</form>
 					{#if childKpis.length > 0 && node.parent_id}
-						<form method="POST" action="/strategy?/deleteNode">
+						<form
+							method="POST"
+							action="?/deleteNode"
+							use:enhance={() => {
+								return async ({ result, update }) => {
+									if (result.type === 'success') {
+										showDeleteConfirm = false;
+										onClose();
+									}
+									await update({ reset: false });
+								};
+							}}
+						>
 							<input type="hidden" name="nodeId" value={node.id} />
 							<input type="hidden" name="promote" value="1" />
 							<button
 								type="submit"
-								class="px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold shadow-xs hover:opacity-90"
+								class="px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold shadow-xs hover:opacity-90 cursor-pointer"
 							>
 								Excluir e Promover KPIs
 							</button>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { Profile, Team } from '$lib/types';
 	import { enhanceFormValidation, getInitials } from '$lib/utils';
 	import { getDossierTheme } from '$lib/dossier-theme';
@@ -152,10 +153,15 @@
 			<form
 				method="POST"
 				action={activeTeamModal.mode === 'create' ? '?/createTeam' : '?/updateTeam'}
-				use:enhanceFormValidation
-				onsubmit={() => {
-					setTimeout(() => (activeTeamModal = null), 80);
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							activeTeamModal = null;
+						}
+						await update({ reset: false });
+					};
 				}}
+				use:enhanceFormValidation
 				class="w-full border-2 rounded-2xl rounded-tl-none hanging-folder-shadow flex flex-col relative overflow-hidden transition-colors duration-200"
 				style="background-color: {modalTheme.folderBg}; border-color: {modalTheme.folderBorder};"
 			>

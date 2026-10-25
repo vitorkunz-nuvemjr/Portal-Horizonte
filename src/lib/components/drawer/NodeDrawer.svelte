@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { Cycle, NodeWithExtras, Profile, StrategyNode, Team } from '$lib/types';
 	import { enhanceFormValidation, formatNumber, formatPct, getInitials, getTeamIcon } from '$lib/utils';
 	import { valueColor } from '$lib/value-colors';
@@ -219,7 +220,12 @@
 			<!-- 1. Core Node Details Form -->
 			<form
 				method="POST"
-				action="/strategy?/updateNode"
+				action="?/updateNode"
+				use:enhance={() => {
+					return async ({ update }) => {
+						await update({ reset: false });
+					};
+				}}
 				use:enhanceFormValidation
 				class="space-y-4 rounded-[6px] border p-4 shadow-[0_2px_6px_rgba(36,34,30,0.04)] transition-colors"
 				style="background-color: {drawerTheme.folderBg}; border-color: {drawerTheme.folderBorder};"
@@ -528,7 +534,12 @@
 					{#if canEdit}
 						<form
 							method="POST"
-							action="/strategy?/logMetric"
+							action="?/logMetric"
+							use:enhance={() => {
+								return async ({ update }) => {
+									await update({ reset: false });
+								};
+							}}
 							use:enhanceFormValidation
 							class="mt-3 grid grid-cols-12 gap-2"
 						>
@@ -599,7 +610,12 @@
 			{#if node.tree === 'strategy'}
 				<form
 					method="POST"
-					action="/strategy?/setValues"
+					action="?/setValues"
+					use:enhance={() => {
+						return async ({ update }) => {
+							await update({ reset: false });
+						};
+					}}
 					class="rounded-[6px] border border-outline-variant bg-surface-container-lowest p-4"
 				>
 					<input type="hidden" name="nodeId" value={node.id} />
@@ -651,7 +667,12 @@
 			<!-- 4. Assignees: Teams & Individual Members -->
 			<form
 				method="POST"
-				action="/strategy?/setAssignees"
+				action="?/setAssignees"
+				use:enhance={() => {
+					return async ({ update }) => {
+						await update({ reset: false });
+					};
+				}}
 				class="rounded-[6px] border border-outline-variant bg-surface-container-lowest p-4 space-y-4"
 			>
 				<input type="hidden" name="nodeId" value={node.id} />
@@ -777,12 +798,23 @@
 						Excluir um nó apaga seus filhos em cascata, a menos que você os promova ao nó pai.
 					</p>
 					<div class="mt-3 flex flex-wrap items-center gap-2">
-						<form method="POST" action="/strategy?/deleteNode">
+						<form
+							method="POST"
+							action="?/deleteNode"
+							use:enhance={() => {
+								return async ({ result, update }) => {
+									if (result.type === 'success') {
+										onClose();
+									}
+									await update({ reset: false });
+								};
+							}}
+						>
 							<input type="hidden" name="nodeId" value={node.id} />
 							<input type="hidden" name="promote" value="0" />
 							<button
 								type="submit"
-								class="inline-flex items-center gap-1.5 rounded-[4px] bg-error px-3 py-1.5 text-xs font-bold text-on-error shadow-[0_2px_0_#410002] hover:opacity-95"
+								class="inline-flex items-center gap-1.5 rounded-[4px] bg-error px-3 py-1.5 text-xs font-bold text-on-error shadow-[0_2px_0_#410002] hover:opacity-95 cursor-pointer"
 							>
 								<Trash2 class="h-3.5 w-3.5" />
 								Excluir Nó{node.children.length > 0
@@ -792,12 +824,23 @@
 						</form>
 
 						{#if canPromoteChildren}
-							<form method="POST" action="/strategy?/deleteNode">
+							<form
+								method="POST"
+								action="?/deleteNode"
+								use:enhance={() => {
+									return async ({ result, update }) => {
+										if (result.type === 'success') {
+											onClose();
+										}
+										await update({ reset: false });
+									};
+								}}
+							>
 								<input type="hidden" name="nodeId" value={node.id} />
 								<input type="hidden" name="promote" value="1" />
 								<button
 									type="submit"
-									class="inline-flex items-center gap-1.5 rounded-[4px] border border-error/40 bg-surface-container-lowest px-3 py-1.5 text-xs font-bold text-error hover:bg-error-container"
+									class="inline-flex items-center gap-1.5 rounded-[4px] border border-error/40 bg-surface-container-lowest px-3 py-1.5 text-xs font-bold text-error hover:bg-error-container cursor-pointer"
 								>
 									<ArrowUpRight class="h-3.5 w-3.5" />
 									Excluir e Promover Filhos

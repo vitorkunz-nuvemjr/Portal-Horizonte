@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
+	import { onMount } from 'svelte';
 	import CycleFilterBar from '$lib/components/filter/CycleFilterBar.svelte';
 	import CascadeTreeBoard from '$lib/components/canvas/CascadeTreeBoard.svelte';
 	import StrategyCanvas from '$lib/components/canvas/StrategyCanvas.svelte';
@@ -100,6 +102,31 @@
 	// Team and User filters from URL searchParams
 	const selectedTeamId = $derived($page.url.searchParams.get('team') || 'all');
 	const selectedUserId = $derived($page.url.searchParams.get('user') || 'all');
+
+	// Restore user preferences from localStorage on direct visit without query params
+	onMount(() => {
+		if (typeof window === 'undefined') return;
+		try {
+			const raw = localStorage.getItem('plano_strategy_filters');
+			if (!raw) return;
+			const prefs = JSON.parse(raw);
+			if (!prefs || typeof prefs !== 'object') return;
+
+			let shouldUpdate = false;
+			const url = new URL($page.url);
+			for (const key of ['view', 'years', 'semesters', 'strict', 'team', 'user']) {
+				if (!url.searchParams.has(key) && prefs[key]) {
+					url.searchParams.set(key, prefs[key]);
+					shouldUpdate = true;
+				}
+			}
+			if (shouldUpdate) {
+				goto(url.toString(), { replaceState: true, noScroll: true, keepFocus: true });
+			}
+		} catch (e) {
+			// ignore storage errors
+		}
+	});
 
 	// Sync global header search param (?q=...) and sidebar quick create (?create=...)
 	$effect(() => {
@@ -436,10 +463,18 @@
 			<form
 				method="POST"
 				action="?/createNode"
-				use:enhanceFormValidation
-				onsubmit={() => {
-					setTimeout(() => (createModal.open = false), 50);
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							createModal.open = false;
+							if (result.data && typeof result.data === 'object' && 'createdId' in result.data) {
+								selectedNodeId = String((result.data as { createdId?: string }).createdId);
+							}
+						}
+						await update({ reset: false });
+					};
 				}}
+				use:enhanceFormValidation
 				class="mt-4 space-y-4"
 			>
 				<input type="hidden" name="color" value={createModal.color} />

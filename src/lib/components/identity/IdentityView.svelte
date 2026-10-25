@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { enhance } from '$app/forms';
 	import type { NodeValue, NodeWithExtras, StrategicEra, StrategyNode } from '$lib/types';
 	import { enhanceFormValidation, formatNumber, getInitials, getTeamIcon } from '$lib/utils';
 	import { getDossierTheme } from '$lib/dossier-theme';
@@ -578,10 +579,15 @@
 						<form
 							method="POST"
 							action="?/updateIdentityNode"
-							use:enhanceFormValidation
-							onsubmit={() => {
-								setTimeout(() => (editingMission = false), 50);
+							use:enhance={() => {
+								return async ({ result, update }) => {
+									if (result.type === 'success') {
+										editingMission = false;
+									}
+									await update({ reset: false });
+								};
 							}}
+							use:enhanceFormValidation
 							class="space-y-4 rounded-xl bg-surface-container-low p-5 shadow-[inset_0_2px_4px_rgba(36,34,30,0.05)]"
 						>
 							<input type="hidden" name="nodeId" value={mission.id} />
@@ -829,7 +835,15 @@
 											>
 												<Pencil class="h-3.5 w-3.5" />
 											</button>
-											<form method="POST" action="?/deleteIdentityNode">
+											<form
+												method="POST"
+												action="?/deleteIdentityNode"
+												use:enhance={() => {
+													return async ({ update }) => {
+														await update({ reset: false });
+													};
+												}}
+											>
 												<input type="hidden" name="nodeId" value={val.id} />
 												<button
 													type="submit"
@@ -1271,10 +1285,15 @@
 			<form
 				method="POST"
 				action="?/archiveAndCreateEra"
-				use:enhanceFormValidation
-				onsubmit={() => {
-					setTimeout(() => (showNewEraModal = false), 50);
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							showNewEraModal = false;
+						}
+						await update({ reset: false });
+					};
 				}}
+				use:enhanceFormValidation
 				class="mt-4 space-y-4"
 			>
 				<div class="grid grid-cols-2 gap-3">

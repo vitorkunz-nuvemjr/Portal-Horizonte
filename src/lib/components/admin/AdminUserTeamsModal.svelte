@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import type { Profile, Team } from '$lib/types';
 	import { getInitials } from '$lib/utils';
 	import { getTeamVisual } from './admin-utils';
@@ -66,8 +67,13 @@
 			<form
 				method="POST"
 				action="?/updateUserTeams"
-				onsubmit={() => {
-					setTimeout(() => (editingUserTeams = null), 50);
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							editingUserTeams = null;
+						}
+						await update({ reset: false });
+					};
 				}}
 				class="space-y-4"
 			>
