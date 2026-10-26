@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { X } from 'lucide-svelte';
+	import { getDossierTheme } from '$lib/dossier-theme';
 
 	let showSupportModal = $state(false);
+	const supportTheme = getDossierTheme('#b00066');
 
 	function closeSupportModal() {
 		showSupportModal = false;
@@ -28,7 +29,7 @@
 	</div>
 
 	<!-- Top section: Logos & Links -->
-	<div class="max-w-7xl mx-auto px-6 py-6">
+	<div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6">
 		<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
 			<!-- 1. Lado esquerdo: Horizonte OKRs Brand, Subtítulo & Badge -->
 			<div class="lg:col-span-4 flex items-center gap-3">
@@ -124,57 +125,124 @@
 </footer>
 <!-- END: Footer -->
 
-<!-- Support Modal / Dialog -->
+<!-- Support Hanging-Folder Dossier Modal -->
 {#if showSupportModal}
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-fadeIn"
+		class="fixed inset-0 z-[100] flex items-center justify-center bg-[#181613]/60 backdrop-blur-[5px] p-2.5 sm:p-6 overflow-y-auto overscroll-contain animate-fadeIn"
 		onclick={(e) => {
 			if (e.target === e.currentTarget) closeSupportModal();
 		}}
 	>
-		<div class="w-full max-w-md bg-white rounded-2xl border border-[#E8E2D8] shadow-2xl p-6 relative">
-			<button
-				type="button"
-				onclick={closeSupportModal}
-				class="absolute top-4 right-4 text-[#8C8A83] hover:text-[#1E1D1A] p-1 rounded-lg hover:bg-black/5 transition cursor-pointer"
-				aria-label="Fechar diálogo"
+		<div class="w-full max-w-md flex flex-col my-auto relative">
+			<!-- Top Protruding Folder Tab Bar -->
+			<div class="flex items-end justify-between px-2 sm:px-5 -mb-[1px] relative z-20">
+				<div
+					class="border-t-2 border-l-2 border-r-2 rounded-t-xl px-3 sm:px-5 py-2 flex items-center gap-2 shadow-[0_-3px_10px_rgba(0,0,0,0.05)] relative transition-colors duration-300"
+					style="background-color: {supportTheme.folderBg}; border-color: {supportTheme.folderBorder};"
+				>
+					<div
+						class="flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-white/95 border shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]"
+						style="border-color: color-mix(in srgb, {supportTheme.accent} 32%, transparent);"
+					>
+						<span class="w-2 h-2 rounded-full animate-pulse" style="background-color: {supportTheme.accent};"></span>
+						<span class="font-mono text-[10px] uppercase font-bold tracking-wider" style="color: {supportTheme.accent};">
+							SUPORTE &amp; GOVERNANÇA
+						</span>
+					</div>
+					<div
+						class="absolute -bottom-1 left-0 right-0 h-2 transition-colors duration-300"
+						style="background-color: {supportTheme.folderBg};"
+					></div>
+				</div>
+
+				<!-- Close Button -->
+				<div class="flex items-center gap-2 pb-2">
+					<button
+						type="button"
+						onclick={closeSupportModal}
+						class="w-8 h-8 rounded-full bg-white/95 hover:bg-white text-on-surface-variant hover:text-on-surface border border-[#cfc5b4] flex items-center justify-center shadow-[0_2px_0_#d8d2c2] active:translate-y-0.5 transition-all cursor-pointer"
+						title="Fechar (Esc)"
+						aria-label="Fechar diálogo"
+					>
+						<span class="material-symbols-outlined text-[18px]">close</span>
+					</button>
+				</div>
+			</div>
+
+			<!-- Main Folder Body -->
+			<div
+				class="border-2 rounded-2xl hanging-folder-shadow relative z-10 overflow-hidden flex flex-col transition-colors duration-300"
+				style="background-color: {supportTheme.folderBg}; border-color: {supportTheme.folderBorder};"
 			>
-				<X class="w-5 h-5" />
-			</button>
-			<div class="flex items-center gap-3 mb-3">
-				<div class="w-10 h-10 rounded-xl bg-pink-50 text-secondary flex items-center justify-center">
-					<span class="material-symbols-outlined text-[22px]">contact_support</span>
+				<!-- Top 1.5px Structural Reinforcement Bar -->
+				<div
+					class="w-full h-1.5"
+					style="background: linear-gradient(to right, color-mix(in srgb, {supportTheme.accent} 25%, transparent), color-mix(in srgb, {supportTheme.accent} 45%, transparent), color-mix(in srgb, {supportTheme.accent} 20%, transparent));"
+				></div>
+
+				<!-- Body Content -->
+				<div class="p-4 sm:p-6 space-y-4">
+					<div
+						class="rounded-xl p-4 border shadow-[0_2px_8px_rgba(29,27,23,0.04),inset_0_1px_0_#ffffff] space-y-3"
+						style="background-color: {supportTheme.cardBg}; border-color: {supportTheme.cardBorder};"
+					>
+						<div class="flex items-center gap-3">
+							<div
+								class="w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 shadow-2xs"
+								style="background-color: {supportTheme.badgeBg}; border-color: {supportTheme.badgeBorder}; color: {supportTheme.accent};"
+							>
+								<span class="material-symbols-outlined text-[22px]">contact_support</span>
+							</div>
+							<div>
+								<h3 class="text-base font-bold text-[#1E1D1A]">Suporte &amp; Governança</h3>
+								<p class="text-[11px] font-mono text-[#63625D]">Nuvem Consultoria Jr.</p>
+							</div>
+						</div>
+
+						<p class="text-xs text-[#524d45] leading-relaxed">
+							Para dúvidas operacionais sobre metas, credenciais corporativas ou auditoria de OKRs, contate a Governança Executiva da Nuvem Jr. pelo e-mail institucional:
+						</p>
+
+						<div
+							class="p-3 rounded-xl border flex items-center justify-between"
+							style="background-color: {supportTheme.inputBg}; border-color: {supportTheme.inputBorder};"
+						>
+							<span class="font-mono text-xs font-bold text-[#1E1D1A] select-all truncate">
+								presidencia@nuvemej.com.br
+							</span>
+							<span class="material-symbols-outlined text-[16px]" style="color: {supportTheme.accent};">verified_user</span>
+						</div>
+					</div>
 				</div>
-				<div>
-					<h3 class="text-base font-bold text-[#1E1D1A]">Suporte & Governança</h3>
-					<p class="text-[11px] text-[#63625D]">Nuvem Consultoria Jr.</p>
+
+				<!-- Stitched Manila Footer -->
+				<div
+					class="px-4 sm:px-6 py-3.5 border-t flex flex-wrap items-center justify-end gap-2.5 relative transition-colors duration-300"
+					style="background-color: {supportTheme.footerBg}; border-color: {supportTheme.folderBorder};"
+				>
+					<div
+						class="absolute top-0.5 left-0 right-0 h-[1px] opacity-60"
+						style="background-image: repeating-linear-gradient(to right, {supportTheme.stitchedColor} 0px, {supportTheme.stitchedColor} 6px, transparent 6px, transparent 11px);"
+					></div>
+
+					<button
+						type="button"
+						onclick={closeSupportModal}
+						class="px-4 py-2 rounded-xl bg-white/85 hover:bg-white border border-[#cfc5b4] font-mono text-xs font-bold text-[#1d1b17] shadow-[0_2px_0_#d8d2c2] active:translate-y-0.5 transition-all cursor-pointer"
+					>
+						Fechar
+					</button>
+					<a
+						href="mailto:presidencia@nuvemej.com.br?subject=Suporte%20Horizonte%20OKRs"
+						class="flex-1 sm:flex-initial px-4 py-2 rounded-xl text-white font-mono text-xs font-bold tracking-wide transition-all active:translate-y-0.5 flex items-center justify-center gap-1.5"
+						style="background-color: {supportTheme.accent}; box-shadow: 0 2.5px 0 {supportTheme.accentShadow};"
+					>
+						<span class="material-symbols-outlined text-[16px]">mail</span>
+						Enviar E-mail
+					</a>
 				</div>
-			</div>
-			<p class="text-xs text-[#63625D] leading-relaxed mb-4">
-				Para dúvidas operacionais sobre metas, credenciais corporativas ou auditoria de OKRs, contate a Governança Executiva da Nuvem Jr. pelo e-mail institucional:
-			</p>
-			<div class="p-3 bg-[#FDFBF7] border border-[#E8E2D8] rounded-xl flex items-center justify-between mb-6">
-				<span class="font-mono text-xs font-semibold text-[#1E1D1A] select-all">
-					presidencia@nuvemej.com.br
-				</span>
-			</div>
-			<div class="flex gap-2">
-				<a
-					href="mailto:presidencia@nuvemej.com.br?subject=Suporte%20Horizonte%20OKRs"
-					class="flex-1 h-10 rounded-xl bg-primary hover:bg-[#00479b] text-white text-xs font-semibold tracking-wide transition shadow-sm flex items-center justify-center gap-1.5"
-				>
-					<span class="material-symbols-outlined text-[16px]">mail</span>
-					Enviar E-mail
-				</a>
-				<button
-					type="button"
-					onclick={closeSupportModal}
-					class="px-4 h-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold tracking-wide transition cursor-pointer"
-				>
-					Fechar
-				</button>
 			</div>
 		</div>
 	</div>

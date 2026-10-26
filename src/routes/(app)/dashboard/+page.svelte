@@ -371,7 +371,7 @@
 	}
 </script>
 
-<div class="flex flex-col w-full p-gutter lg:p-gutter-lg gap-y-space-lg">
+<div class="flex flex-col w-full p-3.5 sm:p-gutter lg:p-gutter-lg gap-y-space-lg">
 	<!-- Section 0: Header -->
 	<section
 		class="flex flex-col xl:flex-row xl:items-end justify-between gap-space-md pb-space-xs"
@@ -385,7 +385,7 @@
 				</span>
 			</div>
 			<h1
-				class="font-headline-xl text-headline-xl text-on-surface tracking-tight leading-tight"
+				class="font-headline-xl text-2xl sm:text-headline-xl text-on-surface tracking-tight leading-tight"
 			>
 				Painel Executivo de Estratégia
 			</h1>

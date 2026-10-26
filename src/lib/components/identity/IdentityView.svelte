@@ -41,6 +41,7 @@
 	});
 
 	const selectedEra = $derived(eras.find((e) => e.key === activeEraKey) ?? eras[0] ?? null);
+	const newEraTheme = getDossierTheme('#0058bd');
 
 	// Tonal themes for Value cards & badges
 	const valueThemes = [
@@ -320,7 +321,7 @@
 				</span>
 			</div>
 			<h1
-				class="font-headline-xl text-headline-xl text-on-surface tracking-tight leading-tight"
+				class="font-headline-xl text-2xl sm:text-headline-xl text-on-surface tracking-tight leading-tight"
 			>
 				Identidade Organizacional
 			</h1>
@@ -332,13 +333,13 @@
 
 		<!-- Action Buttons -->
 		{#if canEdit}
-			<div class="flex items-center gap-3 shrink-0">
+			<div class="flex flex-wrap items-center gap-2 sm:gap-3 shrink-0">
 				<!-- + Novo Valor (Sunshine Yellow) -->
 				{#if selectedEra && activeEraKey !== 'timeline'}
 					<button
 						type="button"
 						onclick={() => (activeValueModal = { mode: 'create', value: null })}
-						class="group relative px-4 py-2.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md font-bold flex items-center gap-2 shadow-[0_2px_0_#c2ac00,0_4px_10px_rgba(194,172,0,0.2)] active:translate-y-0.5 active:shadow-[0_1px_0_#c2ac00] transition-all cursor-pointer"
+						class="group relative px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed font-label-md text-label-md font-bold flex items-center gap-1.5 sm:gap-2 shadow-[0_2px_0_#c2ac00,0_4px_10px_rgba(194,172,0,0.2)] active:translate-y-0.5 active:shadow-[0_1px_0_#c2ac00] transition-all cursor-pointer"
 					>
 						<span
 							class="material-symbols-outlined text-[18px] group-hover:rotate-90 transition-transform duration-300"
@@ -353,7 +354,7 @@
 				<button
 					type="button"
 					onclick={() => (showNewEraModal = true)}
-					class="group relative px-4 py-2.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-bold flex items-center gap-2 shadow-[0_2px_0_#004494,0_4px_12px_rgba(0,88,189,0.25)] active:translate-y-0.5 active:shadow-[0_1px_0_#004494] transition-all"
+					class="group relative px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-bold flex items-center gap-1.5 sm:gap-2 shadow-[0_2px_0_#004494,0_4px_12px_rgba(0,88,189,0.25)] active:translate-y-0.5 active:shadow-[0_1px_0_#004494] transition-all cursor-pointer"
 				>
 					<span class="material-symbols-outlined text-[18px]">calendar_add_on</span>
 					<span>Nova Era</span>
@@ -364,7 +365,7 @@
 
 	<!-- Eras Navigation Bar (Folder tabs styling) -->
 	{#if eras.length > 0}
-		<div class="relative flex flex-wrap items-end gap-1.5 pt-2">
+		<div class="relative flex items-end gap-1.5 pt-2 overflow-x-auto no-scrollbar flex-nowrap sm:flex-wrap pb-1">
 			{#each eras as era (era.key)}
 				{@const isSelected = activeEraKey === era.key}
 				{#if isSelected}
@@ -376,7 +377,7 @@
 							editingMission = false;
 							activeValueModal = null;
 						}}
-						class="relative group z-20 flex items-center gap-2.5 px-6 py-3 bg-surface-container-lowest text-primary font-label-md text-label-md rounded-t-xl shadow-[0_-3px_8px_rgba(36,34,30,0.05),-2px_0_4px_rgba(36,34,30,0.03),2px_0_4px_rgba(36,34,30,0.03)] cursor-default"
+						class="relative group z-20 shrink-0 flex items-center gap-2.5 px-4 sm:px-6 py-2.5 sm:py-3 bg-surface-container-lowest text-primary font-label-md text-label-md rounded-t-xl shadow-[0_-3px_8px_rgba(36,34,30,0.05),-2px_0_4px_rgba(36,34,30,0.03),2px_0_4px_rgba(36,34,30,0.03)] cursor-default"
 					>
 						<!-- Folded Corner Effect top-right -->
 						<div
@@ -410,7 +411,7 @@
 							editingMission = false;
 							activeValueModal = null;
 						}}
-						class="relative group z-10 flex items-center gap-2 px-5 py-2.5 bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-md text-label-md rounded-t-lg shadow-[inset_0_-2px_4px_rgba(36,34,30,0.04)] transition-colors"
+						class="relative group z-10 shrink-0 flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-surface-container-high text-on-surface-variant hover:text-on-surface font-label-md text-label-md rounded-t-lg shadow-[inset_0_-2px_4px_rgba(36,34,30,0.04)] transition-colors cursor-pointer"
 					>
 						<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
 						<span>Era {era.start_year}{era.end_year ? `–${era.end_year}` : ''}</span>
@@ -429,7 +430,7 @@
 					editingMission = false;
 					activeValueModal = null;
 				}}
-				class="relative group z-0 flex items-center gap-2 px-5 py-2.5 font-label-md text-label-md rounded-t-lg transition-colors {activeEraKey ===
+				class="relative group z-0 shrink-0 flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 font-label-md text-label-md rounded-t-lg transition-colors cursor-pointer {activeEraKey ===
 				'timeline'
 					? 'z-20 bg-surface-container-lowest text-primary font-bold shadow-[0_-3px_8px_rgba(36,34,30,0.05)]'
 					: 'bg-surface-container-high text-on-surface-variant hover:text-on-surface shadow-[inset_0_-2px_4px_rgba(36,34,30,0.04)]'}"
@@ -536,7 +537,7 @@
 		<!-- Missão Estratégica Box (Archival Parchment Paper Card with Brass Pin Accents) -->
 		{#if mission}
 			<div
-				class="relative w-full rounded-2xl bg-surface-container-lowest p-8 md:p-10 shadow-[0_1px_1px_rgba(36,34,30,0.05),0_4px_12px_rgba(36,34,30,0.06),0_-1px_0_rgba(255,255,255,0.9)_inset] overflow-hidden -mt-1"
+				class="relative w-full rounded-2xl bg-surface-container-lowest p-5 sm:p-8 md:p-10 shadow-[0_1px_1px_rgba(36,34,30,0.05),0_4px_12px_rgba(36,34,30,0.06),0_-1px_0_rgba(255,255,255,0.9)_inset] overflow-hidden -mt-1"
 			>
 				<!-- Top edge simulated parchment ruler mark -->
 				<div class="absolute top-0 left-0 right-0 h-1 bg-surface-variant mat-ruler-h opacity-70"></div>
@@ -685,7 +686,7 @@
 								“
 							</span>
 							<blockquote
-								class="font-headline-xl text-2xl md:text-headline-xl text-on-surface italic tracking-tight leading-snug max-w-4xl"
+								class="font-headline-xl text-xl sm:text-2xl md:text-headline-xl text-on-surface italic tracking-tight leading-snug max-w-4xl"
 							>
 								{mission.title}
 							</blockquote>
@@ -775,7 +776,7 @@
 						{@const cardIcon = val.icon || theme.iconName}
 
 						<div
-							class="relative group rounded-2xl p-6 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 {isCustom ? 'border' : theme.cardBg}"
+							class="relative group rounded-2xl p-4 sm:p-6 flex flex-col justify-between hover:-translate-y-1 transition-all duration-300 {isCustom ? 'border' : theme.cardBg}"
 							style={isCustom
 								? `background-color: ${dTheme.cardBg}; border-color: ${dTheme.cardBorder}; box-shadow: 0 1px 2px rgba(36,34,30,0.05), 0 6px 16px color-mix(in srgb, ${dTheme.accent} 12%, transparent), inset 0 1px 0 rgba(255,255,255,0.9);`
 								: undefined}
@@ -825,7 +826,7 @@
 
 									{#if canEdit}
 										<div
-											class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+											class="flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
 										>
 											<button
 												type="button"
@@ -933,7 +934,7 @@
 
 			<!-- Bottom Drawer: Matriz de Alinhamento Tático Rápido (Table linking values to OKRs & Teams) -->
 			<div
-				class="relative w-full rounded-2xl bg-surface-container-lowest p-6 md:p-8 shadow-[0_1px_1px_rgba(36,34,30,0.05),0_6px_16px_rgba(36,34,30,0.04),0_-1px_0_rgba(255,255,255,0.9)_inset]"
+				class="relative w-full rounded-2xl bg-surface-container-lowest p-4 sm:p-6 md:p-8 shadow-[0_1px_1px_rgba(36,34,30,0.05),0_6px_16px_rgba(36,34,30,0.04),0_-1px_0_rgba(255,255,255,0.9)_inset]"
 			>
 				<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6">
 					<div class="flex items-center gap-3">
@@ -1247,12 +1248,12 @@
 	{/if}
 </div>
 
-<!-- Modal: Start New Strategic Era -->
+<!-- Modal: Start New Strategic Era: Hanging-Folder Dossier -->
 {#if showNewEraModal}
 	<div
 		role="presentation"
 		onclick={() => (showNewEraModal = false)}
-		class="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/35 p-4 backdrop-blur-xs"
+		class="fixed inset-0 z-[150] flex items-center justify-center bg-[#181613]/60 backdrop-blur-[5px] p-2.5 sm:p-6 overflow-y-auto overscroll-contain"
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -1262,153 +1263,177 @@
 			aria-modal="true"
 			aria-labelledby="new-era-title"
 			onclick={(e) => e.stopPropagation()}
-			class="w-full max-w-lg rounded-2xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-[0_20px_28px_-4px_rgba(36,34,30,0.16)]"
+			class="relative w-full max-w-xl rounded-2xl pt-2 pb-0 flex flex-col border-2 hanging-folder-shadow transition-colors duration-200 overflow-hidden"
+			style="background-color: {newEraTheme.folderBg}; border-color: {newEraTheme.folderBorder};"
 		>
-			<div class="flex items-center justify-between border-b border-outline-variant/40 pb-3">
-				<div>
-					<h3 id="new-era-title" class="font-headline-sm text-headline-sm text-on-surface">
-						Iniciar Nova Era Estratégica
-					</h3>
-					<p class="mt-0.5 font-body-sm text-body-sm text-on-surface-variant">
-						Arquive o ciclo atual e formule a nova Missão e Valores Fundamentais.
-					</p>
+			<!-- Top Protruding Manila Tab & Controls -->
+			<div class="px-4 sm:px-6 pt-3 pb-2 flex items-center justify-between gap-3 border-b border-black/5">
+				<div
+					class="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-t-xl border-t border-x -mb-2 shadow-xs min-w-0"
+					style="background-color: {newEraTheme.cardBg}; border-color: {newEraTheme.folderBorder};"
+				>
+					<span
+						class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0"
+						style="background-color: {newEraTheme.badgeBg}; border: 1px solid {newEraTheme.badgeBorder}; color: {newEraTheme.badgeText};"
+					>
+						NOVO CICLO DE IDENTIDADE
+					</span>
+					<span class="font-label-sm text-xs text-on-surface-variant truncate hidden sm:inline">
+						Missão e Valores
+					</span>
 				</div>
+
 				<button
 					type="button"
 					onclick={() => (showNewEraModal = false)}
-					class="rounded-lg p-1.5 text-outline hover:bg-surface-container hover:text-on-surface"
+					class="w-8 h-8 rounded-full flex items-center justify-center transition-all bg-black/5 hover:bg-black/10 text-on-surface-variant hover:text-on-surface cursor-pointer shrink-0"
+					title="Fechar"
 				>
 					<X class="h-4 w-4" />
 				</button>
 			</div>
 
-			<form
-				method="POST"
-				action="?/archiveAndCreateEra"
-				use:enhance={() => {
-					return async ({ result, update }) => {
-						if (result.type === 'success') {
-							showNewEraModal = false;
-						}
-						await update({ reset: false });
-					};
-				}}
-				use:enhanceFormValidation
-				class="mt-4 space-y-4"
-			>
-				<div class="grid grid-cols-2 gap-3">
+			<!-- Structural Reinforcement Bar -->
+			<div
+				class="h-[3px] w-full"
+				style="background: linear-gradient(90deg, {newEraTheme.accent} 0%, {newEraTheme.folderBorder} 100%);"
+			></div>
+
+			<!-- Modal Body (Inner Cardstock) -->
+			<div class="p-4 sm:p-6 overflow-y-auto max-h-[calc(85dvh-130px)]">
+				<form
+					method="POST"
+					action="?/archiveAndCreateEra"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							if (result.type === 'success') {
+								showNewEraModal = false;
+							}
+							await update({ reset: false });
+						};
+					}}
+					use:enhanceFormValidation
+					class="space-y-4"
+				>
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+						<div>
+							<label
+								for="archive-year"
+								class="block font-label-md text-label-md font-bold text-on-surface"
+							>
+								Arquivar Era Anterior no Ano <span class="text-error">*</span>
+							</label>
+							<input
+								id="archive-year"
+								name="archivePriorEndYear"
+								type="number"
+								required
+								value="2026"
+								class="mt-1 w-full rounded-lg bg-surface-container px-3 py-1.5 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
+							/>
+						</div>
+						<div>
+							<label
+								for="new-start-year"
+								class="block font-label-md text-label-md font-bold text-on-surface"
+							>
+								Ano Inicial da Nova Era <span class="text-error">*</span>
+							</label>
+							<input
+								id="new-start-year"
+								name="newStartYear"
+								type="number"
+								required
+								value="2027"
+								class="mt-1 w-full rounded-lg bg-surface-container px-3 py-1.5 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
+							/>
+						</div>
+					</div>
+
 					<div>
 						<label
-							for="archive-year"
+							for="new-era-mission"
 							class="block font-label-md text-label-md font-bold text-on-surface"
 						>
-							Arquivar Era Anterior no Ano <span class="text-error">*</span>
+							Nova Declaração de Missão <span class="text-error">*</span>
 						</label>
-						<input
-							id="archive-year"
-							name="archivePriorEndYear"
-							type="number"
+						<textarea
+							id="new-era-mission"
+							name="missionTitle"
+							rows="2"
 							required
-							value="2026"
-							class="mt-1 w-full rounded-lg bg-surface-container px-3 py-1.5 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
-						/>
+							placeholder="Nova missão estratégica para o próximo ciclo plurianual..."
+							aria-errormessage="new-mission-err"
+							class="mt-1 w-full rounded-lg bg-surface-container px-3 py-2 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
+						></textarea>
+						<div id="new-mission-err" class="error-msg">
+							<AlertCircle class="h-3.5 w-3.5" />
+							<span>A nova declaração de missão é obrigatória.</span>
+						</div>
 					</div>
+
 					<div>
 						<label
-							for="new-start-year"
+							for="new-era-mdesc"
 							class="block font-label-md text-label-md font-bold text-on-surface"
 						>
-							Ano Inicial da Nova Era <span class="text-error">*</span>
+							Propósito e Narrativa Estratégica
 						</label>
-						<input
-							id="new-start-year"
-							name="newStartYear"
-							type="number"
-							required
-							value="2027"
-							class="mt-1 w-full rounded-lg bg-surface-container px-3 py-1.5 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
-						/>
+						<textarea
+							id="new-era-mdesc"
+							name="missionDescription"
+							rows="2"
+							placeholder="Contexto, visão e direcionadores para esta renovação estratégica..."
+							class="mt-1 w-full rounded-lg bg-surface-container px-3 py-2 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
+						></textarea>
 					</div>
-				</div>
 
-				<div>
-					<label
-						for="new-era-mission"
-						class="block font-label-md text-label-md font-bold text-on-surface"
-					>
-						Nova Declaração de Missão <span class="text-error">*</span>
-					</label>
-					<textarea
-						id="new-era-mission"
-						name="missionTitle"
-						rows="2"
-						required
-						placeholder="Nova missão estratégica para o próximo ciclo plurianual..."
-						aria-errormessage="new-mission-err"
-						class="mt-1 w-full rounded-lg bg-surface-container px-3 py-2 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
-					></textarea>
-					<div id="new-mission-err" class="error-msg">
-						<AlertCircle class="h-3.5 w-3.5" />
-						<span>A nova declaração de missão é obrigatória.</span>
+					<div class="border-t border-outline-variant/40 pt-3">
+						<div class="font-label-md text-label-md font-bold text-on-surface">
+							Valores Fundamentais Iniciais (Opcional)
+						</div>
+						<div class="mt-2 space-y-2">
+							{#each [1, 2] as i}
+								<div class="flex flex-col sm:flex-row gap-2">
+									<input
+										name="valueTitles"
+										type="text"
+										placeholder="Título do Valor #{i}..."
+										class="w-full sm:w-1/2 rounded-lg bg-surface-container px-2.5 py-1.5 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
+									/>
+									<input
+										name="valueDescriptions"
+										type="text"
+										placeholder="Definição / comportamento..."
+										class="w-full sm:w-1/2 rounded-lg bg-surface-container px-2.5 py-1.5 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
+									/>
+								</div>
+							{/each}
+						</div>
 					</div>
-				</div>
 
-				<div>
-					<label
-						for="new-era-mdesc"
-						class="block font-label-md text-label-md font-bold text-on-surface"
+					<!-- Stitched Perforation Footer Inside Form -->
+					<div
+						class="pt-3 border-t mt-4 -mx-4 sm:-mx-6 px-4 sm:px-6 flex items-center justify-end gap-2"
+						style="border-color: {newEraTheme.folderBorder}; background-color: {newEraTheme.footerBg};"
 					>
-						Propósito e Narrativa Estratégica
-					</label>
-					<textarea
-						id="new-era-mdesc"
-						name="missionDescription"
-						rows="2"
-						placeholder="Contexto, visão e direcionadores para esta renovação estratégica..."
-						class="mt-1 w-full rounded-lg bg-surface-container px-3 py-2 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
-					></textarea>
-				</div>
-
-				<div class="border-t border-outline-variant/40 pt-3">
-					<div class="font-label-md text-label-md font-bold text-on-surface">
-						Valores Fundamentais Iniciais (Opcional)
+						<button
+							type="button"
+							onclick={() => (showNewEraModal = false)}
+							class="rounded-lg bg-surface-container px-4 py-2 font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface cursor-pointer"
+						>
+							Cancelar
+						</button>
+						<button
+							type="submit"
+							class="inline-flex items-center gap-1.5 rounded-lg px-4 py-2 font-label-md text-label-md font-bold text-white shadow-[0_2px_0_#004494] cursor-pointer"
+							style="background-color: {newEraTheme.accent};"
+						>
+							Criar Nova Era
+						</button>
 					</div>
-					<div class="mt-2 space-y-2">
-						{#each [1, 2] as i}
-							<div class="flex gap-2">
-								<input
-									name="valueTitles"
-									type="text"
-									placeholder="Título do Valor #{i}..."
-									class="w-1/2 rounded-lg bg-surface-container px-2.5 py-1.5 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
-								/>
-								<input
-									name="valueDescriptions"
-									type="text"
-									placeholder="Definição / comportamento..."
-									class="w-1/2 rounded-lg bg-surface-container px-2.5 py-1.5 font-body-sm text-body-sm text-on-surface shadow-[inset_0_2px_4px_rgba(36,34,30,0.06)]"
-								/>
-							</div>
-						{/each}
-					</div>
-				</div>
-
-				<div class="flex justify-end gap-2 border-t border-outline-variant/40 pt-4">
-					<button
-						type="button"
-						onclick={() => (showNewEraModal = false)}
-						class="rounded-lg bg-surface-container px-4 py-2 font-label-md text-label-md text-on-surface-variant"
-					>
-						Cancelar
-					</button>
-					<button
-						type="submit"
-						class="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 font-label-md text-label-md font-bold text-on-primary shadow-[0_2px_0_#004494]"
-					>
-						Criar Nova Era
-					</button>
-				</div>
-			</form>
+				</form>
+			</div>
 		</div>
 	</div>
 {/if}

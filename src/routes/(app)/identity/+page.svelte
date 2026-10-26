@@ -26,7 +26,7 @@
 	);
 </script>
 
-<div class="flex flex-col w-full p-gutter lg:p-gutter-lg">
+<div class="flex flex-col w-full p-3.5 sm:p-gutter lg:p-gutter-lg">
 	{#if form?.message}
 		<div
 			class="mb-space-md flex items-center gap-2 rounded-xl bg-error-container px-4 py-3 text-xs font-semibold text-on-error-container shadow-sm"

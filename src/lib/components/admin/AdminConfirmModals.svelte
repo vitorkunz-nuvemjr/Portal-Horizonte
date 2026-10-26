@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import type { Team, Cycle } from '$lib/types';
+	import { getDossierTheme } from '$lib/dossier-theme';
+	import { X, AlertTriangle, RotateCcw } from 'lucide-svelte';
 
 	interface Props {
 		teamToDelete?: Team | null;
@@ -13,6 +15,9 @@
 		cycleToDelete = $bindable(null),
 		showResetModal = $bindable(false)
 	}: Props = $props();
+
+	const dangerTheme = getDossierTheme('#dc2626');
+	const warningTheme = getDossierTheme('#b7076c');
 </script>
 
 <!-- MODAL: CONFIRMAR EXCLUSÃO DE EQUIPE -->
@@ -20,23 +25,64 @@
 	<div
 		role="presentation"
 		onclick={() => (teamToDelete = null)}
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4"
+		class="fixed inset-0 z-[160] flex items-center justify-center bg-[#181613]/60 backdrop-blur-[5px] p-2.5 sm:p-6 overflow-y-auto overscroll-contain animate-fadeIn"
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div
 			role="dialog"
 			tabindex="-1"
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
-			class="w-full max-w-md rounded-2xl border border-[#d5cebe] bg-white p-6 shadow-2xl space-y-4"
+			class="relative w-full max-w-md rounded-2xl pt-2 pb-0 flex flex-col border-2 hanging-folder-shadow transition-colors duration-200 overflow-hidden"
+			style="background-color: {dangerTheme.folderBg}; border-color: {dangerTheme.folderBorder};"
 		>
-			<div class="flex items-center gap-3 text-red-600">
-				<span class="material-symbols-outlined text-[28px]">warning</span>
-				<h3 class="text-base font-bold text-[#1d1b17]">Excluir Equipe</h3>
+			<!-- Top Protruding Tab -->
+			<div class="px-4 sm:px-6 pt-3 pb-2 flex items-center justify-between gap-3 border-b border-black/5">
+				<div
+					class="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-t-xl border-t border-x -mb-2 shadow-xs min-w-0"
+					style="background-color: {dangerTheme.cardBg}; border-color: {dangerTheme.folderBorder};"
+				>
+					<span
+						class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0"
+						style="background-color: {dangerTheme.badgeBg}; border: 1px solid {dangerTheme.badgeBorder}; color: {dangerTheme.badgeText};"
+					>
+						CONFIRMAR EXCLUSÃO
+					</span>
+				</div>
+				<button
+					type="button"
+					onclick={() => (teamToDelete = null)}
+					class="w-8 h-8 rounded-full flex items-center justify-center transition-all bg-black/5 hover:bg-black/10 text-on-surface-variant hover:text-on-surface cursor-pointer shrink-0"
+					title="Fechar"
+				>
+					<X class="h-4 w-4" />
+				</button>
 			</div>
-			<p class="text-[13px] text-[#424753] leading-relaxed">
-				Tem certeza que deseja excluir a equipe <strong>"{teamToDelete.name}"</strong>? Os membros serão desvinculados desta equipe, mas seus perfis permanecerão intactos.
-			</p>
+
+			<!-- Structural Reinforcement Bar -->
+			<div
+				class="h-[3px] w-full"
+				style="background: linear-gradient(90deg, {dangerTheme.accent} 0%, {dangerTheme.folderBorder} 100%);"
+			></div>
+
+			<!-- Body -->
+			<div class="p-5 sm:p-6">
+				<div class="flex items-center gap-3 mb-3">
+					<div
+						class="w-10 h-10 rounded-xl flex items-center justify-center shadow-xs shrink-0"
+						style="background-color: {dangerTheme.badgeBg}; border: 1px solid {dangerTheme.badgeBorder}; color: {dangerTheme.accentDark};"
+					>
+						<AlertTriangle class="h-5 w-5" />
+					</div>
+					<h3 class="text-base font-bold text-on-surface">Excluir Diretoria / Equipe</h3>
+				</div>
+				<p class="text-xs text-on-surface-variant leading-relaxed">
+					Tem certeza que deseja excluir a equipe <strong class="text-on-surface">"{teamToDelete.name}"</strong>? Os membros serão desvinculados desta equipe, mas seus perfis permanecerão intactos.
+				</p>
+			</div>
+
+			<!-- Stitched Perforation Footer -->
 			<form
 				method="POST"
 				action="?/deleteTeam"
@@ -48,19 +94,21 @@
 						await update({ reset: false });
 					};
 				}}
-				class="flex items-center justify-end gap-2 pt-2 border-t border-[#f3ede6]"
+				class="p-4 border-t flex items-center justify-end gap-2"
+				style="border-color: {dangerTheme.folderBorder}; background-color: {dangerTheme.footerBg};"
 			>
 				<input type="hidden" name="teamId" value={teamToDelete.id} />
 				<button
 					type="button"
 					onclick={() => (teamToDelete = null)}
-					class="px-4 py-2 rounded-xl border border-[#d5cebe] text-[12.5px] font-bold text-[#727784] hover:text-[#1d1b17] hover:bg-[#f3ede6] transition-colors cursor-pointer"
+					class="px-4 py-2 rounded-xl border border-outline-variant/60 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
 				>
 					Cancelar
 				</button>
 				<button
 					type="submit"
-					class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-[12.5px] shadow-[0_2px_4px_rgba(220,38,38,0.2)] transition-all cursor-pointer"
+					class="px-5 py-2 rounded-xl text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
+					style="background-color: {dangerTheme.accent}; box-shadow: 0 2px 0 {dangerTheme.accentShadow};"
 				>
 					Excluir Equipe
 				</button>
@@ -74,23 +122,64 @@
 	<div
 		role="presentation"
 		onclick={() => (cycleToDelete = null)}
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4"
+		class="fixed inset-0 z-[160] flex items-center justify-center bg-[#181613]/60 backdrop-blur-[5px] p-2.5 sm:p-6 overflow-y-auto overscroll-contain animate-fadeIn"
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div
 			role="dialog"
 			tabindex="-1"
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
-			class="w-full max-w-md rounded-2xl border border-[#d5cebe] bg-white p-6 shadow-2xl space-y-4"
+			class="relative w-full max-w-md rounded-2xl pt-2 pb-0 flex flex-col border-2 hanging-folder-shadow transition-colors duration-200 overflow-hidden"
+			style="background-color: {dangerTheme.folderBg}; border-color: {dangerTheme.folderBorder};"
 		>
-			<div class="flex items-center gap-3 text-red-600">
-				<span class="material-symbols-outlined text-[28px]">warning</span>
-				<h3 class="text-base font-bold text-[#1d1b17]">Excluir Ciclo</h3>
+			<!-- Top Protruding Tab -->
+			<div class="px-4 sm:px-6 pt-3 pb-2 flex items-center justify-between gap-3 border-b border-black/5">
+				<div
+					class="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-t-xl border-t border-x -mb-2 shadow-xs min-w-0"
+					style="background-color: {dangerTheme.cardBg}; border-color: {dangerTheme.folderBorder};"
+				>
+					<span
+						class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0"
+						style="background-color: {dangerTheme.badgeBg}; border: 1px solid {dangerTheme.badgeBorder}; color: {dangerTheme.badgeText};"
+					>
+						CONFIRMAR EXCLUSÃO
+					</span>
+				</div>
+				<button
+					type="button"
+					onclick={() => (cycleToDelete = null)}
+					class="w-8 h-8 rounded-full flex items-center justify-center transition-all bg-black/5 hover:bg-black/10 text-on-surface-variant hover:text-on-surface cursor-pointer shrink-0"
+					title="Fechar"
+				>
+					<X class="h-4 w-4" />
+				</button>
 			</div>
-			<p class="text-[13px] text-[#424753] leading-relaxed">
-				Tem certeza que deseja excluir o ciclo <strong>"{cycleToDelete.code}"</strong>? Certifique-se de que não há nós estratégicos exclusivamente atribuídos a este ciclo.
-			</p>
+
+			<!-- Structural Reinforcement Bar -->
+			<div
+				class="h-[3px] w-full"
+				style="background: linear-gradient(90deg, {dangerTheme.accent} 0%, {dangerTheme.folderBorder} 100%);"
+			></div>
+
+			<!-- Body -->
+			<div class="p-5 sm:p-6">
+				<div class="flex items-center gap-3 mb-3">
+					<div
+						class="w-10 h-10 rounded-xl flex items-center justify-center shadow-xs shrink-0"
+						style="background-color: {dangerTheme.badgeBg}; border: 1px solid {dangerTheme.badgeBorder}; color: {dangerTheme.accentDark};"
+					>
+						<AlertTriangle class="h-5 w-5" />
+					</div>
+					<h3 class="text-base font-bold text-on-surface">Excluir Ciclo Semestral</h3>
+				</div>
+				<p class="text-xs text-on-surface-variant leading-relaxed">
+					Tem certeza que deseja excluir o ciclo <strong class="text-on-surface">"{cycleToDelete.code}"</strong>? Certifique-se de que não há nós estratégicos exclusivamente atribuídos a este ciclo.
+				</p>
+			</div>
+
+			<!-- Stitched Perforation Footer -->
 			<form
 				method="POST"
 				action="?/deleteCycle"
@@ -102,19 +191,21 @@
 						await update({ reset: false });
 					};
 				}}
-				class="flex items-center justify-end gap-2 pt-2 border-t border-[#f3ede6]"
+				class="p-4 border-t flex items-center justify-end gap-2"
+				style="border-color: {dangerTheme.folderBorder}; background-color: {dangerTheme.footerBg};"
 			>
 				<input type="hidden" name="cycleId" value={cycleToDelete.id} />
 				<button
 					type="button"
 					onclick={() => (cycleToDelete = null)}
-					class="px-4 py-2 rounded-xl border border-[#d5cebe] text-[12.5px] font-bold text-[#727784] hover:text-[#1d1b17] hover:bg-[#f3ede6] transition-colors cursor-pointer"
+					class="px-4 py-2 rounded-xl border border-outline-variant/60 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
 				>
 					Cancelar
 				</button>
 				<button
 					type="submit"
-					class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-[12.5px] shadow-[0_2px_4px_rgba(220,38,38,0.2)] transition-all cursor-pointer"
+					class="px-5 py-2 rounded-xl text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
+					style="background-color: {dangerTheme.accent}; box-shadow: 0 2px 0 {dangerTheme.accentShadow};"
 				>
 					Excluir Ciclo
 				</button>
@@ -128,23 +219,64 @@
 	<div
 		role="presentation"
 		onclick={() => (showResetModal = false)}
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4"
+		class="fixed inset-0 z-[160] flex items-center justify-center bg-[#181613]/60 backdrop-blur-[5px] p-2.5 sm:p-6 overflow-y-auto overscroll-contain animate-fadeIn"
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div
 			role="dialog"
 			tabindex="-1"
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
-			class="w-full max-w-md rounded-2xl border border-[#d5cebe] bg-white p-6 shadow-2xl space-y-4"
+			class="relative w-full max-w-md rounded-2xl pt-2 pb-0 flex flex-col border-2 hanging-folder-shadow transition-colors duration-200 overflow-hidden"
+			style="background-color: {warningTheme.folderBg}; border-color: {warningTheme.folderBorder};"
 		>
-			<div class="flex items-center gap-3 text-amber-600">
-				<span class="material-symbols-outlined text-[28px]">restart_alt</span>
-				<h3 class="text-base font-bold text-[#1d1b17]">Restaurar Modelo Padrão</h3>
+			<!-- Top Protruding Tab -->
+			<div class="px-4 sm:px-6 pt-3 pb-2 flex items-center justify-between gap-3 border-b border-black/5">
+				<div
+					class="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-t-xl border-t border-x -mb-2 shadow-xs min-w-0"
+					style="background-color: {warningTheme.cardBg}; border-color: {warningTheme.folderBorder};"
+				>
+					<span
+						class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0"
+						style="background-color: {warningTheme.badgeBg}; border: 1px solid {warningTheme.badgeBorder}; color: {warningTheme.badgeText};"
+					>
+						RESTAURAR MODELO
+					</span>
+				</div>
+				<button
+					type="button"
+					onclick={() => (showResetModal = false)}
+					class="w-8 h-8 rounded-full flex items-center justify-center transition-all bg-black/5 hover:bg-black/10 text-on-surface-variant hover:text-on-surface cursor-pointer shrink-0"
+					title="Fechar"
+				>
+					<X class="h-4 w-4" />
+				</button>
 			</div>
-			<p class="text-[13px] text-[#424753] leading-relaxed">
-				Esta ação carregará o modelo oficial de OKRs do JE Strategy OS, restaurando as 6 diretorias padrão e objetivos canônicos recomendados. Deseja prosseguir?
-			</p>
+
+			<!-- Structural Reinforcement Bar -->
+			<div
+				class="h-[3px] w-full"
+				style="background: linear-gradient(90deg, {warningTheme.accent} 0%, {warningTheme.folderBorder} 100%);"
+			></div>
+
+			<!-- Body -->
+			<div class="p-5 sm:p-6">
+				<div class="flex items-center gap-3 mb-3">
+					<div
+						class="w-10 h-10 rounded-xl flex items-center justify-center shadow-xs shrink-0"
+						style="background-color: {warningTheme.badgeBg}; border: 1px solid {warningTheme.badgeBorder}; color: {warningTheme.accentDark};"
+					>
+						<RotateCcw class="h-5 w-5" />
+					</div>
+					<h3 class="text-base font-bold text-on-surface">Restaurar Modelo Padrão</h3>
+				</div>
+				<p class="text-xs text-on-surface-variant leading-relaxed">
+					Esta ação carregará o modelo oficial de OKRs do JE Strategy OS, restaurando as 6 diretorias padrão e objetivos canônicos recomendados. Deseja prosseguir?
+				</p>
+			</div>
+
+			<!-- Stitched Perforation Footer -->
 			<form
 				method="POST"
 				action="?/resetTemplate"
@@ -156,18 +288,20 @@
 						await update({ reset: false });
 					};
 				}}
-				class="flex items-center justify-end gap-2 pt-2 border-t border-[#f3ede6]"
+				class="p-4 border-t flex items-center justify-end gap-2"
+				style="border-color: {warningTheme.folderBorder}; background-color: {warningTheme.footerBg};"
 			>
 				<button
 					type="button"
 					onclick={() => (showResetModal = false)}
-					class="px-4 py-2 rounded-xl border border-[#d5cebe] text-[12.5px] font-bold text-[#727784] hover:text-[#1d1b17] hover:bg-[#f3ede6] transition-colors cursor-pointer"
+					class="px-4 py-2 rounded-xl border border-outline-variant/60 text-xs font-bold text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
 				>
 					Cancelar
 				</button>
 				<button
 					type="submit"
-					class="px-5 py-2 rounded-xl bg-[#b7076c] hover:bg-[#960457] text-white font-bold text-[12.5px] shadow-[0_2px_4px_rgba(183,7,108,0.2)] transition-all cursor-pointer"
+					class="px-5 py-2 rounded-xl text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
+					style="background-color: {warningTheme.accent}; box-shadow: 0 2px 0 {warningTheme.accentShadow};"
 				>
 					Confirmar e Restaurar
 				</button>

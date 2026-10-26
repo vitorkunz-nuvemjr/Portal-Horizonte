@@ -2,8 +2,11 @@
 	import { base } from '$app/paths';
 	import { enhance } from '$app/forms';
 	import { ShieldCheck, X, AlertCircle } from 'lucide-svelte';
+	import { getDossierTheme } from '$lib/dossier-theme';
 
 	let { data, form } = $props();
+
+	const loginTheme = getDossierTheme('#0058bd');
 
 	let email = $state('');
 	let password = $state('');
@@ -439,34 +442,82 @@
 		</div>
 	</footer>
 
-	<!-- Informational Modal / Dialog -->
+	<!-- Informational Hanging-Folder Dossier Modal -->
 	{#if infoModal}
-		<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-fadeIn">
-			<div class="w-full max-w-md bg-white rounded-2xl border border-[#E8E2D8] shadow-2xl p-6 relative">
-				<button
-					type="button"
-					onclick={closeInfo}
-					class="absolute top-4 right-4 text-[#8C8A83] hover:text-[#1E1D1A] p-1 rounded-lg hover:bg-black/5 transition"
-					aria-label="Fechar diálogo"
-				>
-					<X class="w-5 h-5" />
-				</button>
-				<div class="flex items-center gap-3 mb-3">
-					<div class="w-10 h-10 rounded-xl bg-blue-50 text-[#0058bd] flex items-center justify-center">
-						<span class="material-symbols-outlined text-[22px]">info</span>
+		<div
+			role="presentation"
+			onclick={closeInfo}
+			class="fixed inset-0 z-[150] flex items-center justify-center bg-[#181613]/60 backdrop-blur-[5px] p-2.5 sm:p-6 overflow-y-auto overscroll-contain animate-fadeIn"
+		>
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div
+				role="dialog"
+				tabindex="-1"
+				aria-modal="true"
+				onclick={(e) => e.stopPropagation()}
+				class="relative w-full max-w-md rounded-2xl pt-2 pb-0 flex flex-col border-2 hanging-folder-shadow transition-colors duration-200 overflow-hidden"
+				style="background-color: {loginTheme.folderBg}; border-color: {loginTheme.folderBorder};"
+			>
+				<!-- Top Protruding Tab -->
+				<div class="px-4 sm:px-6 pt-3 pb-2 flex items-center justify-between gap-3 border-b border-black/5">
+					<div
+						class="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-t-xl border-t border-x -mb-2 shadow-xs min-w-0"
+						style="background-color: {loginTheme.cardBg}; border-color: {loginTheme.folderBorder};"
+					>
+						<span
+							class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0"
+							style="background-color: {loginTheme.badgeBg}; border: 1px solid {loginTheme.badgeBorder}; color: {loginTheme.badgeText};"
+						>
+							INFORMAÇÃO CORPORATIVA
+						</span>
 					</div>
-					<h3 class="text-base font-bold text-[#1E1D1A]">{infoModal.title}</h3>
+					<button
+						type="button"
+						onclick={closeInfo}
+						class="w-8 h-8 rounded-full flex items-center justify-center transition-all bg-black/5 hover:bg-black/10 text-on-surface-variant hover:text-on-surface cursor-pointer shrink-0"
+						title="Fechar diálogo"
+					>
+						<X class="w-4 h-4" />
+					</button>
 				</div>
-				<p class="text-xs text-[#63625D] leading-relaxed mb-6">
-					{infoModal.message}
-				</p>
-				<button
-					type="button"
-					onclick={closeInfo}
-					class="w-full h-10 rounded-xl bg-[#0058bd] hover:bg-[#00479b] text-white text-xs font-semibold tracking-wide transition shadow-sm"
+
+				<!-- Structural Reinforcement Bar -->
+				<div
+					class="h-[3px] w-full"
+					style="background: linear-gradient(90deg, {loginTheme.accent} 0%, {loginTheme.folderBorder} 100%);"
+				></div>
+
+				<!-- Card Content -->
+				<div class="p-5 sm:p-6">
+					<div class="flex items-center gap-3 mb-3">
+						<div
+							class="w-10 h-10 rounded-xl flex items-center justify-center shadow-xs shrink-0"
+							style="background-color: {loginTheme.badgeBg}; border: 1px solid {loginTheme.badgeBorder}; color: {loginTheme.accentDark};"
+						>
+							<span class="material-symbols-outlined text-[22px]">info</span>
+						</div>
+						<h3 class="text-base font-bold text-on-surface">{infoModal.title}</h3>
+					</div>
+					<p class="text-xs text-on-surface-variant leading-relaxed">
+						{infoModal.message}
+					</p>
+				</div>
+
+				<!-- Stitched Perforation Footer -->
+				<div
+					class="p-4 border-t flex items-center justify-end"
+					style="border-color: {loginTheme.folderBorder}; background-color: {loginTheme.footerBg};"
 				>
-					Entendido
-				</button>
+					<button
+						type="button"
+						onclick={closeInfo}
+						class="w-full sm:w-auto px-6 py-2 rounded-xl text-white text-xs font-bold tracking-wide transition shadow-sm cursor-pointer"
+						style="background-color: {loginTheme.accent}; box-shadow: 0 2px 0 {loginTheme.accentShadow};"
+					>
+						Entendido
+					</button>
+				</div>
 			</div>
 		</div>
 	{/if}

@@ -350,7 +350,7 @@
 	<!-- Modal Container with Ambient Dimming Backdrop -->
 	<div
 		id="editKrModal"
-		class="fixed inset-0 z-[100] flex justify-center p-3 sm:p-5 overflow-y-auto"
+		class="fixed inset-0 z-[100] flex justify-center p-2 sm:p-5 overflow-y-auto overscroll-contain"
 		style="font-family: 'Poppins', sans-serif !important;"
 	>
 		<!-- Backdrop Overlay -->
@@ -362,17 +362,17 @@
 
 		<!-- Outer Folder Jacket & Tabbed Dossier Shell -->
 		<div
-			class="relative w-full max-w-5xl my-auto z-10 flex flex-col h-[88vh] max-h-[850px] min-h-[460px] pt-1 sm:pt-2"
+			class="relative w-full max-w-5xl my-auto z-10 flex flex-col h-[90dvh] sm:h-[88dvh] max-h-[850px] min-h-[420px] pt-1 sm:pt-2"
 		>
 			<!-- FOLDER SUSPENDED TABS (Recortes de abas salientes superiores estilo pasta Hal Lee / ShareWillow) -->
 			<div
-				class="flex items-end gap-1.5 px-4 sm:px-8 -mb-[2px] z-20 shrink-0 select-none overflow-x-auto no-scrollbar"
+				class="flex items-end gap-1 sm:gap-1.5 px-2 sm:px-8 -mb-[2px] z-20 shrink-0 select-none overflow-x-auto no-scrollbar"
 			>
 				<!-- Tab 1: Parâmetros & Meta -->
 				<button
 					type="button"
 					onclick={() => (activeTab = 'tab1')}
-					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2.5 text-xs font-bold transition-all cursor-pointer {activeTab ===
+					class="folder-tab group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-[11px] sm:text-xs font-bold transition-all cursor-pointer shrink-0 {activeTab ===
 					'tab1'
 						? 'folder-tab-active border-t-2 border-l border-r text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative'
 						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
@@ -387,7 +387,7 @@
 					<span class="tracking-tight whitespace-nowrap">1. Parâmetros &amp; Meta</span>
 					{#if activeTab === 'tab1'}
 						<span
-							class="text-[10px] px-1.5 py-0.2 rounded font-bold ml-1 border"
+							class="text-[10px] px-1.5 py-0.2 rounded font-bold ml-1 border hidden sm:inline"
 							style="background-color: {theme.badgeBg}; border-color: {theme.badgeBorder}; color: {theme.badgeText};"
 							>Ativo</span
 						>
@@ -398,7 +398,7 @@
 				<button
 					type="button"
 					onclick={() => (activeTab = 'tab2')}
-					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-bold transition-all cursor-pointer {activeTab ===
+					class="folder-tab group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 text-[11px] sm:text-xs font-bold transition-all cursor-pointer shrink-0 {activeTab ===
 					'tab2'
 						? 'folder-tab-active border-t-2 border-l border-r text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative'
 						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
@@ -420,7 +420,7 @@
 				<button
 					type="button"
 					onclick={() => (activeTab = 'tab3')}
-					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-bold transition-all cursor-pointer {activeTab ===
+					class="folder-tab group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 text-[11px] sm:text-xs font-bold transition-all cursor-pointer shrink-0 {activeTab ===
 					'tab3'
 						? 'folder-tab-active border-t-2 border-l border-r text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative'
 						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
@@ -442,7 +442,7 @@
 				<button
 					type="button"
 					onclick={() => (activeTab = 'tab4')}
-					class="folder-tab group flex items-center gap-2 px-4 sm:px-5 py-2 text-xs font-bold transition-all cursor-pointer {activeTab ===
+					class="folder-tab group flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 text-[11px] sm:text-xs font-bold transition-all cursor-pointer shrink-0 {activeTab ===
 					'tab4'
 						? 'folder-tab-active border-t-2 border-l border-r text-on-surface shadow-[0_-3px_8px_rgba(29,27,23,0.06)] relative'
 						: 'bg-[#F6F0E9] hover:bg-[#FAF6F0] border-t-2 border-l border-r border-transparent text-on-surface-variant hover:text-on-surface shadow-[0_-1px_3px_rgba(29,27,23,0.04)]'}"
@@ -478,22 +478,22 @@
 
 				<!-- Archival Folder Header Strip -->
 				<div
-					class="px-5 py-3 sm:px-6 sm:py-3.5 border-b flex items-center justify-between shrink-0 relative z-30 transition-colors"
+					class="px-3.5 py-2.5 sm:px-6 sm:py-3.5 border-b flex items-center justify-between gap-2 shrink-0 relative z-30 transition-colors"
 					style="background-color: {theme.cardBg}; border-color: {theme.folderBorder};"
 				>
-					<div class="flex flex-wrap items-center gap-3">
+					<div class="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
 						<!-- Physical Tag Badge -->
 						<div
-							class="flex items-center gap-1.5 px-2.5 py-1 rounded border shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] transition-colors"
+							class="flex items-center gap-1.5 px-2 sm:px-2.5 py-1 rounded border shadow-[inset_0_1px_1px_rgba(255,255,255,0.7)] transition-colors min-w-0"
 							style="background-color: {theme.badgeBg}; border-color: {theme.badgeBorder}; color: {theme.badgeText};"
 						>
-							<span class="material-symbols-outlined text-[14px]" style="color: {theme.accent};">folder_special</span>
-							<span class="text-[11px] font-extrabold uppercase tracking-widest">
+							<span class="material-symbols-outlined text-[14px] shrink-0" style="color: {theme.accent};">folder_special</span>
+							<span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest truncate">
 								DOSSIÊ RESULTADO-CHAVE
 							</span>
 						</div>
 						<div
-							class="flex items-center gap-1.5 bg-surface-container-lowest px-2.5 py-1 rounded-md text-on-surface-variant border border-outline-variant/40 text-[11px] font-semibold"
+							class="hidden min-[440px]:flex items-center gap-1.5 bg-surface-container-lowest px-2.5 py-1 rounded-md text-on-surface-variant border border-outline-variant/40 text-[11px] font-semibold"
 						>
 							<span class="w-2 h-2 rounded-full" style="background-color: {theme.accent};"></span>
 							<span>Ciclo: {currentCycle?.code ?? '2026-S1'}</span>
@@ -504,12 +504,12 @@
 						</span>
 					</div>
 
-					<div class="flex items-center gap-2">
+					<div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
 						<!-- Seletor de Cor Paper Strategist -->
 						<PaperColorPicker bind:value={accentColor} disabled={!canEdit} align="right" />
 
 						<span
-							class="text-[11px] font-semibold text-on-surface-variant bg-surface-container-low px-2 py-1 rounded border border-outline-variant/30 hidden sm:inline-flex items-center gap-1"
+							class="text-[11px] font-semibold text-on-surface-variant bg-surface-container-low px-2 py-1 rounded border border-outline-variant/30 hidden lg:inline-flex items-center gap-1"
 						>
 							<span class="material-symbols-outlined text-[14px] text-tertiary">lock_open</span>
 							Revisão Estratégica Aberta
@@ -517,7 +517,7 @@
 						<button
 							type="button"
 							onclick={onClose}
-							class="w-8 h-8 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant hover:text-on-surface border border-outline-variant/40 transition-colors shadow-xs flex items-center justify-center cursor-pointer"
+							class="w-8 h-8 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant hover:text-on-surface border border-outline-variant/40 transition-colors shadow-xs flex items-center justify-center cursor-pointer shrink-0"
 						>
 							<span class="material-symbols-outlined text-[18px]">close</span>
 						</button>
@@ -525,7 +525,7 @@
 				</div>
 
 				<!-- Scrollable Dossier Body -->
-				<div class="p-5 sm:p-6 md:p-7 flex-1 min-h-0 overflow-y-auto text-on-surface">
+				<div class="p-3.5 sm:p-6 md:p-7 flex-1 min-h-0 overflow-y-auto overscroll-contain custom-scroll text-on-surface">
 					<!-- ============================================================== -->
 					<!-- ABA 1: PARÂMETROS & META (Título, Objetivo Pai, Baseline, Meta) -->
 					<!-- ============================================================== -->
@@ -1651,7 +1651,7 @@
 
 				<!-- Dossier Footer Ribbon -->
 				<div
-					class="px-5 py-3 sm:px-6 sm:py-3.5 border-t flex flex-col gap-2 shrink-0 transition-colors duration-200"
+					class="px-3.5 py-2.5 sm:px-6 sm:py-3.5 border-t flex flex-col gap-2 shrink-0 transition-colors duration-200"
 					style="background-color: {theme.footerBg}; border-color: {theme.folderBorder};"
 				>
 					<!-- Linha de Costura / Picote Sutil de Papel Manilha -->
@@ -1660,8 +1660,8 @@
 						style="background-image: repeating-linear-gradient(to right, {theme.stitchedColor} 0px, {theme.stitchedColor} 6px, transparent 6px, transparent 11px);"
 					></div>
 
-					<div class="flex flex-wrap items-center justify-between gap-3">
-						<div class="flex items-center gap-2 text-xs text-on-surface-variant font-medium">
+					<div class="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3">
+						<div class="hidden sm:flex items-center gap-2 text-xs text-on-surface-variant font-medium">
 							<span class="material-symbols-outlined text-[16px]" style="color: {theme.accent};">schedule</span>
 							<span>
 								{#if latestMetricUpdate}
@@ -1672,21 +1672,21 @@
 							</span>
 						</div>
 
-					<div class="flex items-center gap-2.5">
+					<div class="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
 						{#if canEdit}
 							<button
 								type="button"
 								onclick={() => (showDeleteConfirm = true)}
-								class="px-3.5 py-2 text-error hover:bg-error-container/40 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+								class="px-3 py-2 text-error hover:bg-error-container/40 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer mr-auto sm:mr-0"
 							>
 								<span class="material-symbols-outlined text-[16px]">delete</span>
-								Excluir KR
+								<span>Excluir KR</span>
 							</button>
 						{/if}
 						<button
 							type="button"
 							onclick={onClose}
-							class="px-4 py-2 bg-surface-container rounded-lg border border-outline-variant/50 text-on-surface hover:bg-surface-container-high text-xs font-bold transition-all shadow-xs cursor-pointer"
+							class="px-3.5 sm:px-4 py-2 bg-surface-container rounded-lg border border-outline-variant/50 text-on-surface hover:bg-surface-container-high text-xs font-bold transition-all shadow-xs cursor-pointer"
 						>
 							Cancelar
 						</button>
@@ -1694,11 +1694,11 @@
 							<button
 								type="submit"
 								form="updateKrForm"
-								class="px-5 py-2 text-white rounded-lg text-xs font-bold hover:brightness-105 hover:-translate-y-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer"
+								class="px-4 sm:px-5 py-2 text-white rounded-lg text-xs font-bold hover:brightness-105 hover:-translate-y-0.5 active:translate-y-0.5 transition-all flex items-center gap-1.5 cursor-pointer"
 								style="background-color: {theme.accent}; box-shadow: 0 2px 0 {theme.accentShadow};"
 							>
 								<span class="material-symbols-outlined text-[18px]">check</span>
-								Salvar Alterações no Dossiê
+								<span>Salvar Alterações</span>
 							</button>
 						{/if}
 					</div>
@@ -1708,12 +1708,13 @@
 	</div>
 	</div>
 
-	<!-- Delete KR Confirmation Modal -->
+	<!-- Delete KR Confirmation Dossier Modal -->
 	{#if showDeleteConfirm}
+		{@const delTheme = getDossierTheme('#ba1a1a')}
 		<div
 			role="presentation"
 			onclick={() => (showDeleteConfirm = false)}
-			class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-on-surface/40 backdrop-blur-xs"
+			class="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-6 bg-[#181613]/65 backdrop-blur-[5px] overflow-y-auto overscroll-contain"
 		>
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -1722,60 +1723,93 @@
 				tabindex="-1"
 				aria-modal="true"
 				onclick={(e) => e.stopPropagation()}
-				class="w-full max-w-md bg-surface-container-lowest p-6 rounded-2xl shadow-2xl border border-outline-variant flex flex-col gap-4"
+				class="w-full max-w-md flex flex-col my-auto relative animate-in fade-in zoom-in-95 duration-150"
 			>
-				<div class="flex items-center gap-3">
-					<span
-						class="w-10 h-10 rounded-full bg-error-container text-error flex items-center justify-center shrink-0"
+				<!-- Top Protruding Warning Tab -->
+				<div class="flex items-end justify-between px-3 -mb-[1px] relative z-20">
+					<div
+						class="border-t-2 border-l-2 border-r-2 rounded-t-xl px-4 py-2 flex items-center gap-2 relative"
+						style="background-color: {delTheme.folderBg}; border-color: {delTheme.folderBorder};"
 					>
-						<span class="material-symbols-outlined text-[24px]">warning</span>
-					</span>
-					<div>
-						<h3 class="text-sm font-bold text-on-surface">Confirmar Exclusão de KR</h3>
-						<p class="text-xs text-on-surface-variant">Esta ação não pode ser desfeita.</p>
+						<div
+							class="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-white/95 border"
+							style="border-color: {delTheme.badgeBorder};"
+						>
+							<span class="w-2 h-2 rounded-full bg-[#ba1a1a] animate-pulse"></span>
+							<span class="font-mono text-[10px] font-bold uppercase tracking-wider text-[#ba1a1a]">
+								CONFIRMAR EXCLUSÃO DE KR
+							</span>
+						</div>
+						<span
+							class="absolute -bottom-1 left-0 right-0 h-2"
+							style="background-color: {delTheme.folderBg};"
+						></span>
 					</div>
-				</div>
-				<p class="text-xs text-on-surface">
-					Tem certeza que deseja excluir o Resultado-Chave <strong>"{node.title}"</strong>?
-					{#if childKpis.length > 0}
-						<br /><br />
-						<span class="text-error font-semibold">
-							Atenção: Este KR possui {childKpis.length} KPI(s) filho(s). Você pode excluí-los em cascata
-							ou promovê-los para o Objetivo pai.
-						</span>
-					{/if}
-				</p>
-				<div class="flex flex-wrap items-center justify-end gap-2 pt-2">
 					<button
 						type="button"
 						onclick={() => (showDeleteConfirm = false)}
-						class="px-3 py-1.5 rounded-lg border border-outline-variant text-xs font-semibold text-on-surface hover:bg-surface-container"
+						class="w-8 h-8 mb-1.5 rounded-full bg-white/95 hover:bg-white text-[#524d45] border border-[#cfc5b4] flex items-center justify-center shadow-xs cursor-pointer"
+						title="Fechar"
 					>
-						Cancelar
+						<span class="material-symbols-outlined text-[18px]">close</span>
 					</button>
-					<form
-						method="POST"
-						action="?/deleteNode"
-						use:enhance={() => {
-							return async ({ result, update }) => {
-								if (result.type === 'success') {
-									showDeleteConfirm = false;
-									onClose();
-								}
-								await update({ reset: false });
-							};
-						}}
-					>
-						<input type="hidden" name="nodeId" value={node.id} />
-						<input type="hidden" name="promote" value="0" />
-						<button
-							type="submit"
-							class="px-3.5 py-1.5 rounded-lg bg-error text-white text-xs font-bold shadow-xs hover:opacity-90 cursor-pointer"
+				</div>
+
+				<!-- Folder Body -->
+				<div
+					class="border-2 rounded-2xl hanging-folder-shadow overflow-hidden flex flex-col relative z-10"
+					style="background-color: {delTheme.folderBg}; border-color: {delTheme.folderBorder};"
+				>
+					<div
+						class="h-1.5 w-full border-b"
+						style="background: linear-gradient(to right, rgba(186,26,26,0.25), rgba(186,26,26,0.5), rgba(186,26,26,0.2)); border-color: {delTheme.folderBorder};"
+					></div>
+
+					<div class="p-4 sm:p-5 space-y-3">
+						<div
+							class="p-4 rounded-xl border space-y-2.5"
+							style="background-color: {delTheme.cardBg}; border-color: {delTheme.cardBorder};"
 						>
-							Excluir KR
+							<div class="flex items-center gap-3">
+								<span
+									class="w-10 h-10 rounded-xl bg-error-container text-error flex items-center justify-center shrink-0"
+								>
+									<span class="material-symbols-outlined text-[24px]">warning</span>
+								</span>
+								<div>
+									<h3 class="text-sm font-bold text-[#1d1b17]">Confirmar Exclusão de KR</h3>
+									<p class="text-[11px] text-[#727784]">Esta ação não pode ser desfeita.</p>
+								</div>
+							</div>
+							<p class="text-xs text-[#424753] leading-relaxed">
+								Tem certeza que deseja excluir o Resultado-Chave <strong>"{node.title}"</strong>?
+								{#if childKpis.length > 0}
+									<br /><br />
+									<span class="text-error font-semibold">
+										Atenção: Este KR possui {childKpis.length} KPI(s) filho(s). Você pode excluí-los em cascata
+										ou promovê-los para o Objetivo pai.
+									</span>
+								{/if}
+							</p>
+						</div>
+					</div>
+
+					<!-- Stitched Footer -->
+					<div
+						class="px-4 sm:px-5 py-3 border-t flex flex-wrap items-center justify-end gap-2 relative"
+						style="background-color: {delTheme.footerBg}; border-color: {delTheme.folderBorder};"
+					>
+						<div
+							class="absolute top-0.5 left-0 right-0 h-[1px] opacity-60"
+							style="background-image: repeating-linear-gradient(to right, {delTheme.stitchedColor} 0px, {delTheme.stitchedColor} 6px, transparent 6px, transparent 11px);"
+						></div>
+						<button
+							type="button"
+							onclick={() => (showDeleteConfirm = false)}
+							class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-[#d5cebe] text-xs font-bold text-[#424753] cursor-pointer"
+						>
+							Cancelar
 						</button>
-					</form>
-					{#if childKpis.length > 0 && node.parent_id}
 						<form
 							method="POST"
 							action="?/deleteNode"
@@ -1790,15 +1824,39 @@
 							}}
 						>
 							<input type="hidden" name="nodeId" value={node.id} />
-							<input type="hidden" name="promote" value="1" />
+							<input type="hidden" name="promote" value="0" />
 							<button
 								type="submit"
-								class="px-3.5 py-1.5 rounded-lg bg-primary text-white text-xs font-bold shadow-xs hover:opacity-90 cursor-pointer"
+								class="px-3.5 py-2 rounded-xl bg-error text-white text-xs font-bold shadow-[0_2px_0_#7f1d1d] active:translate-y-0.5 hover:opacity-90 cursor-pointer"
 							>
-								Excluir e Promover KPIs
+								Excluir KR
 							</button>
 						</form>
-					{/if}
+						{#if childKpis.length > 0 && node.parent_id}
+							<form
+								method="POST"
+								action="?/deleteNode"
+								use:enhance={() => {
+									return async ({ result, update }) => {
+										if (result.type === 'success') {
+											showDeleteConfirm = false;
+											onClose();
+										}
+										await update({ reset: false });
+									};
+								}}
+							>
+								<input type="hidden" name="nodeId" value={node.id} />
+								<input type="hidden" name="promote" value="1" />
+								<button
+									type="submit"
+									class="px-3.5 py-2 rounded-xl bg-primary text-white text-xs font-bold shadow-[0_2px_0_#004494] active:translate-y-0.5 hover:opacity-90 cursor-pointer"
+								>
+									Excluir e Promover KPIs
+								</button>
+							</form>
+						{/if}
+					</div>
 				</div>
 			</div>
 		</div>

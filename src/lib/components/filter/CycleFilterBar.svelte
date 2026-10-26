@@ -192,7 +192,7 @@
 <section class="relative w-full mb-space-lg">
 	<!-- Top Identity Anchor (Archival Parchment Banner) -->
 	<div
-		class="relative bg-surface-container-low rounded-xl shadow-[0_1px_1px_rgba(36,34,30,0.05),0_3px_6px_-1px_rgba(36,34,30,0.04),0_-1px_0_rgba(255,255,255,0.8)_inset] p-space-md mb-space-md overflow-hidden"
+		class="relative bg-surface-container-low rounded-xl shadow-[0_1px_1px_rgba(36,34,30,0.05),0_3px_6px_-1px_rgba(36,34,30,0.04),0_-1px_0_rgba(255,255,255,0.8)_inset] p-3.5 sm:p-space-md mb-space-md overflow-hidden"
 	>
 		<div
 			class="absolute -right-10 -bottom-10 w-48 h-48 bg-primary/5 rounded-full pointer-events-none blur-2xl"
@@ -285,7 +285,7 @@
 
 	<!-- Craft Cutting Mat Controls & Index Tabs Ribbon -->
 	<div
-		class="w-full bg-surface-container-high rounded-xl p-space-sm shadow-[inset_0_1px_3px_rgba(36,34,30,0.08)] flex flex-col xl:flex-row xl:items-center justify-between gap-space-md"
+		class="w-full bg-surface-container-high rounded-xl p-2 sm:p-space-sm shadow-[inset_0_1px_3px_rgba(36,34,30,0.08)] flex flex-col xl:flex-row xl:items-center justify-between gap-space-md"
 	>
 		<!-- Left: Tabs & Filters -->
 		<div class="flex flex-wrap items-center gap-space-xs">
@@ -308,7 +308,7 @@
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="fixed inset-0 z-20" onclick={() => (showYearDropdown = false)}></div>
 					<div
-						class="absolute top-full left-0 mt-1 w-56 bg-surface-container-lowest rounded-xl shadow-[0_12px_24px_rgba(36,34,30,0.12)] p-1.5 z-30 border border-outline-variant/30 flex flex-col gap-0.5"
+						class="absolute top-full left-0 mt-1 w-56 max-w-[calc(100vw-32px)] bg-surface-container-lowest rounded-xl shadow-[0_12px_24px_rgba(36,34,30,0.12)] p-1.5 z-30 border border-outline-variant/30 flex flex-col gap-0.5"
 					>
 						{#each availableYears as yr (yr)}
 							{@const active = selectedYears.includes(yr)}
@@ -345,7 +345,7 @@
 					<button
 						type="button"
 						onclick={() => toggleSemester(sem)}
-						class="px-3 py-1 rounded font-label-md text-label-md transition-all {active
+						class="px-2.5 sm:px-3 py-1 rounded font-label-md text-label-md transition-all {active
 							? 'font-bold bg-surface-container-highest text-on-surface shadow-[inset_0_1px_1px_rgba(36,34,30,0.08)]'
 							: 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'}"
 					>
@@ -401,7 +401,7 @@
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="fixed inset-0 z-20" onclick={() => (showTeamDropdown = false)}></div>
 					<div
-						class="absolute top-full left-0 mt-1 w-56 bg-surface-container-lowest rounded-xl shadow-[0_12px_24px_rgba(36,34,30,0.12)] p-1.5 z-30 border border-outline-variant/30 max-h-72 overflow-y-auto custom-scroll flex flex-col gap-0.5"
+						class="absolute top-full left-0 mt-1 w-56 max-w-[calc(100vw-32px)] bg-surface-container-lowest rounded-xl shadow-[0_12px_24px_rgba(36,34,30,0.12)] p-1.5 z-30 border border-outline-variant/30 max-h-72 overflow-y-auto custom-scroll flex flex-col gap-0.5"
 					>
 						<button
 							type="button"
@@ -499,7 +499,7 @@
 					<!-- svelte-ignore a11y_no_static_element_interactions -->
 					<div class="fixed inset-0 z-20" onclick={() => (showUserDropdown = false)}></div>
 					<div
-						class="absolute top-full left-0 mt-1 w-64 bg-surface-container-lowest rounded-xl shadow-[0_12px_24px_rgba(36,34,30,0.12)] p-1.5 z-30 border border-outline-variant/30 max-h-72 overflow-y-auto custom-scroll flex flex-col gap-0.5"
+						class="absolute top-full left-0 mt-1 w-64 max-w-[calc(100vw-32px)] bg-surface-container-lowest rounded-xl shadow-[0_12px_24px_rgba(36,34,30,0.12)] p-1.5 z-30 border border-outline-variant/30 max-h-72 overflow-y-auto custom-scroll flex flex-col gap-0.5"
 					>
 						<button
 							type="button"
@@ -563,13 +563,13 @@
 				<button
 					type="button"
 					onclick={() => setViewMode('tree')}
-					class="relative px-3 py-1 font-label-md text-label-md rounded flex items-center gap-1.5 transition-all {viewMode ===
+					class="relative px-2.5 sm:px-3 py-1 font-label-md text-label-md rounded flex items-center gap-1 sm:gap-1.5 transition-all {viewMode ===
 					'tree'
 						? 'font-bold bg-surface-container-lowest text-primary shadow-[0_2px_4px_rgba(36,34,30,0.08)]'
 						: 'text-on-surface-variant hover:text-on-surface'}"
 				>
 					<span class="material-symbols-outlined text-[16px]">account_tree</span>
-					<span>Visão Horizontal</span>
+					<span><span class="hidden sm:inline">Visão </span>Horizontal</span>
 					{#if viewMode === 'tree'}
 						<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
 					{/if}
@@ -578,7 +578,7 @@
 				<button
 					type="button"
 					onclick={() => setViewMode('outline')}
-					class="relative px-2.5 py-1 font-label-md text-label-md rounded flex items-center gap-1.5 transition-all {viewMode ===
+					class="relative px-2.5 py-1 font-label-md text-label-md rounded flex items-center gap-1 sm:gap-1.5 transition-all {viewMode ===
 					'outline'
 						? 'font-bold bg-surface-container-lowest text-primary shadow-[0_2px_4px_rgba(36,34,30,0.08)]'
 						: 'text-on-surface-variant hover:text-on-surface'}"
@@ -593,13 +593,13 @@
 				<button
 					type="button"
 					onclick={() => setViewMode('canvas')}
-					class="relative px-2.5 py-1 font-label-md text-label-md rounded flex items-center gap-1.5 transition-all {viewMode ===
+					class="relative px-2.5 py-1 font-label-md text-label-md rounded flex items-center gap-1 sm:gap-1.5 transition-all {viewMode ===
 					'canvas'
 						? 'font-bold bg-surface-container-lowest text-primary shadow-[0_2px_4px_rgba(36,34,30,0.08)]'
 						: 'text-on-surface-variant hover:text-on-surface'}"
 				>
 					<span class="material-symbols-outlined text-[16px]">view_kanban</span>
-					<span>Visão Vertical</span>
+					<span><span class="hidden sm:inline">Visão </span>Vertical</span>
 					{#if viewMode === 'canvas'}
 						<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
 					{/if}
@@ -609,30 +609,30 @@
 
 		<!-- Right: Quick Action Physical Action Tabs -->
 		{#if canEdit}
-			<div class="flex flex-wrap items-center gap-2">
+			<div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
 				<button
 					type="button"
 					onclick={onCreateObjective}
-					class="px-3.5 py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md flex items-center gap-1.5 shadow-[0_2px_0_#004494] hover:-translate-y-0.5 active:translate-y-0.5 transition-all"
+					class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-primary text-on-primary rounded-lg font-label-md text-label-md flex items-center gap-1 sm:gap-1.5 shadow-[0_2px_0_#004494] hover:-translate-y-0.5 active:translate-y-0.5 transition-all cursor-pointer"
 				>
 					<span class="material-symbols-outlined text-[18px]">add</span>
-					<span>Novo Objetivo</span>
+					<span><span class="hidden min-[400px]:inline">Novo </span>Objetivo</span>
 				</button>
 				<button
 					type="button"
 					onclick={() => onCreateKR?.()}
-					class="px-3.5 py-2 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md flex items-center gap-1.5 shadow-[0_2px_0_#8d0051] hover:-translate-y-0.5 active:translate-y-0.5 transition-all"
+					class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-secondary text-on-secondary rounded-lg font-label-md text-label-md flex items-center gap-1 sm:gap-1.5 shadow-[0_2px_0_#8d0051] hover:-translate-y-0.5 active:translate-y-0.5 transition-all cursor-pointer"
 				>
 					<span class="material-symbols-outlined text-[18px]">adjust</span>
-					<span>Novo KR</span>
+					<span><span class="hidden min-[400px]:inline">Novo </span>KR</span>
 				</button>
 				<button
 					type="button"
 					onclick={() => onCreateKPI?.()}
-					class="px-3.5 py-2 bg-tertiary-fixed text-on-tertiary-fixed rounded-lg font-label-md text-label-md flex items-center gap-1.5 shadow-[0_2px_0_#6c5e00] hover:-translate-y-0.5 active:translate-y-0.5 transition-all font-bold"
+					class="px-2.5 sm:px-3.5 py-1.5 sm:py-2 bg-tertiary-fixed text-on-tertiary-fixed rounded-lg font-label-md text-label-md flex items-center gap-1 sm:gap-1.5 shadow-[0_2px_0_#6c5e00] hover:-translate-y-0.5 active:translate-y-0.5 transition-all font-bold cursor-pointer"
 				>
 					<span class="material-symbols-outlined text-[18px]">analytics</span>
-					<span>Indicador KPI</span>
+					<span><span class="hidden min-[400px]:inline">Indicador </span>KPI</span>
 				</button>
 			</div>
 		{/if}

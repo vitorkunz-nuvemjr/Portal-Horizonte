@@ -4,6 +4,7 @@
 	import { base } from '$app/paths';
 	import type { Profile } from '$lib/types';
 	import { getInitials } from '$lib/utils';
+	import { getDossierTheme } from '$lib/dossier-theme';
 	import type { Snippet } from 'svelte';
 	import Footer from '$lib/components/layout/Footer.svelte';
 
@@ -26,9 +27,12 @@
 	}: Props = $props();
 
 	let showProfileMenu = $state(false);
+	let showMobileCommandModal = $state(false);
 	let globalSearch = $state($page.url.searchParams.get('q') ?? '');
 	let sidebarPinned = $state(false);
 	let sidebarHovered = $state(false);
+
+	const mobileDossierTheme = getDossierTheme('#0058bd');
 
 	const isSidebarExpanded = $derived(sidebarPinned || sidebarHovered);
 
@@ -51,14 +55,22 @@
 	let searchInputEl = $state<HTMLInputElement | null>(null);
 
 	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape' && showMobileCommandModal) {
+			showMobileCommandModal = false;
+			return;
+		}
 		if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
 			e.preventDefault();
 			togglePinSidebar();
 		}
 		if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
 			e.preventDefault();
-			searchInputEl?.focus();
-			searchInputEl?.select();
+			if (typeof window !== 'undefined' && window.innerWidth < 768) {
+				showMobileCommandModal = true;
+			} else {
+				searchInputEl?.focus();
+				searchInputEl?.select();
+			}
 		}
 	}
 
@@ -113,23 +125,23 @@
 	<!-- Top 4px Parchment Ruler Strip -->
 	<div class="w-full h-1 bg-surface-variant mat-ruler-h"></div>
 
-	<div class="w-full h-[76px] px-gutter flex items-center justify-between gap-space-md">
+	<div class="w-full h-[76px] px-3.5 sm:px-gutter flex items-center justify-between gap-2 sm:gap-space-md">
 		<!-- Left: Brand -->
-		<div class="flex items-center gap-space-md">
-			<a href="/strategy" class="flex items-center gap-space-sm group">
+		<div class="flex items-center gap-2 sm:gap-space-md min-w-0">
+			<a href="/strategy" class="flex items-center gap-2 sm:gap-space-sm group min-w-0">
 				<div
-					class="w-9 h-9 flex items-center justify-center overflow-hidden"
+					class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center overflow-hidden shrink-0"
 				>
 					<img src="{base}/favicon.png" alt="Horizonte OKRs" class="w-full h-full object-contain scale-105" />
 				</div>
-				<div class="flex flex-col">
+				<div class="flex flex-col min-w-0">
 					<span
-						class="font-label-md text-label-md tracking-wider text-on-surface font-bold"
+						class="font-label-md text-label-md tracking-wider text-on-surface font-bold truncate"
 					>
 						Horizonte OKRs
 					</span>
 					<span
-						class="font-label-sm text-label-sm text-on-surface-variant tracking-wide"
+						class="font-label-sm text-label-sm text-on-surface-variant tracking-wide truncate hidden min-[380px]:block"
 					>
 						Planejamento Estratégico
 					</span>
@@ -160,8 +172,22 @@
 			</div>
 		</div>
 
-		<!-- Right: Cycle Badge, Notifications, and User Profile -->
-		<div class="flex items-center gap-space-sm">
+		<!-- Right: Mobile Search/Actions Trigger, Cycle Badge, Notifications, and User Profile -->
+		<div class="flex items-center gap-1.5 sm:gap-space-sm shrink-0">
+			<!-- Mobile Search & Quick Actions Dossier Trigger -->
+			<button
+				type="button"
+				onclick={() => (showMobileCommandModal = true)}
+				class="md:hidden inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/95 hover:bg-white border border-[#cfc5b4] shadow-[0_2px_0_#d8d2c2,inset_0_1px_0_#ffffff] active:translate-y-0.5 text-on-surface transition-all cursor-pointer"
+				title="Pesquisar e Ações Rápidas"
+				aria-label="Abrir busca e ações rápidas"
+			>
+				<span class="material-symbols-outlined text-[18px] text-primary">search</span>
+				<span class="font-mono text-[10px] font-bold uppercase tracking-wider text-[#1d1b17] hidden min-[420px]:inline">
+					Buscar &amp; Ações
+				</span>
+			</button>
+
 			<div
 				class="hidden sm:flex items-center gap-1.5 bg-surface-container px-3 py-1.5 rounded-full shadow-[inset_0_1px_2px_rgba(36,34,30,0.08)]"
 			>
@@ -184,7 +210,7 @@
 				{/if}
 			</a>
 
-			<div class="relative flex items-center gap-space-xs pl-space-xs">
+			<div class="relative flex items-center gap-space-xs pl-0.5 sm:pl-space-xs">
 				<button
 					type="button"
 					onclick={() => (showProfileMenu = !showProfileMenu)}
@@ -203,7 +229,7 @@
 						onclick={() => (showProfileMenu = false)}
 					></div>
 					<div
-						class="absolute right-0 top-full mt-2 w-72 rounded-xl bg-surface-container-lowest p-3 shadow-[0_16px_32px_rgba(36,34,30,0.14)] border border-outline-variant/40 z-50"
+						class="absolute right-0 top-full mt-2 w-[min(18rem,calc(100vw-24px))] rounded-2xl bg-[#fff8f2] p-3.5 shadow-[0_20px_50px_rgba(29,27,23,0.24)] border-2 border-[#cfc5b4] z-50"
 					>
 						<div class="flex items-center justify-between gap-2 pb-2.5 border-b border-outline-variant/30">
 							<div class="min-w-0">
@@ -472,9 +498,265 @@
 </aside>
 
 <!-- Main Content Container (Pushes content by 64px if pinned, or 16px if unpinned rail) -->
-<div class="transition-all duration-300 ease-in-out {sidebarPinned ? 'md:pl-64' : 'md:pl-16'} relative flex flex-col min-h-screen">
+<div class="transition-all duration-300 ease-in-out {sidebarPinned ? 'md:pl-64' : 'md:pl-16'} pb-20 md:pb-0 relative flex flex-col min-h-screen">
 	<main class="relative pt-20 flex-1 bg-transparent flex flex-col">
 		{@render children()}
 	</main>
 	<Footer />
 </div>
+
+<!-- Mobile Bottom Navigation Bar (< 768px) -->
+<nav
+	class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#fff8f2]/95 backdrop-blur-md border-t border-[#d8d2c2] shadow-[0_-4px_16px_rgba(29,27,23,0.08)] px-2 py-1.5 select-none"
+	aria-label="Navegação Mobile"
+>
+	<div class="grid grid-cols-4 gap-1 max-w-md mx-auto">
+		<a
+			href="/strategy"
+			class="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all {$page.url.pathname.startsWith('/strategy')
+				? 'bg-white text-primary font-bold shadow-[0_1px_3px_rgba(36,34,30,0.08)] border border-[#cfc5b4]/60'
+				: 'text-on-surface-variant hover:text-on-surface'}"
+		>
+			<span class="material-symbols-outlined text-[20px]">lan</span>
+			<span class="font-mono text-[9.5px] uppercase tracking-tight mt-0.5 truncate max-w-full">Mapa OKRs</span>
+		</a>
+
+		<a
+			href="/dashboard"
+			class="relative flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all {$page.url.pathname.startsWith('/dashboard')
+				? 'bg-white text-primary font-bold shadow-[0_1px_3px_rgba(36,34,30,0.08)] border border-[#cfc5b4]/60'
+				: 'text-on-surface-variant hover:text-on-surface'}"
+		>
+			<span class="material-symbols-outlined text-[20px]">query_stats</span>
+			<span class="font-mono text-[9.5px] uppercase tracking-tight mt-0.5 truncate max-w-full">Painel</span>
+			{#if atRiskCount > 0}
+				<span
+					class="absolute top-1 right-3 px-1.5 py-0.2 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-mono text-[9px] font-bold shadow-2xs"
+				>
+					{atRiskCount}
+				</span>
+			{/if}
+		</a>
+
+		<a
+			href="/identity"
+			class="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all {$page.url.pathname.startsWith('/identity')
+				? 'bg-white text-primary font-bold shadow-[0_1px_3px_rgba(36,34,30,0.08)] border border-[#cfc5b4]/60'
+				: 'text-on-surface-variant hover:text-on-surface'}"
+		>
+			<span class="material-symbols-outlined text-[20px]">explore</span>
+			<span class="font-mono text-[9.5px] uppercase tracking-tight mt-0.5 truncate max-w-full">Identidade</span>
+		</a>
+
+		<a
+			href="/admin"
+			class="flex flex-col items-center justify-center py-1.5 px-1 rounded-xl transition-all {$page.url.pathname.startsWith('/admin')
+				? 'bg-white text-primary font-bold shadow-[0_1px_3px_rgba(36,34,30,0.08)] border border-[#cfc5b4]/60'
+				: 'text-on-surface-variant hover:text-on-surface'}"
+		>
+			<span class="material-symbols-outlined text-[20px]">groups</span>
+			<span class="font-mono text-[9.5px] uppercase tracking-tight mt-0.5 truncate max-w-full">Admin</span>
+		</a>
+	</div>
+</nav>
+
+<!-- Mobile Search & Quick Actions Hanging-Folder Dossier Modal -->
+{#if showMobileCommandModal}
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		class="fixed inset-0 z-[100] flex items-center justify-center bg-[#181613]/60 backdrop-blur-[5px] p-2.5 sm:p-6 overflow-y-auto overscroll-contain"
+		onclick={(e) => {
+			if (e.target === e.currentTarget) showMobileCommandModal = false;
+		}}
+	>
+		<div class="w-full max-w-lg flex flex-col my-auto relative">
+			<!-- Top Protruding Folder Tab Bar -->
+			<div class="flex items-end justify-between px-2 sm:px-5 -mb-[1px] relative z-20">
+				<div
+					class="border-t-2 border-l-2 border-r-2 rounded-t-xl px-3 sm:px-5 py-2 flex items-center gap-2 shadow-[0_-3px_10px_rgba(0,0,0,0.05)] relative transition-colors duration-300"
+					style="background-color: {mobileDossierTheme.folderBg}; border-color: {mobileDossierTheme.folderBorder};"
+				>
+					<div
+						class="flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-white/95 border shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]"
+						style="border-color: color-mix(in srgb, {mobileDossierTheme.accent} 32%, transparent);"
+					>
+						<span class="w-2 h-2 rounded-full animate-pulse" style="background-color: {mobileDossierTheme.accent};"></span>
+						<span class="font-mono text-[10px] uppercase font-bold tracking-wider" style="color: {mobileDossierTheme.accent};">
+							BUSCA &amp; AÇÕES RÁPIDAS
+						</span>
+					</div>
+					<div
+						class="absolute -bottom-1 left-0 right-0 h-2 transition-colors duration-300"
+						style="background-color: {mobileDossierTheme.folderBg};"
+					></div>
+				</div>
+
+				<!-- Close Button -->
+				<div class="flex items-center gap-2 pb-2">
+					<button
+						type="button"
+						onclick={() => (showMobileCommandModal = false)}
+						class="w-8 h-8 rounded-full bg-white/95 hover:bg-white text-on-surface-variant hover:text-on-surface border border-[#cfc5b4] flex items-center justify-center shadow-[0_2px_0_#d8d2c2] active:translate-y-0.5 transition-all cursor-pointer"
+						title="Fechar (Esc)"
+						aria-label="Fechar dossiê de busca e ações"
+					>
+						<span class="material-symbols-outlined text-[18px]">close</span>
+					</button>
+				</div>
+			</div>
+
+			<!-- Main Folder Body -->
+			<div
+				class="border-2 rounded-2xl hanging-folder-shadow relative z-10 overflow-hidden flex flex-col transition-colors duration-300"
+				style="background-color: {mobileDossierTheme.folderBg}; border-color: {mobileDossierTheme.folderBorder};"
+			>
+				<!-- Top 1.5px Structural Reinforcement Bar -->
+				<div
+					class="w-full h-1.5"
+					style="background: linear-gradient(to right, color-mix(in srgb, {mobileDossierTheme.accent} 25%, transparent), color-mix(in srgb, {mobileDossierTheme.accent} 45%, transparent), color-mix(in srgb, {mobileDossierTheme.accent} 20%, transparent));"
+				></div>
+
+				<!-- Scrollable Inner Content -->
+				<div class="max-h-[calc(88dvh-130px)] overflow-y-auto overscroll-contain custom-scroll p-3.5 sm:p-5 space-y-4">
+					<!-- 1. Search Cardstock Panel -->
+					<div
+						class="rounded-xl p-3.5 border shadow-[0_2px_8px_rgba(29,27,23,0.04),inset_0_1px_0_#ffffff] space-y-2.5"
+						style="background-color: {mobileDossierTheme.cardBg}; border-color: {mobileDossierTheme.cardBorder};"
+					>
+						<label
+							for="mobile-global-search-input"
+							class="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider font-bold text-[#424753]"
+						>
+							<span class="material-symbols-outlined text-[14px]" style="color: {mobileDossierTheme.accent};">search</span>
+							<span>Pesquisar no Planejamento</span>
+						</label>
+						<div class="flex items-center gap-2">
+							<div class="relative flex-1">
+								<input
+									id="mobile-global-search-input"
+									type="search"
+									value={$page.url.searchParams.get('q') ?? globalSearch}
+									oninput={handleGlobalSearch}
+									onkeydown={(e) => {
+										if (e.key === 'Enter') {
+											showMobileCommandModal = false;
+										}
+									}}
+									placeholder="Buscar objetivos, KRs ou tags..."
+									class="w-full px-3 py-2.5 rounded-lg border text-xs font-medium text-[#1d1b17] placeholder:text-[#727784] focus:outline-none focus:ring-2 transition-all"
+									style="background-color: {mobileDossierTheme.inputBg}; border-color: {mobileDossierTheme.inputBorder};"
+								/>
+							</div>
+							<button
+								type="button"
+								onclick={() => (showMobileCommandModal = false)}
+								class="px-3 py-2.5 rounded-lg font-mono text-[10px] font-bold uppercase tracking-wider text-white shrink-0 active:translate-y-0.5 transition-all cursor-pointer"
+								style="background-color: {mobileDossierTheme.accent}; box-shadow: 0 2px 0 {mobileDossierTheme.accentShadow};"
+							>
+								Filtrar
+							</button>
+						</div>
+					</div>
+
+					<!-- 2. Quick Actions Cardstock Panel -->
+					<div
+						class="rounded-xl p-3.5 border shadow-[0_2px_8px_rgba(29,27,23,0.04),inset_0_1px_0_#ffffff] space-y-2.5"
+						style="background-color: {mobileDossierTheme.cardBg}; border-color: {mobileDossierTheme.cardBorder};"
+					>
+						<div class="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider font-bold text-[#424753]">
+							<span class="material-symbols-outlined text-[14px]" style="color: {mobileDossierTheme.accent};">bolt</span>
+							<span>Ações Rápidas</span>
+						</div>
+
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+							<button
+								type="button"
+								onclick={() => {
+									showMobileCommandModal = false;
+									triggerQuickAction('objective');
+								}}
+								class="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-primary text-on-primary font-label-md text-xs font-bold rounded-xl shadow-[0_2.5px_0_#004494] hover:brightness-105 active:translate-y-0.5 transition-all cursor-pointer"
+							>
+								<span class="material-symbols-outlined text-[18px]">add</span>
+								<span>Novo Objetivo</span>
+							</button>
+
+							<button
+								type="button"
+								onclick={() => {
+									showMobileCommandModal = false;
+									triggerQuickAction('kr');
+								}}
+								class="w-full flex items-center justify-center gap-2 py-2.5 px-3 bg-secondary text-on-secondary font-label-md text-xs font-bold rounded-xl shadow-[0_2.5px_0_#8d0051] hover:brightness-105 active:translate-y-0.5 transition-all cursor-pointer"
+							>
+								<span class="material-symbols-outlined text-[18px]">flag</span>
+								<span>Vincular KR</span>
+							</button>
+						</div>
+					</div>
+
+					<!-- 3. Active Cycle Status Cardstock Panel -->
+					<div
+						class="rounded-xl p-3.5 border shadow-[0_2px_8px_rgba(29,27,23,0.04),inset_0_1px_0_#ffffff] space-y-2.5"
+						style="background-color: {mobileDossierTheme.cardBg}; border-color: {mobileDossierTheme.cardBorder};"
+					>
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-1.5">
+								<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+								<span class="font-mono text-[10px] uppercase tracking-wider font-bold text-[#424753]">
+									{activeCycleLabel}
+								</span>
+							</div>
+							<span class="font-mono text-xs font-bold text-[#1d1b17]">
+								{overallProgressPct}% Concluído
+							</span>
+						</div>
+
+						<div class="w-full h-2 rounded-full bg-black/10 overflow-hidden">
+							<div
+								class="h-full rounded-full transition-all duration-500"
+								style="width: {Math.min(100, Math.max(0, overallProgressPct))}%; background-color: {mobileDossierTheme.accent};"
+							></div>
+						</div>
+
+						{#if atRiskCount > 0}
+							<a
+								href="/dashboard"
+								onclick={() => (showMobileCommandModal = false)}
+								class="flex items-center justify-between px-3 py-2 rounded-lg bg-secondary-fixed/60 border border-secondary/20 text-on-secondary-fixed-variant text-xs font-semibold"
+							>
+								<span class="flex items-center gap-1.5">
+									<span class="material-symbols-outlined text-[16px] text-secondary">warning</span>
+									<span>{atRiskCount} {atRiskCount === 1 ? 'item requer' : 'itens requerem'} atenção</span>
+								</span>
+								<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+							</a>
+						{/if}
+					</div>
+				</div>
+
+				<!-- Stitched Manila Footer -->
+				<div
+					class="px-4 sm:px-5 py-3 border-t flex items-center justify-between relative transition-colors duration-300"
+					style="background-color: {mobileDossierTheme.footerBg}; border-color: {mobileDossierTheme.folderBorder};"
+				>
+					<div
+						class="absolute top-0.5 left-0 right-0 h-[1px] opacity-60"
+						style="background-image: repeating-linear-gradient(to right, {mobileDossierTheme.stitchedColor} 0px, {mobileDossierTheme.stitchedColor} 6px, transparent 6px, transparent 11px);"
+					></div>
+					<span class="font-mono text-[10px] text-[#727784] uppercase tracking-wider font-semibold">
+						Horizonte OKRs
+					</span>
+					<button
+						type="button"
+						onclick={() => (showMobileCommandModal = false)}
+						class="px-4 py-1.5 rounded-lg bg-white/85 hover:bg-white border border-[#cfc5b4] font-mono text-[11px] font-bold text-[#1d1b17] shadow-[0_2px_0_#d8d2c2] active:translate-y-0.5 transition-all cursor-pointer"
+					>
+						Fechar
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}

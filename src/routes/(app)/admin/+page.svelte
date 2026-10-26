@@ -101,7 +101,7 @@
 	<title>Equipes & Administração | Horizonte OKRs</title>
 </svelte:head>
 
-<div class="p-4 sm:p-6 lg:p-8 relative min-h-[calc(100vh-80px)]">
+<div class="p-3.5 sm:p-6 lg:p-8 relative min-h-[calc(100vh-80px)]">
 	<div class="relative z-10 max-w-7xl mx-auto flex flex-col gap-5">
 		<!-- 1. TOP HEADER SECTION -->
 		<div class="flex flex-col sm:flex-row sm:items-end justify-between gap-space-md pb-space-xs">
@@ -114,7 +114,7 @@
 					</span>
 				</div>
 				<h1
-					class="font-headline-xl text-headline-xl text-on-surface tracking-tight leading-tight"
+					class="font-headline-xl text-2xl sm:text-headline-xl text-on-surface tracking-tight leading-tight"
 				>
 					Equipes &amp; Administração
 				</h1>
@@ -246,12 +246,12 @@
 		<!-- 3. PHYSICAL FILING FOLDER TABS SYSTEM -->
 		<div class="mt-3 flex flex-col">
 			<!-- Tabs Strip -->
-			<div class="flex items-end gap-1.5 px-3 sm:px-6 overflow-x-auto no-scrollbar relative z-20 -mb-[1px]">
+			<div class="flex items-end gap-1.5 px-1 sm:px-6 overflow-x-auto no-scrollbar relative z-20 -mb-[1px]">
 				<!-- Tab 1: Equipes & Diretorias -->
 				{#if activeTab === 'teams'}
 					<button
 						type="button"
-						class="group relative flex items-center gap-2.5 px-5 py-3 rounded-t-2xl bg-white border-t-2 border-t-[#0058bd] border-x border-[#d5cebe] text-[#004190] font-bold text-[13px] shadow-[-2px_-2px_6px_rgba(0,0,0,0.03)] cursor-default transition-all select-none"
+						class="group relative shrink-0 flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-t-2xl bg-white border-t-2 border-t-[#0058bd] border-x border-[#d5cebe] text-[#004190] font-bold text-[13px] shadow-[-2px_-2px_6px_rgba(0,0,0,0.03)] cursor-default transition-all select-none"
 					>
 						<span class="w-2.5 h-2.5 rounded-full bg-[#004190]"></span>
 						<span class="material-symbols-outlined text-[19px] text-[#004190]" style="font-variation-settings: 'FILL' 1;">corporate_fare</span>
@@ -263,7 +263,7 @@
 					<button
 						type="button"
 						onclick={() => setTab('teams')}
-						class="group relative flex items-center gap-2 px-4 py-2.5 rounded-t-xl bg-[#ede7e0]/80 hover:bg-[#ede3d8] border-t border-x border-[#d5cebe] text-[#1d1b17] font-medium text-[13px] transition-all whitespace-nowrap cursor-pointer select-none"
+						class="group relative shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-t-xl bg-[#ede7e0]/80 hover:bg-[#ede3d8] border-t border-x border-[#d5cebe] text-[#1d1b17] font-medium text-[13px] transition-all whitespace-nowrap cursor-pointer select-none"
 					>
 						<span class="material-symbols-outlined text-[18px] text-[#004190] group-hover:scale-110 transition-transform">corporate_fare</span>
 						<span class="font-sans text-[#1d1b17] font-semibold">1. Equipes &amp; Diretorias</span>
@@ -275,7 +275,7 @@
 				{#if activeTab === 'members'}
 					<button
 						type="button"
-						class="group relative flex items-center gap-2.5 px-5 py-3 rounded-t-2xl bg-white border-t-2 border-t-[#0058bd] border-x border-[#d5cebe] text-[#004190] font-bold text-[13px] shadow-[-2px_-2px_6px_rgba(0,0,0,0.03)] cursor-default transition-all select-none"
+						class="group relative shrink-0 flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-t-2xl bg-white border-t-2 border-t-[#0058bd] border-x border-[#d5cebe] text-[#004190] font-bold text-[13px] shadow-[-2px_-2px_6px_rgba(0,0,0,0.03)] cursor-default transition-all select-none"
 					>
 						<span class="w-2.5 h-2.5 rounded-full bg-[#004190]"></span>
 						<span class="material-symbols-outlined text-[19px] text-[#004190]" style="font-variation-settings: 'FILL' 1;">badge</span>
@@ -287,7 +287,7 @@
 					<button
 						type="button"
 						onclick={() => setTab('members')}
-						class="group relative flex items-center gap-2 px-4 py-2.5 rounded-t-xl bg-[#ede7e0]/80 hover:bg-[#ede3d8] border-t border-x border-[#d5cebe] text-[#1d1b17] font-medium text-[13px] transition-all whitespace-nowrap cursor-pointer select-none"
+						class="group relative shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-t-xl bg-[#ede7e0]/80 hover:bg-[#ede3d8] border-t border-x border-[#d5cebe] text-[#1d1b17] font-medium text-[13px] transition-all whitespace-nowrap cursor-pointer select-none"
 					>
 						<span class="material-symbols-outlined text-[18px] text-[#004190] group-hover:scale-110 transition-transform">badge</span>
 						<span class="font-sans text-[#1d1b17] font-semibold">2. Membros &amp; Permissões</span>
@@ -299,7 +299,7 @@
 				{#if activeTab === 'cycles'}
 					<button
 						type="button"
-						class="group relative flex items-center gap-2.5 px-5 py-3 rounded-t-2xl bg-white border-t-2 border-t-amber-600 border-x border-[#d5cebe] text-amber-700 font-bold text-[13px] shadow-[-2px_-2px_6px_rgba(0,0,0,0.03)] cursor-default transition-all select-none"
+						class="group relative shrink-0 flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-t-2xl bg-white border-t-2 border-t-amber-600 border-x border-[#d5cebe] text-amber-700 font-bold text-[13px] shadow-[-2px_-2px_6px_rgba(0,0,0,0.03)] cursor-default transition-all select-none"
 					>
 						<span class="w-2.5 h-2.5 rounded-full bg-amber-600"></span>
 						<span class="material-symbols-outlined text-[19px] text-amber-600" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
@@ -311,7 +311,7 @@
 					<button
 						type="button"
 						onclick={() => setTab('cycles')}
-						class="group relative flex items-center gap-2 px-4 py-2.5 rounded-t-xl bg-[#ede7e0]/80 hover:bg-[#ede3d8] border-t border-x border-[#d5cebe] text-[#1d1b17] font-medium text-[13px] transition-all whitespace-nowrap cursor-pointer select-none"
+						class="group relative shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-t-xl bg-[#ede7e0]/80 hover:bg-[#ede3d8] border-t border-x border-[#d5cebe] text-[#1d1b17] font-medium text-[13px] transition-all whitespace-nowrap cursor-pointer select-none"
 					>
 						<span class="material-symbols-outlined text-[18px] text-amber-600 group-hover:scale-110 transition-transform">calendar_month</span>
 						<span class="font-sans text-[#1d1b17] font-semibold">3. Ciclos Semestrais</span>
@@ -323,7 +323,7 @@
 				{#if activeTab === 'backup'}
 					<button
 						type="button"
-						class="group relative flex items-center gap-2.5 px-5 py-3 rounded-t-2xl bg-white border-t-2 border-t-[#b7076c] border-x border-[#d5cebe] text-[#b7076c] font-bold text-[13px] shadow-[-2px_-2px_6px_rgba(0,0,0,0.03)] cursor-default transition-all select-none"
+						class="group relative shrink-0 flex items-center gap-2.5 px-4 sm:px-5 py-3 rounded-t-2xl bg-white border-t-2 border-t-[#b7076c] border-x border-[#d5cebe] text-[#b7076c] font-bold text-[13px] shadow-[-2px_-2px_6px_rgba(0,0,0,0.03)] cursor-default transition-all select-none"
 					>
 						<span class="w-2.5 h-2.5 rounded-full bg-[#b7076c]"></span>
 						<span class="material-symbols-outlined text-[19px] text-[#b7076c]" style="font-variation-settings: 'FILL' 1;">folder_zip</span>
@@ -334,7 +334,7 @@
 					<button
 						type="button"
 						onclick={() => setTab('backup')}
-						class="group relative flex items-center gap-2 px-4 py-2.5 rounded-t-xl bg-[#ede7e0]/80 hover:bg-[#ede3d8] border-t border-x border-[#d5cebe] text-[#1d1b17] font-medium text-[13px] transition-all whitespace-nowrap cursor-pointer select-none"
+						class="group relative shrink-0 flex items-center gap-2 px-3.5 sm:px-4 py-2.5 rounded-t-xl bg-[#ede7e0]/80 hover:bg-[#ede3d8] border-t border-x border-[#d5cebe] text-[#1d1b17] font-medium text-[13px] transition-all whitespace-nowrap cursor-pointer select-none"
 					>
 						<span class="material-symbols-outlined text-[18px] text-[#b7076c] group-hover:scale-110 transition-transform">folder_zip</span>
 						<span class="font-sans text-[#1d1b17] font-semibold">4. Gestão de Snapshot &amp; Backup EJ</span>

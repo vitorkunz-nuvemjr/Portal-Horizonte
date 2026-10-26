@@ -303,7 +303,7 @@
 	function recomputeConnectors() {
 		if (!gridEl) return;
 		const gridRect = gridEl.getBoundingClientRect();
-		if (gridRect.width < 900) {
+		if (gridRect.width < 600) {
 			objToKrPaths = [];
 			krToKpiPaths = [];
 			return;
@@ -458,11 +458,11 @@
 
 <!-- Interactive Cascade Board (Canvas Drafting Mat) -->
 <section
-	class="relative w-full rounded-2xl p-space-md lg:p-space-lg overflow-x-auto min-h-[680px] bg-surface-container-low shadow-[inset_0_2px_6px_rgba(36,34,30,0.05),0_1px_0_#ffffff]"
+	class="relative w-full rounded-2xl p-2.5 sm:p-space-md lg:p-space-lg overflow-x-auto overscroll-x-contain min-h-[580px] sm:min-h-[680px] bg-surface-container-low shadow-[inset_0_2px_6px_rgba(36,34,30,0.05),0_1px_0_#ffffff]"
 >
 	<!-- Visual Ledger Grid Ruler Top (Aligned with 12-column Board Layout) -->
 	<div
-		class="min-w-[1060px] grid grid-cols-12 gap-space-lg pb-space-sm mb-space-md border-b border-outline-variant/30"
+		class="min-w-[820px] sm:min-w-[960px] lg:min-w-[1060px] grid grid-cols-12 gap-3.5 sm:gap-space-md lg:gap-space-lg pb-space-sm mb-space-md border-b border-outline-variant/30"
 	>
 		<!-- Level 1 Column Header -->
 		<div class="col-span-4 flex flex-col items-start gap-1.5">
@@ -583,7 +583,7 @@
 		</div>
 	{:else}
 		<!-- Tree Matrix Grid Layout -->
-		<div bind:this={gridEl} class="relative min-w-[1060px] grid grid-cols-12 gap-space-lg">
+		<div bind:this={gridEl} class="relative min-w-[820px] sm:min-w-[960px] lg:min-w-[1060px] grid grid-cols-12 gap-3.5 sm:gap-space-md lg:gap-space-lg">
 			<!-- ================= SVG BRANCH CONNECTIONS OVERLAY ================= -->
 			<svg
 				class="absolute inset-0 w-full h-full pointer-events-none z-0"

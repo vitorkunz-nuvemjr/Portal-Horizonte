@@ -284,7 +284,7 @@
 				{label}:
 			</span>
 			<span
-				class="font-mono text-[10.5px] font-bold px-1.5 py-0.5 rounded border"
+				class="font-mono text-[10.5px] font-bold px-1.5 py-0.5 rounded border hidden min-[420px]:inline"
 				style="background-color: {theme.badgeBg}; border-color: {theme.badgeBorder}; color: {theme.badgeText};"
 			>
 				{theme.rawHex.toUpperCase()}
@@ -313,9 +313,9 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			onclick={(e) => e.stopPropagation()}
-			class="absolute z-[130] w-[316px] sm:w-[336px] rounded-2xl bg-[#fff8f2] border-2 border-[#cfc5b4] p-3 shadow-[0_20px_50px_rgba(29,27,23,0.26),0_4px_14px_rgba(29,27,23,0.1),inset_0_1px_0_#ffffff] flex flex-col gap-2.5 animate-in fade-in zoom-in-95 duration-150 {expandDirection === 'up'
-				? 'bottom-full mb-2'
-				: 'top-full mt-2'} {horizontalAlign === 'right' ? 'right-0' : 'left-0'}"
+			class="fixed inset-x-3 top-20 mx-auto max-w-[336px] sm:mx-0 sm:inset-x-auto sm:absolute z-[130] sm:w-[336px] rounded-2xl bg-[#fff8f2] border-2 border-[#cfc5b4] p-3 shadow-[0_20px_50px_rgba(29,27,23,0.26),0_4px_14px_rgba(29,27,23,0.1),inset_0_1px_0_#ffffff] flex flex-col gap-2.5 animate-in fade-in zoom-in-95 duration-150 {expandDirection === 'up'
+				? 'sm:top-auto sm:bottom-full sm:mb-2'
+				: 'sm:top-full sm:mt-2'} {horizontalAlign === 'right' ? 'sm:right-0' : 'sm:left-0'}"
 		>
 			<!-- Top Header Bar (Stationery Inspector Header) -->
 			<div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-[#f3ede6] border border-[#e2d9cd] shadow-[inset_0_1px_3px_rgba(36,34,30,0.06)]">

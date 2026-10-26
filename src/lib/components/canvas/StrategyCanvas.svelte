@@ -190,7 +190,7 @@
 <div class="relative h-full w-full bg-surface-container-low">
 	<!-- Direction & Collapse Switcher Overlay -->
 	<div
-		class="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-xl bg-surface-container-lowest p-1.5 shadow-[0_2px_8px_rgba(36,34,30,0.08)]"
+		class="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex items-center gap-1 max-w-[calc(100vw-36px)] overflow-x-auto no-scrollbar rounded-xl bg-surface-container-lowest p-1 sm:p-1.5 shadow-[0_2px_8px_rgba(36,34,30,0.08)]"
 	>
 		<button
 			type="button"

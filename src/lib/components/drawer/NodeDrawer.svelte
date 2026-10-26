@@ -146,77 +146,109 @@
 </script>
 
 {#if node}
-	<!-- Backdrop -->
+	<!-- Hanging-Folder Dossier Modal Backdrop -->
 	<div
 		role="presentation"
 		onclick={onClose}
-		class="fixed inset-0 z-40 bg-on-surface/30 backdrop-blur-[2px] transition-opacity"
-	></div>
-
-	<!-- Slide-over Panel -->
-	<aside
-		aria-label="Editar detalhes do nó"
-		class="fixed top-0 right-0 z-50 flex h-full w-full max-w-xl flex-col border-l border-outline-variant bg-surface-container-lowest shadow-[0_8px_32px_rgba(36,34,30,0.16)]"
+		class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-[#181613]/60 backdrop-blur-[5px] overflow-y-auto overscroll-contain"
 	>
-		<!-- Drawer Header -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div
-			class="flex items-center justify-between border-b px-6 py-4 relative z-30 transition-colors"
-			style="background-color: {drawerTheme.folderBg}; border-color: {drawerTheme.folderBorder};"
+			role="dialog"
+			tabindex="-1"
+			aria-modal="true"
+			aria-label="Editar detalhes do nó"
+			onclick={(e) => e.stopPropagation()}
+			class="relative w-full max-w-3xl my-auto flex flex-col items-stretch animate-in fade-in zoom-in-95 duration-200"
 		>
-			<div class="flex items-center gap-2.5">
-				<span
-					class="rounded-[4px] border px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase"
-					style="background-color: {drawerTheme.badgeBg}; border-color: {drawerTheme.badgeBorder}; color: {drawerTheme.badgeText};"
+			<!-- 1. TOPO DA PASTA: ABA SALIENTE COM VISOR DE ACETATO -->
+			<div class="flex items-end justify-between gap-2 px-2 sm:px-5 -mb-[1px] relative z-30">
+				<div
+					class="min-w-0 relative flex items-center gap-2 sm:gap-3 px-3 sm:px-6 py-2 sm:py-2.5 border-t-2 border-l-2 border-r-2 rounded-t-xl transition-colors duration-200"
+					style="background-color: {drawerTheme.folderBg}; border-color: {drawerTheme.folderBorder}; box-shadow: 0 -3px 10px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9);"
 				>
-					{typeLabels[node.type] ?? node.type}
-				</span>
-				<span class="text-xs font-medium text-on-surface-variant">
-					Progresso: <strong class="font-bold text-on-surface">{formatPct(node.progress)}</strong>
-				</span>
-			</div>
+					<div
+						class="min-w-0 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded bg-white/95 border shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+						style="border-color: {drawerTheme.badgeBorder};"
+					>
+						<span
+							class="w-2 h-2 rounded-full animate-pulse shrink-0"
+							style="background-color: {drawerColor};"
+						></span>
+						<span
+							class="font-mono text-[10px] sm:text-[11px] font-bold tracking-wider uppercase truncate"
+							style="color: {drawerTheme.accentDark};"
+						>
+							DOSSIÊ • {(typeLabels[node.type] ?? node.type).toUpperCase()}
+						</span>
+					</div>
 
-			<div class="flex items-center gap-2">
-				<PaperColorPicker bind:value={drawerColor} disabled={!canEdit} align="right" />
-				{#if node.children.length > 0 && onToggleCollapse}
-					{@const isCollapsed = collapsedIds.has(node.id)}
+					<span
+						class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded font-mono text-[10.5px] font-bold border shrink-0"
+						style="background-color: {drawerTheme.badgeBg}; border-color: {drawerTheme.badgeBorder}; color: {drawerTheme.badgeText};"
+					>
+						{formatPct(node.progress)}
+					</span>
+
+					<span
+						class="absolute -bottom-1 left-0 right-0 h-2 transition-colors duration-200"
+						style="background-color: {drawerTheme.folderBg};"
+					></span>
+				</div>
+
+				<div class="flex items-center gap-1.5 sm:gap-2 pb-1.5 pr-0.5 sm:pr-1 shrink-0 relative z-40">
+					<PaperColorPicker bind:value={drawerColor} disabled={!canEdit} align="right" />
+					{#if node.children.length > 0 && onToggleCollapse}
+						{@const isCollapsed = collapsedIds.has(node.id)}
+						<button
+							type="button"
+							onclick={() => onToggleCollapse(node.id)}
+							class="hidden md:inline-flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition {isCollapsed
+								? 'border-on-surface bg-on-surface text-surface hover:opacity-90'
+								: 'border-[#cfc5b4] bg-white/95 text-on-surface-variant hover:text-on-surface'}"
+						>
+							{#if isCollapsed}
+								<ChevronRight class="h-3.5 w-3.5" />
+								Mostrar Filhos ({node.children.length})
+							{:else}
+								<ChevronDown class="h-3.5 w-3.5" />
+								Ocultar Filhos ({node.children.length})
+							{/if}
+						</button>
+					{/if}
+					{#if canEdit && (node.type === 'objective' || node.type === 'key_result')}
+						<button
+							type="button"
+							onclick={() => onAddChild(node)}
+							class="hidden sm:inline-flex items-center gap-1 rounded-xl border border-[#cfc5b4] bg-white/95 px-2.5 py-1.5 text-xs font-bold text-on-surface shadow-[0_2px_0_#D8D2C2] transition-all hover:bg-primary hover:text-on-primary hover:border-primary"
+						>
+							<Plus class="h-3.5 w-3.5" />
+							+ {node.type === 'objective' ? 'KR' : 'KPI'}
+						</button>
+					{/if}
 					<button
 						type="button"
-						onclick={() => onToggleCollapse(node.id)}
-						class="inline-flex items-center gap-1 rounded-[4px] border px-2.5 py-1 text-xs font-bold transition {isCollapsed
-							? 'border-on-surface bg-on-surface text-surface hover:opacity-90'
-							: 'border-outline-variant bg-surface-container-lowest text-on-surface-variant hover:border-outline hover:text-on-surface'}"
+						onclick={onClose}
+						class="w-8 h-8 rounded-full bg-white/95 hover:bg-white text-[#524d45] hover:text-[#1d1b17] border border-[#cfc5b4] shadow-sm flex items-center justify-center transition-all hover:scale-105 active:scale-95 cursor-pointer"
+						title="Fechar Dossiê"
 					>
-						{#if isCollapsed}
-							<ChevronRight class="h-3.5 w-3.5" />
-							Mostrar Filhos ({node.children.length})
-						{:else}
-							<ChevronDown class="h-3.5 w-3.5" />
-							Ocultar Filhos ({node.children.length})
-						{/if}
+						<X class="h-4 w-4" />
 					</button>
-				{/if}
-				{#if canEdit && (node.type === 'objective' || node.type === 'key_result')}
-					<button
-						type="button"
-						onclick={() => onAddChild(node)}
-						class="inline-flex items-center gap-1 rounded-[4px] border border-outline-variant bg-surface-container-lowest px-2.5 py-1 text-xs font-bold text-on-surface shadow-[0_2px_0_#D8D2C2] transition-all hover:bg-primary hover:text-on-primary hover:border-primary"
-					>
-						<Plus class="h-3.5 w-3.5" />
-						Adicionar {node.type === 'objective' ? 'Resultado-Chave' : 'KPI'}
-					</button>
-				{/if}
-				<button
-					type="button"
-					onclick={onClose}
-					class="rounded-[4px] p-1.5 text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
-				>
-					<X class="h-5 w-5" />
-				</button>
+				</div>
 			</div>
-		</div>
 
-		<!-- Scrollable Drawer Body -->
-		<div class="flex-1 space-y-6 overflow-y-auto px-6 py-5">
+			<!-- 2. CORPO DA PASTA FÍSICA -->
+			<div
+				class="w-full border-2 rounded-2xl hanging-folder-shadow flex flex-col relative overflow-hidden transition-colors duration-200"
+				style="background-color: {drawerTheme.folderBg}; border-color: {drawerTheme.folderBorder};"
+			>
+				<div
+					class="h-1.5 w-full relative z-10 border-b transition-colors duration-200"
+					style="background: linear-gradient(to right, color-mix(in srgb, {drawerColor} 25%, transparent), color-mix(in srgb, {drawerColor} 45%, transparent), color-mix(in srgb, {drawerColor} 20%, transparent)); border-color: {drawerTheme.folderBorder};"
+				></div>
+
+				<!-- Scrollable Body -->
+				<div class="max-h-[calc(88dvh-130px)] space-y-5 overflow-y-auto overscroll-contain custom-scroll p-3.5 sm:p-6">
 			<!-- 1. Core Node Details Form -->
 			<form
 				method="POST"
@@ -227,8 +259,8 @@
 					};
 				}}
 				use:enhanceFormValidation
-				class="space-y-4 rounded-[6px] border p-4 shadow-[0_2px_6px_rgba(36,34,30,0.04)] transition-colors"
-				style="background-color: {drawerTheme.folderBg}; border-color: {drawerTheme.folderBorder};"
+				class="space-y-4 rounded-xl border p-4 shadow-xs transition-colors"
+				style="background-color: {drawerTheme.cardBg}; border-color: {drawerTheme.cardBorder};"
 			>
 				<input type="hidden" name="nodeId" value={node.id} />
 				<input type="hidden" name="color" value={drawerColor} />
@@ -268,7 +300,7 @@
 				</div>
 
 				<!-- Status, Weight, and Scope -->
-				<div class="grid grid-cols-3 gap-3">
+				<div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
 					<div>
 						<label for="drawer-status" class="block text-label-sm font-bold text-on-surface-variant uppercase tracking-wider">
 							Status
@@ -386,7 +418,7 @@
 				{/if}
 
 				{#if node.type === 'kpi'}
-					<div class="grid grid-cols-4 gap-2.5 border-t border-outline-variant/60 pt-3">
+					<div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 border-t border-outline-variant/60 pt-3">
 						<div>
 							<label for="kpi-unit" class="block text-[10px] font-bold text-on-surface-variant uppercase"
 								>Unidade</label
@@ -850,6 +882,29 @@
 					</div>
 				</div>
 			{/if}
+				</div>
+
+				<!-- 3. RODAPÉ DA PASTA COM COSTURA -->
+				<div
+					class="relative z-10 border-t px-4 sm:px-6 py-3 flex items-center justify-between transition-colors duration-200"
+					style="background-color: {drawerTheme.footerBg}; border-color: {drawerTheme.folderBorder};"
+				>
+					<div
+						class="absolute top-0.5 left-0 right-0 h-[1px] opacity-60"
+						style="background-image: repeating-linear-gradient(to right, {drawerTheme.stitchedColor} 0px, {drawerTheme.stitchedColor} 6px, transparent 6px, transparent 11px);"
+					></div>
+					<span class="font-mono text-[10px] uppercase tracking-wider font-semibold text-[#727784]">
+						Dossiê de Identidade &amp; Governança
+					</span>
+					<button
+						type="button"
+						onclick={onClose}
+						class="px-4 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-[#cfc5b4] font-mono text-xs font-bold text-[#1d1b17] shadow-[0_2px_0_#d8d2c2] active:translate-y-0.5 transition-all cursor-pointer"
+					>
+						Fechar Pasta
+					</button>
+				</div>
+			</div>
 		</div>
-	</aside>
+	</div>
 {/if}

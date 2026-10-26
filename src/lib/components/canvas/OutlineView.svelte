@@ -65,8 +65,8 @@
 		{@const nodeTheme = getDossierTheme(nodeColor)}
 
 		<div
-			class="transition-opacity {isDimmed ? 'opacity-35 hover:opacity-80' : ''}"
-			style="margin-left: {depth * 24}px"
+			class="transition-opacity ml-[calc(var(--tree-depth)*10px)] sm:ml-[calc(var(--tree-depth)*24px)] {isDimmed ? 'opacity-35 hover:opacity-80' : ''}"
+			style="--tree-depth: {depth};"
 		>
 			<div
 				role="button"
@@ -78,7 +78,7 @@
 						onSelectNode(node.id);
 					}
 				}}
-				class="group relative mb-2.5 flex items-center justify-between gap-4 rounded-xl px-4 py-3.5 shadow-[0_1px_1px_rgba(36,34,30,0.05),0_3px_6px_-1px_rgba(36,34,30,0.04),0_-1px_0_rgba(255,255,255,0.8)_inset] transition-all hover:shadow-[0_6px_14px_rgba(36,34,30,0.08)] {isSelected
+				class="group relative mb-2.5 flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 rounded-xl px-3.5 py-3 sm:px-4 sm:py-3.5 overflow-hidden shadow-[0_1px_1px_rgba(36,34,30,0.05),0_3px_6px_-1px_rgba(36,34,30,0.04),0_-1px_0_rgba(255,255,255,0.8)_inset] transition-all hover:shadow-[0_6px_14px_rgba(36,34,30,0.08)] {isSelected
 					? 'ring-2 ring-primary'
 					: ''} {isHighlighted ? 'ring-2 ring-tertiary-container' : ''}"
 				style="background-color: {nodeTheme.folderBg}; border: 1.5px solid {nodeTheme.folderBorder};"
@@ -90,7 +90,7 @@
 				></div>
 
 				<!-- Left: Expand button + Type icon + Title + Meta -->
-				<div class="flex min-w-0 flex-1 items-center gap-2.5 pl-1">
+				<div class="flex min-w-0 flex-1 items-start md:items-center gap-2 sm:gap-2.5 pl-1.5 w-full">
 					{#if visibleChildren.length > 0}
 						<button
 							type="button"
@@ -102,7 +102,7 @@
 								? `Mostrar filhos (${visibleChildren.length})`
 								: `Ocultar filhos (${visibleChildren.length})`}
 							aria-expanded={!isCollapsed}
-							class="rounded p-1 text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
+							class="rounded p-1 mt-0.5 md:mt-0 shrink-0 text-on-surface-variant hover:bg-surface-container hover:text-on-surface"
 						>
 							{#if isCollapsed}
 								<ChevronRight class="h-4 w-4" />
@@ -111,13 +111,13 @@
 							{/if}
 						</button>
 					{:else}
-						<span class="w-6"></span>
+						<span class="w-5 sm:w-6 shrink-0"></span>
 					{/if}
 
-					<!-- Type Badge -->
+					<!-- Desktop Type Badge (sm+) -->
 					{#if node.type === 'objective'}
 						<span
-							class="inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-label-sm font-bold uppercase"
+							class="hidden sm:inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-label-sm font-bold uppercase"
 							style="background-color: {nodeTheme.badgeBg}; border-color: {nodeTheme.badgeBorder}; color: {nodeTheme.badgeText};"
 						>
 							<Target class="h-3 w-3" />
@@ -125,7 +125,7 @@
 						</span>
 					{:else if node.type === 'key_result'}
 						<span
-							class="inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-label-sm font-bold uppercase"
+							class="hidden sm:inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-label-sm font-bold uppercase"
 							style="background-color: {nodeTheme.badgeBg}; border-color: {nodeTheme.badgeBorder}; color: {nodeTheme.badgeText};"
 						>
 							<Flag class="h-3 w-3" />
@@ -133,7 +133,7 @@
 						</span>
 					{:else}
 						<span
-							class="inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-label-sm font-bold uppercase"
+							class="hidden sm:inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-label-sm font-bold uppercase"
 							style="background-color: {nodeTheme.badgeBg}; border-color: {nodeTheme.badgeBorder}; color: {nodeTheme.badgeText};"
 						>
 							<Activity class="h-3 w-3" />
@@ -142,9 +142,63 @@
 					{/if}
 
 					<div class="min-w-0 flex-1">
-						<div class="flex items-center gap-2">
+						<!-- Mobile Badge Row (< 640px) -->
+						<div class="flex sm:hidden flex-wrap items-center gap-1.5 mb-1">
+							{#if node.type === 'objective'}
+								<span
+									class="inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-[10px] font-bold uppercase"
+									style="background-color: {nodeTheme.badgeBg}; border-color: {nodeTheme.badgeBorder}; color: {nodeTheme.badgeText};"
+								>
+									<Target class="h-3 w-3" />
+									OBJ · {node.year}{node.quarter ? ` Q${node.quarter}` : ''}
+								</span>
+							{:else if node.type === 'key_result'}
+								<span
+									class="inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-[10px] font-bold uppercase"
+									style="background-color: {nodeTheme.badgeBg}; border-color: {nodeTheme.badgeBorder}; color: {nodeTheme.badgeText};"
+								>
+									<Flag class="h-3 w-3" />
+									KR {node.cycle ? `· ${node.cycle.code}` : ''}
+								</span>
+							{:else}
+								<span
+									class="inline-flex shrink-0 items-center gap-1 rounded border px-2 py-0.5 font-label-sm text-[10px] font-bold uppercase"
+									style="background-color: {nodeTheme.badgeBg}; border-color: {nodeTheme.badgeBorder}; color: {nodeTheme.badgeText};"
+								>
+									<Activity class="h-3 w-3" />
+									KPI
+								</span>
+							{/if}
+
+							{#if isCollapsed && visibleChildren.length > 0}
+								<button
+									type="button"
+									onclick={(e) => {
+										e.stopPropagation();
+										onToggleCollapse(node.id);
+									}}
+									class="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-2 py-0.5 font-label-sm text-[10px] font-bold text-on-primary"
+									title="Mostrar filhos"
+								>
+									<ChevronRight class="h-2.5 w-2.5" />
+									{visibleChildren.length} {visibleChildren.length === 1 ? 'oculto' : 'ocultos'}
+								</button>
+							{/if}
+
+							{#if node.atRisk && node.status !== 'done'}
+								<span
+									class="inline-flex shrink-0 items-center gap-1 rounded-full bg-secondary-fixed px-2 py-0.5 font-label-sm text-[10px] font-bold text-on-secondary-fixed-variant"
+								>
+									<AlertTriangle class="h-3 w-3" />
+									Em Risco
+								</span>
+							{/if}
+						</div>
+
+						<!-- Node Title + Desktop Status Badges -->
+						<div class="flex flex-wrap sm:flex-nowrap items-center gap-2">
 							<span
-								class="truncate font-body-md text-body-md font-bold"
+								class="line-clamp-2 sm:truncate font-body-md text-body-md font-bold leading-snug"
 								style="color: {nodeTheme.accentShadow};"
 							>
 								{node.title}
@@ -156,7 +210,7 @@
 										e.stopPropagation();
 										onToggleCollapse(node.id);
 									}}
-									class="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-2 py-0.5 font-label-sm text-label-sm font-bold text-on-primary"
+									class="hidden sm:inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-2 py-0.5 font-label-sm text-label-sm font-bold text-on-primary"
 									title="Mostrar filhos"
 								>
 									<ChevronRight class="h-2.5 w-2.5" />
@@ -165,157 +219,168 @@
 							{/if}
 							{#if node.atRisk && node.status !== 'done'}
 								<span
-									class="inline-flex items-center gap-1 rounded-full bg-secondary-fixed px-2 py-0.5 font-label-sm text-label-sm font-bold text-on-secondary-fixed-variant"
+									class="hidden sm:inline-flex shrink-0 items-center gap-1 rounded-full bg-secondary-fixed px-2 py-0.5 font-label-sm text-label-sm font-bold text-on-secondary-fixed-variant"
 								>
 									<AlertTriangle class="h-3 w-3" />
 									Em Risco
 								</span>
 							{/if}
 						</div>
-						{#if node.alignedValues.length > 0}
-							<div class="mt-1 flex flex-wrap items-center gap-1">
+
+						<!-- Values & Teams Metadata Pills -->
+						{#if node.alignedValues.length > 0 || ((node.type === 'objective' || node.type === 'key_result') && node.teams && node.teams.length > 0)}
+							<div class="mt-1.5 flex flex-wrap items-center gap-1.5">
 								{#each node.alignedValues as val (val.id)}
 									<span
 										class="inline-flex items-center gap-1 rounded-full bg-surface-container px-2 py-0.5 font-label-sm text-label-sm text-on-surface-variant"
 									>
 										<span
-											class="h-1.5 w-1.5 rounded-full"
+											class="h-1.5 w-1.5 rounded-full shrink-0"
 											style="background-color: {valueColor(val.id)}"
 										></span>
-										{val.title}
+										<span class="truncate max-w-[140px]">{val.title}</span>
 									</span>
 								{/each}
-							</div>
-						{/if}
-						{#if (node.type === 'objective' || node.type === 'key_result') && node.teams && node.teams.length > 0}
-							<div class="mt-1 flex flex-wrap items-center gap-1">
-								{#each node.teams as t (t.id)}
-									{@const tTheme = getDossierTheme(t.color || '#0058bd')}
-									<span
-										class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-label-sm text-label-sm font-bold"
-										style="background-color: {tTheme.badgeBg}; border-color: {tTheme.badgeBorder}; color: {tTheme.badgeText};"
-										title="Equipe: {t.name}"
-									>
+
+								{#if (node.type === 'objective' || node.type === 'key_result') && node.teams && node.teams.length > 0}
+									{#each node.teams as t (t.id)}
+										{@const tTheme = getDossierTheme(t.color || '#0058bd')}
 										<span
-											class="material-symbols-outlined text-[13px] shrink-0"
-											style="color: {tTheme.accent};"
+											class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-label-sm text-label-sm font-bold"
+											style="background-color: {tTheme.badgeBg}; border-color: {tTheme.badgeBorder}; color: {tTheme.badgeText};"
+											title="Equipe: {t.name}"
 										>
-											{getTeamIcon(t)}
+											<span
+												class="material-symbols-outlined text-[13px] shrink-0"
+												style="color: {tTheme.accent};"
+											>
+												{getTeamIcon(t)}
+											</span>
+											<span class="max-w-[130px] truncate">{t.name}</span>
 										</span>
-										<span class="max-w-[120px] truncate">{t.name}</span>
-									</span>
-								{/each}
+									{/each}
+								{/if}
 							</div>
 						{/if}
 					</div>
 				</div>
 
-				<!-- Right: KPI Metrics / Progress + Assignees + Quick Add -->
-				<div class="flex shrink-0 items-center gap-4">
-					{#if node.type === 'kpi'}
-						<div class="text-right text-xs">
-							<div class="font-bold" style="color: {nodeTheme.accentShadow};">
-								{formatNumber(node.current_value, node.unit)}
-								<span class="font-medium" style="color: {nodeTheme.accentDark};">
-									/ {formatNumber(node.target_value, node.unit)}
-								</span>
-							</div>
-							<div class="text-[10px] font-semibold" style="color: {nodeTheme.accent};">
-								Base: {formatNumber(node.baseline, node.unit)}
-							</div>
-						</div>
-					{/if}
-
-					<div class="w-28">
-						<div class="flex justify-between font-label-sm text-label-sm font-bold" style="color: {nodeTheme.accentShadow};">
-							<span>{formatPct(node.progress)}</span>
-						</div>
-						<div
-							class="mt-1 h-2.5 w-full overflow-hidden rounded-full p-0.5 shadow-[inset_0_1px_2px_rgba(36,34,30,0.08)]"
-							style="background-color: {nodeTheme.badgeBg}; border: 1px solid {nodeTheme.badgeBorder};"
-						>
-							<div
-								class="h-full rounded-full"
-								style="width: {pct}%; background-color: {nodeTheme.accent};"
-							></div>
-						</div>
-					</div>
-
-					<!-- Teams & Assignees -->
-					<div class="flex items-center gap-1.5 justify-end min-w-[32px]">
-						{#if node.type === 'kpi' && node.teams && node.teams.length > 0}
-							<div class="flex items-center gap-1">
-								{#each node.teams.slice(0, 1) as t (t.id)}
-									{@const tTheme = getDossierTheme(t.color || '#0058bd')}
-									<span
-										class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-label-sm text-label-sm font-bold"
-										style="background-color: {tTheme.badgeBg}; border-color: {tTheme.badgeBorder}; color: {tTheme.badgeText};"
-										title="Equipe: {t.name}"
-									>
-										<span
-											class="material-symbols-outlined text-[13px] shrink-0"
-											style="color: {tTheme.accent};"
-										>
-											{getTeamIcon(t)}
-										</span>
-										<span class="max-w-[68px] truncate">{t.name}</span>
+				<!-- Right / Bottom on Mobile: KPI Metrics / Progress + Assignees + Quick Add -->
+				<div class="flex flex-wrap md:flex-nowrap w-full md:w-auto shrink-0 items-center justify-between md:justify-end gap-2.5 md:gap-4 pt-2.5 md:pt-0 border-t border-black/10 md:border-t-0 pl-1.5 md:pl-0">
+					<div class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial">
+						{#if node.type === 'kpi'}
+							<div class="text-left md:text-right text-xs shrink-0">
+								<div class="font-bold whitespace-nowrap" style="color: {nodeTheme.accentShadow};">
+									{formatNumber(node.current_value, node.unit)}
+									<span class="font-medium" style="color: {nodeTheme.accentDark};">
+										/ {formatNumber(node.target_value, node.unit)}
 									</span>
-								{/each}
+								</div>
+								<div class="text-[10px] font-semibold whitespace-nowrap" style="color: {nodeTheme.accent};">
+									Base: {formatNumber(node.baseline, node.unit)}
+								</div>
 							</div>
 						{/if}
-						<div class="flex -space-x-1.5">
-							{#each node.assignees.slice(0, 3) as person (person.id)}
-								<span
-									class="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white ring-2 ring-surface-container-lowest"
-									style="background-color: {person.color || '#0058bd'}"
-									title={person.name}
-								>
-									{getInitials(person.name)}
-								</span>
-							{/each}
+
+						<div class="w-24 sm:w-28 shrink-0">
+							<div class="flex justify-between font-label-sm text-label-sm font-bold" style="color: {nodeTheme.accentShadow};">
+								<span>{formatPct(node.progress)}</span>
+							</div>
+							<div
+								class="mt-1 h-2.5 w-full overflow-hidden rounded-full p-0.5 shadow-[inset_0_1px_2px_rgba(36,34,30,0.08)]"
+								style="background-color: {nodeTheme.badgeBg}; border: 1px solid {nodeTheme.badgeBorder};"
+							>
+								<div
+									class="h-full rounded-full"
+									style="width: {pct}%; background-color: {nodeTheme.accent};"
+								></div>
+							</div>
 						</div>
 					</div>
 
-					{#if visibleChildren.length > 0}
-						<button
-							type="button"
-							onclick={(e) => {
-								e.stopPropagation();
-								onToggleCollapse(node.id);
-							}}
-							class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 font-label-sm text-label-sm font-bold transition {isCollapsed
-								? 'bg-primary text-on-primary shadow-sm'
-								: 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'}"
-							title={isCollapsed
-								? `Mostrar ${visibleChildren.length} ${visibleChildren.length === 1 ? 'item filho' : 'itens filhos'}`
-								: `Ocultar ${visibleChildren.length} ${visibleChildren.length === 1 ? 'item filho' : 'itens filhos'}`}
-							aria-expanded={!isCollapsed}
-						>
-							{#if isCollapsed}
-								<Eye class="h-3.5 w-3.5" />
-								Mostrar ({visibleChildren.length})
-							{:else}
-								<EyeOff class="h-3.5 w-3.5" />
-								Ocultar ({visibleChildren.length})
-							{/if}
-						</button>
-					{/if}
+					<!-- Teams & Assignees + Actions -->
+					<div class="flex items-center gap-2 justify-end shrink-0 ml-auto md:ml-0">
+						{#if (node.type === 'kpi' && node.teams && node.teams.length > 0) || node.assignees.length > 0}
+							<div class="flex items-center gap-1.5 justify-end md:min-w-[32px]">
+								{#if node.type === 'kpi' && node.teams && node.teams.length > 0}
+									<div class="flex items-center gap-1">
+										{#each node.teams.slice(0, 1) as t (t.id)}
+											{@const tTheme = getDossierTheme(t.color || '#0058bd')}
+											<span
+												class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-label-sm text-label-sm font-bold"
+												style="background-color: {tTheme.badgeBg}; border-color: {tTheme.badgeBorder}; color: {tTheme.badgeText};"
+												title="Equipe: {t.name}"
+											>
+												<span
+													class="material-symbols-outlined text-[13px] shrink-0"
+													style="color: {tTheme.accent};"
+												>
+													{getTeamIcon(t)}
+												</span>
+												<span class="max-w-[68px] truncate">{t.name}</span>
+											</span>
+										{/each}
+									</div>
+								{/if}
+								{#if node.assignees.length > 0}
+									<div class="flex -space-x-1.5">
+										{#each node.assignees.slice(0, 3) as person (person.id)}
+											<span
+												class="inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white ring-2 ring-surface-container-lowest"
+												style="background-color: {person.color || '#0058bd'}"
+												title={person.name}
+											>
+												{getInitials(person.name)}
+											</span>
+										{/each}
+									</div>
+								{/if}
+							</div>
+						{:else}
+							<div class="hidden md:block md:min-w-[32px]"></div>
+						{/if}
 
-					{#if canEdit && (node.type === 'objective' || node.type === 'key_result')}
-						<button
-							type="button"
-							onclick={(e) => {
-								e.stopPropagation();
-								onAddChild(node);
-							}}
-							class="inline-flex items-center gap-1 rounded-lg bg-surface-container px-2.5 py-1 font-label-sm text-label-sm font-bold text-on-surface hover:bg-primary hover:text-on-primary transition-colors"
-						>
-							<Plus class="h-3.5 w-3.5" />
-							{node.type === 'objective' ? 'KR' : 'KPI'}
-						</button>
-					{:else}
-						<span class="w-12"></span>
-					{/if}
+						{#if visibleChildren.length > 0}
+							<button
+								type="button"
+								onclick={(e) => {
+									e.stopPropagation();
+									onToggleCollapse(node.id);
+								}}
+								class="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 font-label-sm text-label-sm font-bold transition whitespace-nowrap {isCollapsed
+									? 'bg-primary text-on-primary shadow-sm'
+									: 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface'}"
+								title={isCollapsed
+									? `Mostrar ${visibleChildren.length} ${visibleChildren.length === 1 ? 'item filho' : 'itens filhos'}`
+									: `Ocultar ${visibleChildren.length} ${visibleChildren.length === 1 ? 'item filho' : 'itens filhos'}`}
+								aria-expanded={!isCollapsed}
+							>
+								{#if isCollapsed}
+									<Eye class="h-3.5 w-3.5" />
+									Mostrar ({visibleChildren.length})
+								{:else}
+									<EyeOff class="h-3.5 w-3.5" />
+									Ocultar ({visibleChildren.length})
+								{/if}
+							</button>
+						{/if}
+
+						{#if canEdit && (node.type === 'objective' || node.type === 'key_result')}
+							<button
+								type="button"
+								onclick={(e) => {
+									e.stopPropagation();
+									onAddChild(node);
+								}}
+								class="inline-flex items-center gap-1 rounded-lg bg-surface-container px-2.5 py-1 font-label-sm text-label-sm font-bold text-on-surface hover:bg-primary hover:text-on-primary transition-colors whitespace-nowrap"
+							>
+								<Plus class="h-3.5 w-3.5" />
+								{node.type === 'objective' ? 'KR' : 'KPI'}
+							</button>
+						{:else}
+							<span class="hidden md:inline-block w-12"></span>
+						{/if}
+					</div>
 				</div>
 			</div>
 
@@ -330,7 +395,7 @@
 
 <div class="w-full">
 	{#if visibleRoots.length > 0}
-		<div class="mb-4 flex items-center justify-between gap-2">
+		<div class="mb-4 flex flex-wrap items-center justify-between gap-2">
 			<span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface-variant font-bold">
 				Livro-Razão Hierárquico (Visão em Lista)
 			</span>

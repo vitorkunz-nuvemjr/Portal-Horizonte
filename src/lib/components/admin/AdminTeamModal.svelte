@@ -82,7 +82,7 @@
 	<div
 		role="presentation"
 		onclick={() => (activeTeamModal = null)}
-		class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#181613]/60 backdrop-blur-[5px]"
+		class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-[#181613]/60 backdrop-blur-[5px] overflow-y-auto overscroll-contain"
 	>
 		<!-- WRAPPER: SUSPENSION FOLDER RAIL & CONTAINER -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -91,18 +91,18 @@
 			tabindex="-1"
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
-			class="relative w-full max-w-4xl flex flex-col items-stretch animate-in fade-in zoom-in-95 duration-200"
+			class="relative w-full max-w-4xl my-auto flex flex-col items-stretch animate-in fade-in zoom-in-95 duration-200"
 		>
 			<!-- 1. TOPO DA PASTA: ABA CLÁSSICA COM VISOR TRANSPARENTE E ETIQUETA ENCAIXADA -->
-			<div class="flex items-end justify-between px-2 sm:px-4 -mb-[1px] relative z-20">
+			<div class="flex items-end justify-between gap-2 px-2 sm:px-4 -mb-[1px] relative z-20">
 				<!-- Tab com Visor de Acetato / Etiqueta Manilha Recortada -->
 				<div
-					class="relative flex items-center gap-3 px-5 sm:px-7 py-2.5 border-t-2 border-l-2 border-r-2 rounded-t-xl transition-colors duration-200"
+					class="min-w-0 relative flex items-center gap-2 sm:gap-3 px-3 sm:px-7 py-2 sm:py-2.5 border-t-2 border-l-2 border-r-2 rounded-t-xl transition-colors duration-200"
 					style="background-color: {modalTheme.folderBg}; border-color: {modalTheme.folderBorder}; box-shadow: 0 -3px 10px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9);"
 				>
 					<!-- Visor Plástico Transparente com Cartão Interno -->
 					<div
-						class="flex items-center gap-2 px-2.5 py-1 rounded bg-white/95 border shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+						class="min-w-0 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded bg-white/95 border shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
 						style="border-color: {modalTheme.badgeBorder};"
 					>
 						<span
@@ -112,7 +112,7 @@
 							{activeTeamModal.icon || 'storefront'}
 						</span>
 						<span
-							class="font-mono text-[11.5px] font-bold tracking-wider uppercase"
+							class="font-mono text-[10px] sm:text-[11.5px] font-bold tracking-wider uppercase truncate"
 							style="color: {modalTheme.accentDark};"
 						>
 							{activeTeamModal.mode === 'create'
@@ -122,7 +122,7 @@
 					</div>
 					<!-- Indicador de KRs Ativos acoplado à aba -->
 					<div
-						class="flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold border transition-colors"
+						class="hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold border transition-colors shrink-0"
 						style="background-color: {modalTheme.badgeBg}; border-color: {modalTheme.badgeBorder}; color: {modalTheme.badgeText};"
 					>
 						<span class="material-symbols-outlined text-[14px]" style="color: {modalTheme.accent};">flag</span>
@@ -136,7 +136,7 @@
 				</div>
 
 				<!-- Canto Superior Direito: Seletor de Cor & Botão Fechar -->
-				<div class="flex items-center gap-2 pb-1.5 pr-1 relative z-40">
+				<div class="flex items-center gap-1.5 sm:gap-2 pb-1.5 pr-0.5 sm:pr-1 shrink-0 relative z-40">
 					<PaperColorPicker bind:value={activeTeamModal.color} align="right" />
 					<button
 						type="button"
@@ -182,7 +182,7 @@
 				></div>
 
 				<!-- ÁREA INTERNA DA PASTA -->
-				<div class="p-4 sm:p-6 lg:p-7 max-h-[calc(88vh-135px)] overflow-y-auto custom-scroll relative z-10 space-y-6">
+				<div class="p-3.5 sm:p-6 lg:p-7 max-h-[calc(88dvh-135px)] overflow-y-auto overscroll-contain custom-scroll relative z-10 space-y-5 sm:space-y-6">
 					<div class="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
 						<!-- COLUNA DA ESQUERDA: IDENTIFICAÇÃO & ÍCONE -->
 						<div class="lg:col-span-7 space-y-4">

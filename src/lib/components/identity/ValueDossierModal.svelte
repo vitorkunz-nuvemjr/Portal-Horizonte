@@ -93,7 +93,7 @@
 <div
 	role="presentation"
 	onclick={onClose}
-	class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#181613]/60 backdrop-blur-[5px] overflow-y-auto"
+	class="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6 bg-[#181613]/60 backdrop-blur-[5px] overflow-y-auto overscroll-contain"
 >
 	<!-- WRAPPER: CLÁSSICA PASTA DE ARQUIVO SUSPENSA COM ABA SALIENTE -->
 	<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -106,25 +106,25 @@
 		style="font-family: 'Poppins', sans-serif;"
 	>
 		<!-- 1. TOPO DA PASTA: ABA SALIENTE COM VISOR DE ACETATO E ETIQUETA ENCAIXADA -->
-		<div class="flex items-end justify-between px-3 sm:px-6 -mb-[1px] relative z-20">
+		<div class="flex items-end justify-between gap-2 px-2 sm:px-6 -mb-[1px] relative z-20">
 			<!-- Aba Saliente de Arquivo Manilha -->
 			<div
-				class="relative flex items-center gap-3 px-5 sm:px-7 py-2.5 border-t-2 border-l-2 border-r-2 rounded-t-xl transition-colors duration-200"
+				class="min-w-0 relative flex items-center gap-2 sm:gap-3 px-3 sm:px-7 py-2 sm:py-2.5 border-t-2 border-l-2 border-r-2 rounded-t-xl transition-colors duration-200"
 				style="background-color: {theme.folderBg}; border-color: {theme.folderBorder}; box-shadow: 0 -3px 10px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9);"
 			>
 				<!-- Visor de Acetato Transparente com Cartão Interno -->
 				<div
-					class="flex items-center gap-2 px-2.5 py-1 rounded bg-white/95 border shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
+					class="min-w-0 flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded bg-white/95 border shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)]"
 					style="border-color: {theme.badgeBorder};"
 				>
 					<span
-						class="material-symbols-outlined text-[17px] shrink-0"
+						class="material-symbols-outlined text-[16px] sm:text-[17px] shrink-0"
 						style="color: {color};"
 					>
 						{icon || 'verified'}
 					</span>
 					<span
-						class="font-mono text-[11.5px] font-bold tracking-wider uppercase"
+						class="font-mono text-[10px] sm:text-[11.5px] font-bold tracking-wider uppercase truncate"
 						style="color: {theme.accentDark};"
 					>
 						{mode === 'create'
@@ -136,7 +136,7 @@
 				<!-- Indicador de Itens Alinhados acoplado à aba -->
 				{#if mode === 'edit'}
 					<div
-						class="flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold border transition-colors hidden sm:flex"
+						class="flex items-center gap-1.5 px-2 py-0.5 rounded-md font-mono text-[11px] font-bold border transition-colors hidden md:flex shrink-0"
 						style="background-color: {theme.badgeBg}; border-color: {theme.badgeBorder}; color: {theme.badgeText};"
 					>
 						<span class="material-symbols-outlined text-[14px]" style="color: {theme.accent};">
@@ -155,7 +155,7 @@
 			</div>
 
 			<!-- Canto Superior Direito: Seletor de Cor & Botão Fechar -->
-			<div class="flex items-center gap-2 pb-1.5 pr-1 relative z-40">
+			<div class="flex items-center gap-1.5 sm:gap-2 pb-1.5 pr-0.5 sm:pr-1 shrink-0 relative z-40">
 				<PaperColorPicker bind:value={color} disabled={!canEdit} align="right" />
 				<button
 					type="button"
@@ -199,7 +199,7 @@
 			></div>
 
 			<!-- ÁREA INTERNA DA PASTA -->
-			<div class="p-4 sm:p-6 lg:p-7 max-h-[calc(88vh-130px)] overflow-y-auto custom-scroll relative z-10 space-y-6">
+			<div class="p-3.5 sm:p-6 lg:p-7 max-h-[calc(88dvh-130px)] overflow-y-auto overscroll-contain custom-scroll relative z-10 space-y-5 sm:space-y-6">
 				<div class="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
 					<!-- ============================================================== -->
 					<!-- COLUNA DA ESQUERDA: IDENTIFICAÇÃO, ÍCONE & COR (7/12 ~ 58%) -->
@@ -606,12 +606,13 @@
 	</div>
 </div>
 
-<!-- Modal de Confirmação de Exclusão -->
+<!-- Modal de Confirmação de Exclusão (Dossier Style) -->
 {#if showDeleteConfirm && valueNode}
+	{@const delTheme = getDossierTheme('#ba1a1a')}
 	<div
 		role="presentation"
 		onclick={() => (showDeleteConfirm = false)}
-		class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+		class="fixed inset-0 z-[110] flex items-center justify-center p-3 sm:p-6 bg-[#181613]/65 backdrop-blur-[5px] overflow-y-auto overscroll-contain"
 	>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -620,22 +621,36 @@
 			tabindex="-1"
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
-			class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-[#d5cebe] space-y-4"
+			class="w-full max-w-md flex flex-col my-auto relative animate-in fade-in zoom-in-95 duration-150"
 		>
-			<div class="flex items-center gap-3 text-[#ba1a1a]">
-				<span class="material-symbols-outlined text-[28px]">warning</span>
-				<h3 class="font-bold text-lg text-[#1d1b17]">Excluir Valor Fundamental?</h3>
+			<div class="flex items-end justify-between px-3 -mb-[1px] relative z-20">
+				<div
+					class="border-t-2 border-l-2 border-r-2 rounded-t-xl px-4 py-2 flex items-center gap-2 relative"
+					style="background-color: {delTheme.folderBg}; border-color: {delTheme.folderBorder};"
+				>
+					<div
+						class="flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-white/95 border"
+						style="border-color: {delTheme.badgeBorder};"
+					>
+						<span class="w-2 h-2 rounded-full bg-[#ba1a1a] animate-pulse"></span>
+						<span class="font-mono text-[10px] font-bold uppercase tracking-wider text-[#ba1a1a]">
+							CONFIRMAR EXCLUSÃO
+						</span>
+					</div>
+					<span
+						class="absolute -bottom-1 left-0 right-0 h-2"
+						style="background-color: {delTheme.folderBg};"
+					></span>
+				</div>
+				<button
+					type="button"
+					onclick={() => (showDeleteConfirm = false)}
+					class="w-8 h-8 mb-1.5 rounded-full bg-white/95 hover:bg-white text-[#524d45] border border-[#cfc5b4] flex items-center justify-center shadow-xs cursor-pointer"
+					title="Fechar"
+				>
+					<span class="material-symbols-outlined text-[18px]">close</span>
+				</button>
 			</div>
-
-			<p class="text-sm text-[#424753] leading-relaxed">
-				Você tem certeza de que deseja excluir o valor fundamental <strong>"{valueNode.title}"</strong>?
-				{#if stats.total > 0}
-					<br />
-					<span class="text-xs text-[#ba1a1a] font-semibold mt-1 block">
-						Atenção: Existem {stats.total} itens estratégicos ({stats.okrs} OKRs e {stats.krs} KRs) vinculados a este valor.
-					</span>
-				{/if}
-			</p>
 
 			<form
 				method="POST"
@@ -650,21 +665,55 @@
 					};
 				}}
 				use:enhanceFormValidation
-				class="space-y-4 pt-2"
+				class="border-2 rounded-2xl hanging-folder-shadow overflow-hidden flex flex-col relative z-10"
+				style="background-color: {delTheme.folderBg}; border-color: {delTheme.folderBorder};"
 			>
 				<input type="hidden" name="nodeId" value={valueNode.id} />
+				<div
+					class="h-1.5 w-full border-b"
+					style="background: linear-gradient(to right, rgba(186,26,26,0.25), rgba(186,26,26,0.5), rgba(186,26,26,0.2)); border-color: {delTheme.folderBorder};"
+				></div>
 
-				<div class="flex items-center justify-end gap-2 pt-2">
+				<div class="p-4 sm:p-5 space-y-3">
+					<div
+						class="p-4 rounded-xl border space-y-2"
+						style="background-color: {delTheme.cardBg}; border-color: {delTheme.cardBorder};"
+					>
+						<div class="flex items-center gap-2.5 text-[#ba1a1a]">
+							<span class="material-symbols-outlined text-[24px]">warning</span>
+							<h3 class="font-bold text-base text-[#1d1b17]">Excluir Valor Fundamental?</h3>
+						</div>
+
+						<p class="text-xs text-[#424753] leading-relaxed">
+							Você tem certeza de que deseja excluir o valor fundamental <strong>"{valueNode.title}"</strong>?
+							{#if stats.total > 0}
+								<br />
+								<span class="text-xs text-[#ba1a1a] font-semibold mt-1 block">
+									Atenção: Existem {stats.total} itens estratégicos ({stats.okrs} OKRs e {stats.krs} KRs) vinculados a este valor.
+								</span>
+							{/if}
+						</p>
+					</div>
+				</div>
+
+				<div
+					class="px-4 sm:px-5 py-3 border-t flex items-center justify-end gap-2 relative"
+					style="background-color: {delTheme.footerBg}; border-color: {delTheme.folderBorder};"
+				>
+					<div
+						class="absolute top-0.5 left-0 right-0 h-[1px] opacity-60"
+						style="background-image: repeating-linear-gradient(to right, {delTheme.stitchedColor} 0px, {delTheme.stitchedColor} 6px, transparent 6px, transparent 11px);"
+					></div>
 					<button
 						type="button"
 						onclick={() => (showDeleteConfirm = false)}
-						class="px-4 py-2 rounded-xl border border-[#d5cebe] text-xs font-bold text-[#424753] hover:bg-slate-50 cursor-pointer"
+						class="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 border border-[#d5cebe] text-xs font-bold text-[#424753] cursor-pointer"
 					>
 						Cancelar
 					</button>
 					<button
 						type="submit"
-						class="px-4 py-2 rounded-xl bg-[#ba1a1a] text-white text-xs font-bold hover:bg-[#991b1b] shadow-xs cursor-pointer"
+						class="px-4 py-2 rounded-xl bg-[#ba1a1a] text-white text-xs font-bold hover:bg-[#991b1b] shadow-[0_2px_0_#7f1d1d] active:translate-y-0.5 cursor-pointer"
 					>
 						Confirmar Exclusão
 					</button>
