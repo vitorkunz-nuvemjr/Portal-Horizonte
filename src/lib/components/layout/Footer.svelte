@@ -30,60 +30,63 @@
 
 	<!-- Top section: Logos & Links -->
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6">
-		<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-			<!-- 1. Lado esquerdo: Horizonte OKRs Brand, Subtítulo & Badge -->
-			<div class="lg:col-span-4 flex items-center gap-3">
-				<img
-					alt="Logotipo Horizonte OKRs"
-					class="h-10 w-auto object-contain shrink-0"
-					src="{base}/footer-horizonte-logo.png"
-					onerror={(e) => {
-						const img = e.currentTarget as HTMLImageElement;
-						img.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5Qqj47nomhU0_0484DHCQXJIiS6v5OG2B7OgsQf3B_J8Obx-tRRSkGX-bb4G5I17H7THd_tX-tkqVTFGmwWxUQBC53-Nscq1Uj1qN6RqKpxtZTLfSMXw12H5MIORawV7hqbJ6pm6fGgPfiU7CLASDpvl8D1kTyeSEc14ALklxf4TE9LwQPF6QNjAZO27SBe7yE7-r4ewB8Xds3WjeE0Eup6UXogMxkwL5-J7xIp0d_Z5tfsWVHZOPTVHYdGYpu63rSb4';
-					}}
-				/>
-				<div class="flex flex-col">
-					<div class="flex items-center gap-2">
-						<span class="font-display font-bold text-sm tracking-tight text-[#1d1b17]">
-							Horizonte OKRs
+		<div class="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-center">
+			<!-- 1 e 2. Linha unificada no mobile (lado esquerdo / lado direito), 2 colunas separadas no desktop -->
+			<div class="lg:col-span-8 flex flex-row items-center justify-between gap-3 sm:gap-4 lg:grid lg:grid-cols-2 lg:gap-6">
+				<!-- 1. Lado esquerdo: Horizonte OKRs Brand, Subtítulo & Badge -->
+				<div class="flex items-center gap-2 sm:gap-3 shrink-0 sm:shrink">
+					<img
+						alt="Logotipo Horizonte OKRs"
+						class="h-7 sm:h-8 lg:h-10 w-auto object-contain shrink-0"
+						src="{base}/footer-horizonte-logo.png"
+						onerror={(e) => {
+							const img = e.currentTarget as HTMLImageElement;
+							img.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuC5Qqj47nomhU0_0484DHCQXJIiS6v5OG2B7OgsQf3B_J8Obx-tRRSkGX-bb4G5I17H7THd_tX-tkqVTFGmwWxUQBC53-Nscq1Uj1qN6RqKpxtZTLfSMXw12H5MIORawV7hqbJ6pm6fGgPfiU7CLASDpvl8D1kTyeSEc14ALklxf4TE9LwQPF6QNjAZO27SBe7yE7-r4ewB8Xds3WjeE0Eup6UXogMxkwL5-J7xIp0d_Z5tfsWVHZOPTVHYdGYpu63rSb4';
+						}}
+					/>
+					<div class="flex flex-col">
+						<div class="flex items-center gap-2">
+							<span class="font-display font-bold text-xs sm:text-sm tracking-tight text-[#1d1b17]">
+								Horizonte OKRs
+							</span>
+						</div>
+						<span class="text-[9px] sm:text-[10px] lg:text-[11px] font-medium text-slate-500 tracking-wider whitespace-nowrap">
+							Planejamento estratégico
 						</span>
 					</div>
-					<span class="text-[11px] font-medium text-slate-500 tracking-wider">
-						Planejamento estratégico
-					</span>
 				</div>
-			</div>
 
-			<!-- 2. Centro absoluto: Nuvem Consultoria Jr. + Assinatura -->
-			<div class="lg:col-span-4 flex flex-col items-center justify-center text-center py-2 lg:py-0 border-y lg:border-y-0 border-amber-900/10 lg:border-x lg:px-4">
-				<div class="flex items-center gap-2.5 mb-1">
-					<img
-						alt="Logotipo Nuvem Consultoria Jr."
-						class="h-[34px] w-auto object-contain shrink-0"
-						src="{base}/footer-nuvem-cloud.png"
-						onerror={(e) => {
-							const img = e.currentTarget as HTMLImageElement;
-							img.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBOF6-LATC3s4WLDhRY4TpE9-tPjF77n3RtkXloohy55ih-GL4s1kwGGzX83uPj6-a7gipSg0zZxbhjX-h3tApv7wds74oSq_r92XXVh0LZgFTFa1JE3icidtFOUHR-bl4leZmKAcUtkWJ1aGOBtOkOQUX27zaJGwuKz8x_g_RzzyMyyD8evDx9ZsNJuh0VuXbATaXKBc_0-VnwwL5v0HJywzkbjMZxassF3Pe7vz3IX8VADrS8ShLhfyO2J5NxqSkPnHw';
-						}}
-					/>
-					<img
-						alt="Nuvem Jr."
-						class="h-5 sm:h-6 w-auto object-contain inline-block"
-						src="{base}/footer-nuvem-text.png"
-						onerror={(e) => {
-							const img = e.currentTarget as HTMLImageElement;
-							img.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBf57U3gHNoUNMaF34LPEERj5PaHZOACH85VFsYQx3WAS2IyuOWuF-mPk3DhlwfQekqzTGtaF1GaQzHf62N1eRkSHJXvsig_1ostXm46pxxNVEb_1iuJEzWCd7FzDcgf0qLifFrH-nQxGuoaTH6hfzzDtJ1wa6BKT8bTOo0CL5gSHte9E4beFnzkohJuSY5JrRFnOVkPbka0kvlBqKf-D2rscHs2mfzTzwMtr3Tc-NCCfm8LUG6_9wLBk6EGf3kFCzRehw';
-						}}
-					/>
+				<!-- 2. Lado direito (mobile) / Centro absoluto (desktop): Nuvem Consultoria Jr. + Assinatura -->
+				<div class="flex flex-col items-end sm:items-center justify-center text-right sm:text-center py-0 lg:py-0 lg:border-x border-amber-900/10 lg:px-4 shrink-0 sm:shrink">
+					<div class="flex items-center gap-1.5 sm:gap-2 lg:gap-2.5 mb-0.5 sm:mb-1">
+						<img
+							alt="Logotipo Nuvem Consultoria Jr."
+							class="h-6 sm:h-7 lg:h-[34px] w-auto object-contain shrink-0"
+							src="{base}/footer-nuvem-cloud.png"
+							onerror={(e) => {
+								const img = e.currentTarget as HTMLImageElement;
+								img.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBOF6-LATC3s4WLDhRY4TpE9-tPjF77n3RtkXloohy55ih-GL4s1kwGGzX83uPj6-a7gipSg0zZxbhjX-h3tApv7wds74oSq_r92XXVh0LZgFTFa1JE3icidtFOUHR-bl4leZmKAcUtkWJ1aGOBtOkOQUX27zaJGwuKz8x_g_RzzyMyyD8evDx9ZsNJuh0VuXbATaXKBc_0-VnwwL5v0HJywzkbjMZxassF3Pe7vz3IX8VADrS8ShLhfyO2J5NxqSkPnHw';
+							}}
+						/>
+						<img
+							alt="Nuvem Jr."
+							class="h-3.5 sm:h-4.5 lg:h-6 w-auto object-contain inline-block"
+							src="{base}/footer-nuvem-text.png"
+							onerror={(e) => {
+								const img = e.currentTarget as HTMLImageElement;
+								img.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuBf57U3gHNoUNMaF34LPEERj5PaHZOACH85VFsYQx3WAS2IyuOWuF-mPk3DhlwfQekqzTGtaF1GaQzHf62N1eRkSHJXvsig_1ostXm46pxxNVEb_1iuJEzWCd7FzDcgf0qLifFrH-nQxGuoaTH6hfzzDtJ1wa6BKT8bTOo0CL5gSHte9E4beFnzkohJuSY5JrRFnOVkPbka0kvlBqKf-D2rscHs2mfzTzwMtr3Tc-NCCfm8LUG6_9wLBk6EGf3kFCzRehw';
+							}}
+						/>
+					</div>
+					<p class="text-[9px] sm:text-[10px] lg:text-[11px] text-[#727784] font-normal leading-tight max-w-[155px] sm:max-w-xs">
+						Viva o novo. Experimente o inusitado!
+					</p>
 				</div>
-				<p class="text-[11px] text-[#727784] font-normal leading-tight max-w-xs">
-					Viva o novo. Experimente o inusitado!
-				</p>
 			</div>
 
 			<!-- 3. Lado direito: Governança, Suporte GP & Direitos Reservados -->
-			<div class="lg:col-span-4 flex flex-col items-start lg:items-end justify-center gap-1.5 text-xs">
-				<div class="flex flex-wrap items-center gap-3">
+			<div class="lg:col-span-4 flex flex-col items-center sm:items-start lg:items-end justify-center gap-1.5 text-xs pt-3 lg:pt-0 border-t lg:border-t-0 border-amber-900/10">
+				<div class="flex flex-wrap items-center justify-center sm:justify-start lg:justify-end gap-3">
 					<a
 						class="inline-flex items-center gap-1.5 text-[#727784] hover:text-[#0058bd] transition-colors py-1 px-1.5 rounded hover:bg-black/[0.03] font-medium"
 						href="https://drive.google.com"
@@ -116,7 +119,7 @@
 						<span>Contato de Suporte</span>
 					</button>
 				</div>
-				<span class="text-[11px] text-[#727784] font-normal leading-tight px-1.5">
+				<span class="text-[10px] sm:text-[11px] text-[#727784] font-normal leading-tight px-1.5 text-center sm:text-left lg:text-right">
 					© 2026 Nuvem Júnior. Todos os direitos reservados.
 				</span>
 			</div>
