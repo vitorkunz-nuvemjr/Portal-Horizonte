@@ -795,7 +795,7 @@
 									class="px-2.5 py-1 rounded-md bg-error text-on-error font-title-md text-body-sm shadow-sm hover:opacity-90 transition-opacity cursor-pointer"
 									type="button"
 								>
-									Ação Corretiva
+									Analisar Metas
 								</button>
 							</div>
 						</div>

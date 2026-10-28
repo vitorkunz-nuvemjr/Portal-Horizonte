@@ -63,7 +63,7 @@
 				class="inline-flex items-center gap-1.5 text-xs text-[#63625D] hover:text-[#1E1D1A] transition-colors font-medium"
 			>
 				<span class="material-symbols-outlined text-[16px]">help</span>
-				<span>Suporte Executivo</span>
+				<span>Como usar</span>
 			</button>
 		</div>
 	</header>
@@ -208,7 +208,7 @@
 							<div class="mt-2.5 p-3 rounded-lg bg-amber-50/90 border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2 animate-fadeIn">
 								<span class="material-symbols-outlined text-[16px] text-amber-600 shrink-0 mt-0.5">info</span>
 								<div class="flex-1">
-									<strong class="font-semibold">Modo Mockup:</strong> A autenticação federada com Google Workspace está em homologação. Insira suas credenciais corporativas no formulário abaixo para acessar a plataforma.
+									A autenticação com Google Workspace ainda não está implementada. Insira suas credenciais no formulário abaixo para acessar a plataforma
 								</div>
 								<button
 									type="button"

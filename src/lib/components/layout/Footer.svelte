@@ -88,7 +88,7 @@
 			<div class="lg:col-span-4 flex flex-col items-center sm:items-start lg:items-end justify-center gap-1.5 text-xs pt-3 lg:pt-0 border-t lg:border-t-0 border-amber-900/10">
 				<div class="flex flex-wrap items-center justify-center sm:justify-start lg:justify-end gap-3">
 					<a
-						class="inline-flex items-center gap-1.5 text-[#727784] hover:text-[#0058bd] transition-colors py-1 px-1.5 rounded hover:bg-black/[0.03] font-medium"
+						class="inline-flex items-center gap-1.5 text-[#0058bd] hover:text-[#004190] transition-colors py-1 px-1.5 rounded hover:bg-blue-50/60 font-medium"
 						href="https://drive.google.com"
 						target="_blank"
 						rel="noopener noreferrer"
@@ -103,7 +103,7 @@
 							stroke-width="2"
 							stroke-linecap="round"
 							stroke-linejoin="round"
-							class="w-3.5 h-3.5 text-[#727784] shrink-0"
+							class="w-3.5 h-3.5 text-[#0058bd] shrink-0"
 						>
 							<path d="M12 5v16"></path>
 							<path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"></path>
